@@ -31,6 +31,17 @@ namespace PolytopiaMapManager{
 			Console.WriteLine("MapManager loaded successfully!");
 		}
 
+        [HarmonyPostfix]
+		[HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+		private static void GameManager_Update()
+		{
+			if (UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftControl) && UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.B))
+			{
+				BuildMapFile("map.json");
+				NotificationManager.Notify("Map has been saved.", "Map Manager", null, null);
+			}
+		}
+
         [HarmonyPrefix]
 		[HarmonyPatch(typeof(GameModeScreen), nameof(GameModeScreen.UpdateListLayout))]
 		private static void GameModeScreen_UpdateListLayout(GameModeScreen __instance)
@@ -61,12 +72,12 @@ namespace PolytopiaMapManager{
 	
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
-		private static void BuildAction_ExecuteDefault(BuildAction __instance, GameState state)
+		private static void BuildAction_ExecuteDefault(BuildAction __instance, GameState gameState)
 		{
-			TileData tile = state.Map.GetTile(__instance.Coordinates);
+			TileData tile = gameState.Map.GetTile(__instance.Coordinates);
 			ImprovementData improvementData;
 			PlayerState playerState;
-			if (tile != null && state.GameLogicData.TryGetData(__instance.Type, out improvementData) && state.TryGetPlayer(__instance.PlayerId, out playerState))
+			if (tile != null && gameState.GameLogicData.TryGetData(__instance.Type, out improvementData) && gameState.TryGetPlayer(__instance.PlayerId, out playerState))
 			{
 				if (improvementData.type != ImprovementData.Type.Road)
 				{
@@ -94,7 +105,7 @@ namespace PolytopiaMapManager{
 			GameManager.StartingSkin = SkinType.Default;
 			GameManager.PreliminaryGameSettings = gameSettings;
 			GameManager.PreliminaryGameSettings.OpponentCount = 0;
-			GameManager.PreliminaryGameSettings.Difficulty = GameSettings.Difficulties.Easy;
+			GameManager.PreliminaryGameSettings.Difficulty = GameSettings.Difficulties.Frozen;
 			//UIBlackFader.FadeIn(0.5f, async delegate
 			//{
 			//    DOTween.KillAll(false);
