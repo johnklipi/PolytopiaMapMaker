@@ -29,6 +29,13 @@ namespace PolytopiaMapManager{
             Init();
 			Harmony.CreateAndPatchAll(typeof(MapManager));
 			Console.WriteLine("MapManager loaded successfully!");
+			try{
+				Console.WriteLine(AccountManager.Alias);
+				Console.WriteLine(AccountManager.AliasInternal);
+			}
+			catch(Exception ex){
+				
+			}
 		}
 
         [HarmonyPostfix]
