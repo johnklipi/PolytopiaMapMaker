@@ -5,9 +5,12 @@ using Newtonsoft.Json.Linq;
 using Polytopia.Data;
 using PolytopiaBackendBase;
 using PolytopiaBackendBase.Game;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace PolytopiaMapManager{
+
+namespace PolytopiaMapManager
+{
     public class MapManager
     {
         internal static string versionOfMapManager = "0.0.0";
@@ -29,24 +32,6 @@ namespace PolytopiaMapManager{
             Init();
 			Harmony.CreateAndPatchAll(typeof(MapManager));
 			Console.WriteLine("MapManager loaded successfully!");
-			try{
-				Console.WriteLine(AccountManager.Alias);
-				Console.WriteLine(AccountManager.AliasInternal);
-			}
-			catch(Exception ex){
-				
-			}
-		}
-
-        [HarmonyPostfix]
-		[HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
-		private static void GameManager_Update()
-		{
-			if (UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftControl) && UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.B))
-			{
-				BuildMapFile("map.json");
-				NotificationManager.Notify("Map has been saved.", "Map Manager", null, null);
-			}
 		}
 
         [HarmonyPrefix]
@@ -182,6 +167,7 @@ namespace PolytopiaMapManager{
 		[HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
 		private static void MapGenerator_Generate(ref GameState state, ref MapGeneratorSettings settings)
 		{
+			_map = JObject.Parse(File.ReadAllText(Path.Combine(MAPS_PATH, "map.json")));
 			PreGenerate(ref state, ref settings);
 		}
 
@@ -189,6 +175,7 @@ namespace PolytopiaMapManager{
 		[HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
 		private static void MapGenerator_Generate_(ref GameState state)
 		{
+			_map = JObject.Parse(File.ReadAllText(Path.Combine(MAPS_PATH, "map.json")));
 			PostGenerate(ref state);
 		}
 
@@ -239,63 +226,10 @@ namespace PolytopiaMapManager{
 		}
 
 		[HarmonyPostfix]
-		[HarmonyPatch(typeof(GameSetupScreen.MapPresetDataSource), nameof(GameSetupScreen.MapPresetDataSource.GetData))]
-		private static void GameSetupScreen_MapPresetDataSource_GetData(ref Il2CppStructArray<MapPreset> __result)
-		{
-			List<MapPreset> presets = __result.ToList();
-			presets.Add((MapPreset)500);
-			__result = presets.ToArray();
-		}
-
-		[HarmonyPostfix]
-		[HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.OnMapPresetChanged))]
-		private static void GameSetupScreen_OnMapPresetChanged(GameSetupScreen __instance, int index)
-		{
-			_map = null;
-			MapPreset[] array = GameSetupScreen.MapPresetDataSource.GetData(GameManager.PreliminaryGameSettings.GameType == GameType.Matchmaking);
-
-			if (_isListInstantiated)
-			{
-				UnityEngine.Object.Destroy(_customMapsList.gameObject);
-				_isListInstantiated = false;
-			}
-
-			if ((int)array[index] == 500)
-			{
-				string[] maps = Directory.GetFiles(MAPS_PATH, "*.json");
-				if (maps.Length != 0)
-				{
-					GameManager.PreliminaryGameSettings.mapPreset = array[index];
-					_customMapsList = __instance.CreateHorizontalList("Maps", maps.Select(map => Path.GetFileNameWithoutExtension(map)).ToArray(), new Action<int>(OnCustomMapChanged), 0, null, 500);
-					_isListInstantiated = true;
-				}
-				else
-				{
-					GameManager.PreliminaryGameSettings.mapPreset = MapPreset.None;
-					NotificationManager.Notify(Localization.Get("No maps found"), Localization.Get("gamesettings.notavailable"), null, null);
-				}
-			}
-
-			__instance.UpdateOpponentList();
-			GameManager.PreliminaryGameSettings.SaveToDisk();
-			__instance.RefreshInfo();
-		}
-
-		[HarmonyPostfix]
 		[HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.OnStartGameClicked))]
 		private static void GameSetupScreen_OnStartGameClicked()
 		{
 			_isListInstantiated = false;
-		}
-
-		[HarmonyPostfix]
-		[HarmonyPatch(typeof(MapPresetExtensions), nameof(MapPresetExtensions.GetLocalizationName))]
-		private static void MapPresetExtensions_GetLocalizationName(ref string __result, MapPreset mapPreset)
-		{
-			if (mapPreset == (MapPreset)500)
-			{
-				__result = "Custom";
-			}
 		}
 
 		[HarmonyPostfix]
@@ -337,9 +271,8 @@ namespace PolytopiaMapManager{
 			settings.mapType = PolytopiaBackendBase.Game.MapPreset.Dryland;
 		}
 
-		internal static void Init()
+		public static void Init()
 		{
-			EnumCache<MapPreset>.AddMapping("Custom", (MapPreset)500);
 			EnumCache<ImprovementAbility.Type>.AddMapping("climatesetter", (ImprovementAbility.Type)600);
 			EnumCache<ImprovementAbility.Type>.AddMapping("climatesetter", (ImprovementAbility.Type)600);
             EnumCache<TribeData.Type>.AddMapping("mapmaker", (TribeData.Type)815);
@@ -363,8 +296,9 @@ namespace PolytopiaMapManager{
 
 				tile.climate = (tileJson["climate"] == null || (int)tileJson["climate"] < 0 || (int)tileJson["climate"] > 16) ? 1 : (int)tileJson["climate"];
 				tile.Skin = tileJson["skinType"] == null ? SkinType.Default : EnumCache<SkinType>.GetType((string)tileJson["skinType"]);
-				tile.terrain = tileJson["terrain"] == null ? TerrainData.Type.None : EnumCache<TerrainData.Type>.GetType((string)tileJson["terrain"]);
+				tile.terrain = tileJson["terrain"] == null ? Polytopia.Data.TerrainData.Type.None : EnumCache<Polytopia.Data.TerrainData.Type>.GetType((string)tileJson["terrain"]);
 				tile.resource = tileJson["resource"] == null ? null : new() { type = EnumCache<ResourceData.Type>.GetType((string)tileJson["resource"]) };
+				tile.effects = new Il2CppSystem.Collections.Generic.List<TileData.EffectType>();
 
 				if (tile.rulingCityCoordinates != tile.coordinates)
 				{
@@ -400,28 +334,6 @@ namespace PolytopiaMapManager{
 					}
 				}
 
-				switch (tile.terrain)
-				{
-					case TerrainData.Type.Water:
-						tile.altitude = -1;
-						tile.shoreLines = TileData.ShorelineFlag.None;
-						break;
-					case TerrainData.Type.Ocean:
-					case TerrainData.Type.Ice:
-						tile.altitude = -2;
-						tile.shoreLines = TileData.ShorelineFlag.None;
-						break;
-					case TerrainData.Type.Field:
-					case TerrainData.Type.Forest:
-						tile.altitude = 1;
-						tile.shoreLines = TileData.ShorelineFlag.None;
-						break;
-					case TerrainData.Type.Mountain:
-						tile.altitude = 2;
-						tile.shoreLines = TileData.ShorelineFlag.None;
-						break;
-				}
-
 				originalMap.tiles[i] = tile;
 			}
 
@@ -431,6 +343,101 @@ namespace PolytopiaMapManager{
 		private static void OnCustomMapChanged(int index)
 		{
 			_map = JObject.Parse(File.ReadAllText(Directory.GetFiles(MAPS_PATH, "*.json")[index]));
+		}
+
+		// WILL GO TO POLYTOPIAUI FOR API STUFF.
+		private static void AddUiButtonToArray(UIRoundButton prefabButton, HudScreen hudScreen, UIButtonBase.ButtonAction action, UIRoundButton[] buttonArray, string? description = null)
+		{
+			UIRoundButton button = UnityEngine.GameObject.Instantiate(prefabButton, prefabButton.transform);
+			button.transform.parent = hudScreen.buttonBar.transform;
+			button.OnClicked += action;
+			List<UIRoundButton> list = buttonArray.ToList();
+			list.Add(button);
+			list.ToArray();
+
+			if(description != null){
+				Transform child = button.gameObject.transform.Find("DescriptionText");
+
+				if (child != null)
+				{
+					Console.Write("Found child: " + child.name);
+					TMPLocalizer localizer = child.gameObject.GetComponent<TMPLocalizer>();
+					localizer.Text = description;
+				}
+				else
+				{
+					Console.Write("Child not found.");
+				}
+			}
+		}
+
+        [HarmonyPostfix]
+		[HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
+		private static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
+		{
+			AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MapRevealButton_OnClicked, __instance.buttonArray, "Reveal Map");
+			AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)AddPlayerButton_OnClicked, __instance.buttonArray, "Add Player");
+            AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MapSaveButton_OnClicked, __instance.buttonArray, "Save Map");
+			__instance.Show();
+			__instance.Update();
+
+			// UNUSED
+			void MapRevealButton_OnClicked(int id, BaseEventData eventdata)
+			{
+				for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
+				{
+					GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
+				}
+				MapRenderer.Current.Refresh(false);
+				NotificationManager.Notify("Map has been revealed.", "Mythopia Toolbox", null, null);
+			}
+
+			void MapSaveButton_OnClicked(int id, BaseEventData eventdata)
+			{
+				MapManager.BuildMapFile("map.json");
+				NotificationManager.Notify("Map has been saved.", "Mythopia Toolbox", null, null);
+			}
+			
+			// FOR MYTHOPIA AND WILL BE REMOVED LATER.
+			void AddPlayerButton_OnClicked(int id, BaseEventData eventdata)
+			{
+                if(GameManager.PreliminaryGameSettings.GameType == GameType.PassAndPlay)
+                {
+                    Console.Write("Im Going to... WHAT!");
+                    //GameManager.LocalPlayer.Currency += 100;
+                    Console.Write(GameManager.LocalPlayer.UserName);
+                    NotificationManager.Notify("Creating new player", "Mythopia Toolbox", null, null);
+                    //Plugin.logger.LogMessage(GameManager.GameState.PlayerStates[0].AccountId);
+                    int num = (int)(GameManager.GameState.PlayerStates[GameManager.GameState.PlayerStates.Count - 1].Id + 1);
+                    PlayerState playerState = new PlayerState
+                    {
+                        Id = (byte)num,
+                        AccountId = new Il2CppSystem.Nullable<Il2CppSystem.Guid>(Il2CppSystem.Guid.Empty),
+                        AutoPlay = true,
+                        startTile = new WorldCoordinates(0, 0),
+                        hasChosenTribe = (GameManager.LocalPlayer.tribe > TribeData.Type.None),
+                        tribe = GameManager.LocalPlayer.tribe,
+                        skinType = ((GameManager.LocalPlayer.skinType == SkinType.Default) ? GameManager.GameState.Settings.GetSelectedSkin(GameManager.LocalPlayer.tribe) : GameManager.LocalPlayer.skinType),
+                        handicap = 0,
+						currency = 0,
+						score = 0,
+						cities = 0,
+						kills = 0,
+						casualities = 0,
+						wipeOuts = 0,
+                    };
+                    GameManager.GameState.PlayerStates.Add(playerState);
+                    Console.Write("Created player");
+                    // GameManager.GameState.PlayerStates.Add(new PlayerState 
+                    // { 
+                    //     Id = 99,
+                    //     UserName = "Test",
+                    //     //AccountId = Il2CppSystem.Guid.Parse("06624b2c-f5af-4dd2-babf-f4bc66fec9f8"); 
+                    //     AutoPlay = false,
+                    //     Currency = 12
+                    // });
+                }
+			}
 		}
     }
 }

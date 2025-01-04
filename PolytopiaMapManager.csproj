@@ -1,21 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
-  <TargetFramework>net6.0</TargetFramework>
-  <ImplicitUsings>enable</ImplicitUsings>
-  <Nullable>enable</Nullable>
-  <RestoreAdditionalProjectSources>
-    https://api.nuget.org/v3/index.json;
-    https://nuget.bepinex.dev/v3/index.json;
-    https://nuget.samboy.dev/v3/index.json
-  </RestoreAdditionalProjectSources>
-</PropertyGroup>
-<ItemGroup>
-  <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.691" />
-  <Reference Include="lib\*.dll" />
-</ItemGroup>
-<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-  <Exec Command="xcopy /y /s $(TargetPath) &quot;D:\Steam\steamapps\common\The Battle of Polytopia\Mods&quot;" />
-</Target>
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json;
+      https://polymod.dev/nuget/v3/index.json;
+    </RestoreAdditionalProjectSources>
+  </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="PolyMod" Version="1.0.0-pre" />
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /y /s $(TargetPath) &quot;E:\dev\Mythopia\Game\Mods\MapMaker\&quot;&#xD;&#xA;start E:\dev\Mythopia\Game\Polytopia.exe" />
+  </Target>
 </Project>

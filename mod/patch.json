@@ -1,0 +1,419 @@
+{
+	"tribeData": {
+		"mapmaker": {
+			"color": 13816530,
+			"style": 18,
+			"climate": 18,
+			"language": "City",
+			"startingTech": [
+				"basicmapbuilder"
+			],
+			"category": 0,
+			"priceTier": 0,
+			"bonus": 0,
+			"startingUnit": "none",
+			"idx": 815
+		}
+	},
+	"techData": {
+		"basic": {
+			"improvementUnlocks": [
+				"landfill"
+			],
+			"unitUnlocks": [
+				"warrior"
+			]
+		},
+		"basicmapbuilder": {
+			"improvementUnlocks": [
+				"city",
+				"ruin",
+				"createfield",
+				"createforest",
+				"createmountain",
+				"createwater",
+				"createocean",
+				"createice",
+				"createdryland",
+				"createwetland",
+				"spawngame",
+				"spawncrop",
+				"spawnfish",
+				"spawnwhale",
+				"spawnmetal",
+				"spawnfruit",
+				"spawnspores",
+				"spawnstarfish",
+				"spawnaquacrop"
+			],
+			"cost": 0,
+			"idx": -1
+		}
+	},
+	"improvementData": {
+		"city": {
+			"hidden": false,
+			"cost": 0,
+			"work": 1,
+			"borderSize": 1,
+			"terrainRequirements": [],
+			"improvementAbilities": [
+				"freelance"
+			],
+			"maxLevel": 100
+		},
+		"ruin": {
+			"hidden": false,
+			"improvementAbilities": [
+				"freelance"
+			],
+			"maxLevel": 0
+		},
+		"createfield": {
+			"cost": 0,
+			"creates": [
+				{
+					"terrain": "field"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createforest": {
+			"cost": 0,
+			"creates": [
+				{
+					"terrain": "forest"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createmountain": {
+			"cost": 0,
+			"creates": [
+				{
+					"terrain": "mountain"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createwater": {
+			"cost": 0,
+			"creates": [
+				{
+					"terrain": "water"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createocean": {
+			"cost": 0,
+			"creates": [
+				{
+					"terrain": "ocean"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createice": {
+			"cost": 0,
+			"creates": [
+				{
+					"terrain": "ice"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createwetland": {
+			"cost": 0,
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance",
+				"flood"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"createdryland": {
+			"cost": 0,
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance",
+				"fill"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawngame": {
+			"cost": 0,
+			"terrainRequirements": [
+				{
+					"resource": "game"
+				},
+				{
+					"resource": "crop"
+				},
+				{
+					"resource": "fish"
+				},
+				{
+					"resource": "whale"
+				},
+				{
+					"resource": "metal"
+				},
+				{
+					"resource": "fruit"
+				},
+				{
+					"resource": "spores"
+				},
+				{
+					"resource": "starfish"
+				},
+				{
+					"resource": "aquacrop"
+				}
+			],
+			"creates": [
+				{
+					"resource": "game"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawncrop": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "crop"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnfish": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "fish"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnwhale": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "whale"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnmetal": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "metal"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnfruit": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "fruit"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnspores": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "spores"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnstarfish": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "starfish"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		},
+		"spawnaquacrop": {
+			"cost": 0,
+			"creates": [
+				{
+					"resource": "aquacrop"
+				}
+			],
+			"improvementAbilities": [
+				"consumed",
+				"discrete",
+				"freelance"
+			],
+			"maxLevel": 0,
+			"idx": -1
+		}
+	},
+	"localizationData": {
+		"building_names_createfield": {
+			"English": "Create Field",
+			"Russian": "Создать Поле"
+		},
+		"building_names_createforest": {
+			"English": "Create Forest",
+			"Russian": "Создать Лес"
+		},
+		"building_names_createmountain": {
+			"English": "Create Mountain",
+			"Russian": "Создать Гору"
+		},
+		"building_names_createwater": {
+			"English": "Create Water",
+			"Russian": "Создать Воду"
+		},
+		"building_names_createocean": {
+			"English": "Create Ocean",
+			"Russian": "Создать Океан"
+		},
+		"building_names_createice": {
+			"English": "Create Ice",
+			"Russian": "Создать Лёд"
+		},
+		"building_names_createwetland": {
+			"English": "Flood",
+			"Russian": "Затопить"
+		},
+		"building_names_createdryland": {
+			"English": "Dry up",
+			"Russian": "Высушить"
+		},
+		"building_names_spawngame": {
+			"English": "Spawn Animal",
+			"Russian": "Создать Животное"
+		},
+		"building_names_spawncrop": {
+			"English": "Spawn Crop",
+			"Russian": "Создать Урожай"
+		},
+		"building_names_spawnfish": {
+			"English": "Spawn Fish",
+			"Russian": "Создать Рыбу"
+		},
+		"building_names_spawnwhale": {
+			"English": "Spawn Whale",
+			"Russian": "Создать Кита"
+		},
+		"building_names_spawnmetal": {
+			"English": "Spawn Metal",
+			"Russian": "Создать Метал"
+		},
+		"building_names_spawnfruit": {
+			"English": "Spawn Fruit",
+			"Russian": "Создать Фрукт"
+		},
+		"building_names_spawnspores": {
+			"English": "Spawn Spores",
+			"Russian": "Создать Споры"
+		},
+		"building_names_spawnstarfish": {
+			"English": "Spawn Starfish",
+			"Russian": "Создать Морскую Звезду"
+		},
+		"building_names_spawnaquacrop": {
+			"English": "Spawn Aquacrop",
+			"Russian": "Создать Водный Урожай"
+		}
+	}
+}
