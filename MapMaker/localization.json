@@ -1,0 +1,86 @@
+{
+    "building_names_createfield": {
+        "English": "Create Field",
+        "Russian": "Создать Поле"
+    },
+    "building_names_createforest": {
+        "English": "Create Forest",
+        "Russian": "Создать Лес"
+    },
+    "building_names_createmountain": {
+        "English": "Create Mountain",
+        "Russian": "Создать Гору"
+    },
+    "building_names_createwater": {
+        "English": "Create Water",
+        "Russian": "Создать Воду"
+    },
+    "building_names_createocean": {
+        "English": "Create Ocean",
+        "Russian": "Создать Океан"
+    },
+    "building_names_createice": {
+        "English": "Create Ice",
+        "Russian": "Создать Лёд"
+    },
+    "building_names_createwetland": {
+        "English": "Flood",
+        "Russian": "Затопить"
+    },
+    "building_names_createdryland": {
+        "English": "Dry up",
+        "Russian": "Высушить"
+    },
+    "building_names_spawngame": {
+        "English": "Spawn Animal",
+        "Russian": "Создать Животное"
+    },
+    "building_names_spawncrop": {
+        "English": "Spawn Crop",
+        "Russian": "Создать Урожай"
+    },
+    "building_names_spawnfish": {
+        "English": "Spawn Fish",
+        "Russian": "Создать Рыбу"
+    },
+    "building_names_spawnwhale": {
+        "English": "Spawn Whale",
+        "Russian": "Создать Кита"
+    },
+    "building_names_spawnmetal": {
+        "English": "Spawn Metal",
+        "Russian": "Создать Метал"
+    },
+    "building_names_spawnfruit": {
+        "English": "Spawn Fruit",
+        "Russian": "Создать Фрукт"
+    },
+    "building_names_spawnspores": {
+        "English": "Spawn Spores",
+        "Russian": "Создать Споры"
+    },
+    "building_names_spawnstarfish": {
+        "English": "Spawn Starfish",
+        "Russian": "Создать Морскую Звезду"
+    },
+    "gamemode_mapmaker_caps": {
+        "English": "Map Maker",
+        "Russian": "Редактор Карт"
+    },
+    "gamemode_mapmaker_description_button": {
+        "English": "Create your own game maps and let your imagination flourish!",
+        "Russian": "Создавайте собственные игровые карты и дайте волю своему воображению!"
+    },
+    "gamemode_mapmaker": {
+        "English": "Map Maker",
+        "Russian": "Редактор Карт"
+    },
+    "mapmaker_choose_climate":
+    {
+        "English": "Choose tribe climate"
+    },
+    "mapmaker_choose_skin":
+    {
+        "English": "Choose skin climate"
+    }
+}

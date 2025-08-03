@@ -2,9 +2,7 @@
 	"tribeData": {
 		"mapmaker": {
 			"color": 13816530,
-			"style": 18,
-			"climate": 18,
-			"language": "City",
+			"language": "",
 			"startingTech": [
 				"basicmapbuilder"
 			],
@@ -12,18 +10,10 @@
 			"priceTier": 0,
 			"bonus": 0,
 			"startingUnit": "none",
-			"idx": 815
+			"idx": -1
 		}
 	},
 	"techData": {
-		"basic": {
-			"improvementUnlocks": [
-				"landfill"
-			],
-			"unitUnlocks": [
-				"warrior"
-			]
-		},
 		"basicmapbuilder": {
 			"improvementUnlocks": [
 				"city",
@@ -39,7 +29,6 @@
 				"spawngame",
 				"spawncrop",
 				"spawnfish",
-				"spawnwhale",
 				"spawnmetal",
 				"spawnfruit",
 				"spawnspores",
@@ -185,31 +174,7 @@
 			"cost": 0,
 			"terrainRequirements": [
 				{
-					"resource": "game"
-				},
-				{
-					"resource": "crop"
-				},
-				{
-					"resource": "fish"
-				},
-				{
-					"resource": "whale"
-				},
-				{
-					"resource": "metal"
-				},
-				{
-					"resource": "fruit"
-				},
-				{
-					"resource": "spores"
-				},
-				{
-					"resource": "starfish"
-				},
-				{
-					"resource": "aquacrop"
+					"terrain": "forest"
 				}
 			],
 			"creates": [
@@ -227,6 +192,11 @@
 		},
 		"spawncrop": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "field"
+				}
+			],
 			"creates": [
 				{
 					"resource": "crop"
@@ -242,6 +212,14 @@
 		},
 		"spawnfish": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "water"
+				},
+				{
+					"terrain": "ocean"
+				}
+			],
 			"creates": [
 				{
 					"resource": "fish"
@@ -257,6 +235,14 @@
 		},
 		"spawnwhale": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "water"
+				},
+				{
+					"terrain": "ocean"
+				}
+			],
 			"creates": [
 				{
 					"resource": "whale"
@@ -272,6 +258,11 @@
 		},
 		"spawnmetal": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "mountain"
+				}
+			],
 			"creates": [
 				{
 					"resource": "metal"
@@ -287,6 +278,11 @@
 		},
 		"spawnfruit": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "field"
+				}
+			],
 			"creates": [
 				{
 					"resource": "fruit"
@@ -302,6 +298,14 @@
 		},
 		"spawnspores": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "field"
+				},
+				{
+					"terrain": "forest"
+				}
+			],
 			"creates": [
 				{
 					"resource": "spores"
@@ -317,6 +321,14 @@
 		},
 		"spawnstarfish": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "water"
+				},
+				{
+					"terrain": "ocean"
+				}
+			],
 			"creates": [
 				{
 					"resource": "starfish"
@@ -332,6 +344,14 @@
 		},
 		"spawnaquacrop": {
 			"cost": 0,
+			"terrainRequirements": [
+				{
+					"terrain": "water"
+				},
+				{
+					"terrain": "ocean"
+				}
+			],
 			"creates": [
 				{
 					"resource": "aquacrop"
@@ -346,74 +366,9 @@
 			"idx": -1
 		}
 	},
-	"localizationData": {
-		"building_names_createfield": {
-			"English": "Create Field",
-			"Russian": "Создать Поле"
-		},
-		"building_names_createforest": {
-			"English": "Create Forest",
-			"Russian": "Создать Лес"
-		},
-		"building_names_createmountain": {
-			"English": "Create Mountain",
-			"Russian": "Создать Гору"
-		},
-		"building_names_createwater": {
-			"English": "Create Water",
-			"Russian": "Создать Воду"
-		},
-		"building_names_createocean": {
-			"English": "Create Ocean",
-			"Russian": "Создать Океан"
-		},
-		"building_names_createice": {
-			"English": "Create Ice",
-			"Russian": "Создать Лёд"
-		},
-		"building_names_createwetland": {
-			"English": "Flood",
-			"Russian": "Затопить"
-		},
-		"building_names_createdryland": {
-			"English": "Dry up",
-			"Russian": "Высушить"
-		},
-		"building_names_spawngame": {
-			"English": "Spawn Animal",
-			"Russian": "Создать Животное"
-		},
-		"building_names_spawncrop": {
-			"English": "Spawn Crop",
-			"Russian": "Создать Урожай"
-		},
-		"building_names_spawnfish": {
-			"English": "Spawn Fish",
-			"Russian": "Создать Рыбу"
-		},
-		"building_names_spawnwhale": {
-			"English": "Spawn Whale",
-			"Russian": "Создать Кита"
-		},
-		"building_names_spawnmetal": {
-			"English": "Spawn Metal",
-			"Russian": "Создать Метал"
-		},
-		"building_names_spawnfruit": {
-			"English": "Spawn Fruit",
-			"Russian": "Создать Фрукт"
-		},
-		"building_names_spawnspores": {
-			"English": "Spawn Spores",
-			"Russian": "Создать Споры"
-		},
-		"building_names_spawnstarfish": {
-			"English": "Spawn Starfish",
-			"Russian": "Создать Морскую Звезду"
-		},
-		"building_names_spawnaquacrop": {
-			"English": "Spawn Aquacrop",
-			"Russian": "Создать Водный Урожай"
+	"mapPreset": {
+		"custom": {
+			"idx": -1
 		}
 	}
 }
