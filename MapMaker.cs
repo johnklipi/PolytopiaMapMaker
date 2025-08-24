@@ -3,13 +3,8 @@ using BepInEx.Logging;
 using PolytopiaBackendBase.Game;
 using System.Text.Json;
 using HarmonyLib;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Newtonsoft.Json.Linq;
 using Polytopia.Data;
-using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
-using static PopupBase;
 
 namespace PolytopiaMapManager;
 
@@ -19,6 +14,9 @@ public static class MapMaker
     {
         [JsonInclude]
         public int climate = 0;
+        [JsonInclude]
+        [JsonConverter(typeof(EnumCacheJson<SkinType>))]
+        public SkinType skinType = SkinType.Default;
         [JsonInclude]
         [JsonConverter(typeof(EnumCacheJson<Polytopia.Data.TerrainData.Type>))]
         public Polytopia.Data.TerrainData.Type terrain = Polytopia.Data.TerrainData.Type.Field;
@@ -47,13 +45,15 @@ public static class MapMaker
     }
     internal static ManualLogSource? modLogger;
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
-    internal static int chosenClimate = -1;
+    internal static int chosenClimate = 1;
+    internal static SkinType chosenSkinType = SkinType.Default;
 
     public static void Load(ManualLogSource logger)
     {
         modLogger = logger;
         Harmony.CreateAndPatchAll(typeof(MapMaker));
         Harmony.CreateAndPatchAll(typeof(CustomPopup));
+        Harmony.CreateAndPatchAll(typeof(UI));
         PolyMod.Loader.AddGameModeButton("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, PolyMod.Registry.GetSprite("mapmaker"));
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         Directory.CreateDirectory(MAPS_PATH);
@@ -102,177 +102,42 @@ public static class MapMaker
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
-    public static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
+    [HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
+    private static void BuildAction_ExecuteDefault(BuildAction __instance, GameState gameState)
     {
-        AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MenuButtonOnClicked, __instance.buttonArray, "Menu");
-        // AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)SaveMapButtonOnClicked, __instance.buttonArray, "Save Map");
-        __instance.nextTurnButton.gameObject.SetActive(false);
-        __instance.techTreeButton.gameObject.SetActive(false);
-        __instance.statsButton.gameObject.SetActive(false);
-        __instance.Show();
-        __instance.Update();
-        // __instance.buttonBar.statsButton.BlockButton = true;
-        void MenuButtonOnClicked(int id, BaseEventData eventdata)
+        TileData tile = gameState.Map.GetTile(__instance.Coordinates);
+        ImprovementData improvementData;
+        PlayerState playerState;
+        if (tile != null && gameState.GameLogicData.TryGetData(__instance.Type, out improvementData) && gameState.TryGetPlayer(__instance.PlayerId, out playerState))
         {
-            CustomPopup.Show();
-        }
-
-        void SaveMapButtonOnClicked(int id, BaseEventData eventdata)
-        {
-            // BuildMapFile(chosenMapName + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
-            NotificationManager.Notify($"Saved map.", "Map Maker", null, null);
-        }
-    }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(SettingsUtils), nameof(SettingsUtils.UseCompactUI), MethodType.Getter)]
-    private static void SettingsUtils_UseCompactUI_Get(ref bool __result)
-    {
-        // PlayerPrefsUtils.GetBoolValue("useCompactUI", false)
-        // __result = IsMapMaker();
-        __result = true;
-    }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateHorizontalList))]
-    private static void GameSetupScreen_CreateHorizontalList(GameSetupScreen __instance, string headerKey, Il2CppStringArray items, Il2CppSystem.Action<int> indexChangedCallback, int selectedIndex, UnityEngine.RectTransform parent, int enabledItemCount, Il2CppSystem.Action onClickDisabledItemCallback)
-    {
-        Console.Write(headerKey);
-    }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
-    public static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
-    {
-        if (!__result && IsMapMaker())
-            __result = true;
-    }
-
-    private static void AddUiButtonToArray(UIRoundButton prefabButton, HudScreen hudScreen, UIButtonBase.ButtonAction action, UIRoundButton[] buttonArray, string? description = null)
-    {
-        UIRoundButton button = UnityEngine.GameObject.Instantiate(prefabButton, prefabButton.transform);
-        button.transform.parent = hudScreen.buttonBar.transform;
-        button.OnClicked += action;
-        List<UIRoundButton> list = buttonArray.ToList();
-        list.Add(button);
-        list.ToArray();
-
-        if(description != null){
-            Transform child = button.gameObject.transform.Find("DescriptionText");
-
-            if (child != null)
+            if (improvementData.HasAbility(EnumCache<ImprovementAbility.Type>.GetType("climatechanger")))
             {
-                Console.Write("Found child: " + child.name);
-                TMPLocalizer localizer = child.gameObject.GetComponent<TMPLocalizer>();
-                localizer.Text = description;
-            }
-            else
-            {
-                Console.Write("Child not found.");
+                tile.climate = chosenClimate;
+                tile.Skin = chosenSkinType;
             }
         }
     }
 
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-    private static void HudScreen_OnMatchStart(HudScreen __instance)
+    internal static int GetTribeClimateFromType(TribeData.Type type, GameLogicData gameLogicData)
     {
-        if (IsMapMaker())
-        {
-            Console.Write("IN MAP MAKERRRRRR");
-            __instance.replayInterface.gameObject.SetActive(true);
-            __instance.replayInterface.SetData(GameManager.GameState);
-            __instance.replayInterface.timeline.gameObject.SetActive(false);
-        }
-        else
-        {
-            Console.Write("NOOOOOOOOOOOT IN MAP MAKERRRRRR");
-        }
+        gameLogicData.TryGetData(type, out TribeData data);
+        return data.climate;
     }
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(ReplayInterface), nameof(ReplayInterface.ShowViewModePopup))]
-    private static bool ReplayInterface_ShowViewModePopup(ReplayInterface __instance)
+    internal static int GetTribeClimateFromSkin(SkinType skinType, GameLogicData gameLogicData)
     {
-        if (__instance.selectViewmodePopup != null && __instance.selectViewmodePopup.IsShowing())
+        List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
+        foreach (TribeData tribeData in tribes)
         {
-            return false;
-        }
-        __instance.selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-        // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-        __instance.selectViewmodePopup.Header = Localization.Get("mapmaker.choose.climate", new Il2CppSystem.Object[] { });
-        __instance.selectViewmodePopup.SetData(GameManager.GameState);
-        __instance.selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-        {
-            new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
-        };
-        void exit(int id, BaseEventData eventData)
-        {
-            __instance.CloseViewModePopup();
-        }
-        __instance.selectViewmodePopup.Show(__instance.viewmodeSelectButton.rectTransform.position);
-        return false;
-    }
-
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(SelectViewmodePopup), nameof(SelectViewmodePopup.SetData))]
-    public static bool SelectViewmodePopup_SetData(SelectViewmodePopup __instance, GameState gameState)
-    {
-        if (IsMapMaker(gameState))
-        {
-            __instance.ClearButtons();
-            __instance.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-            float num = 0f;
-            foreach (int tribe in Enum.GetValues(typeof(TribeData.Type)))
+            if (tribeData.skins.Contains(skinType))
             {
-                TribeData.Type tribeType = (TribeData.Type)tribe;
-                if (gameState.GameLogicData.TryGetData(tribeType, out TribeData tribeData))
-                {
-                    string tribeName = EnumCache<TribeData.Type>.GetName(tribeType);
-                    UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(__instance.buttonPrefab, __instance.gridLayout.transform);
-                    playerButton.id = tribe;
-                    playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-                    playerButton.Outline.gameObject.SetActive(false);
-                    playerButton.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(tribeData.color), 1f);
-                    playerButton.text = tribeName[0].ToString().ToUpper() + tribeName.Substring(1);
-                    playerButton.SetIconColor(Color.white);
-                    playerButton.ButtonEnabled = true;
-                    playerButton.OnClicked = (UIButtonBase.ButtonAction)OnClimateButtonClicked;
-                    void OnClimateButtonClicked(int id, BaseEventData eventData)
-                    {
-                        Console.Write("Clicked i guess");
-                    }
-                    playerButton.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
-                    void TribeSpriteHandle(SpriteHandle spriteHandleCallback)
-                    {
-                        playerButton.SetFaceIcon(spriteHandleCallback.sprite);
-                    }
-                    playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(tribeName));
-                    if (playerButton.Label.PreferedValues.y > num)
-                    {
-                        num = playerButton.Label.PreferedValues.y;
-                    }
-                    __instance.buttons.Add(playerButton);
-                }
+                return tribeData.climate;
             }
-            __instance.gridLayout.spacing = new Vector2(__instance.gridLayout.spacing.x, num + 10f);
-            __instance.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-            __instance.gridBottomSpacer.minHeight = num + 10f;
         }
-        return !IsMapMaker(gameState);
+        return 1;
     }
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(SelectViewmodePopup), nameof(SelectViewmodePopup.OnPlayerButtonClicked))]
-    private static bool SelectViewmodePopup_OnPlayerButtonClicked(SelectViewmodePopup __instance, int id, BaseEventData eventData)
-    {
-        if (IsMapMaker())
-            __instance.SetSelectedButton(id);
-        return !IsMapMaker();
-    }
-
-    public static void BuildMapFile(string name, ushort size, List<TileData> tiles)
+    internal static void BuildMapFile(string name, ushort size, List<TileData> tiles)
     {
         List<MapTile> mapTiles = new();
         foreach (TileData tileData in tiles)

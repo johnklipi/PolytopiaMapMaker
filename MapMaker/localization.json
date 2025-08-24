@@ -82,5 +82,13 @@
     "mapmaker_choose_skin":
     {
         "English": "Choose skin climate"
+    },
+    "gamesettings_generationtype":
+    {
+        "English": "Generation Type"
+    },
+    "gamesettings_maps":
+    {
+        "English": "Available Maps"
     }
 }
