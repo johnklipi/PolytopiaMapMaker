@@ -377,6 +377,11 @@
 			"idx": -1
 		}
 	},
+	"mapSize": {
+		"custom": {
+			"idx": -1
+		}
+	},
 	"improvementAbility": {
 		"climatechanger": {
 			"idx": -1

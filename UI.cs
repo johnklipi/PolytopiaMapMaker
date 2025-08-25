@@ -1,12 +1,18 @@
 using HarmonyLib;
 using Polytopia.Data;
+using PolytopiaBackendBase.Game;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 namespace PolytopiaMapManager
 {
     public static class UI
     {
+        private static GameSetupNameRow? mapSizeInputField = null;
+        internal const float CAMERA_MAXZOOM_CONSTANT = 1000;
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SelectViewmodePopup), nameof(SelectViewmodePopup.OnPlayerButtonClicked))]
         private static bool SelectViewmodePopup_OnPlayerButtonClicked(SelectViewmodePopup __instance, int id, BaseEventData eventData)
@@ -100,9 +106,9 @@ namespace PolytopiaMapManager
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateDifficultyList))]
-        private static bool GameSetupScreen_CreateHorizontalList(GameSetupScreen __instance)
+        private static bool GameSetupScreen_CreateDifficultyList(GameSetupScreen __instance)
         {
-            if (!ContainsHorizontalList(__instance, "gamesettings.generationtype"))
+            if (!ContainsHorizontalList(__instance, "gamesettings.generationtype") && GameManager.PreliminaryGameSettings.BaseGameMode == GameMode.Custom)
             {
                 List<string> types = new();
                 foreach (MapMaker.MapGenerationType value in Enum.GetValues(typeof(MapMaker.MapGenerationType)))
@@ -113,7 +119,108 @@ namespace PolytopiaMapManager
             }
             return true;
         }
-    
+
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(CameraController), nameof(CameraController.Awake))]
+		private static void CameraController_Awake()
+		{
+			CameraController.Instance.maxZoom = CAMERA_MAXZOOM_CONSTANT;
+		}
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateHorizontalList))]
+        private static bool GameSetupScreen_CreateHorizontalList(GameSetupScreen __instance, string headerKey, ref Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStringArray items, Il2CppSystem.Action<int> indexChangedCallback, int selectedIndex , RectTransform parent, int enabledItemCount, Il2CppSystem.Action onClickDisabledItemCallback)
+        {
+            Console.Write(headerKey);
+            if (headerKey == "gamesettings.size")
+            {
+                List<string> list = items.ToList();
+                list.Add("gamesettings.size.custom");
+                items = list.ToArray();
+            }
+            return true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.OnMapSizeChanged))]
+        private static void MapSizeExtensions_OnMapSizeChanged(GameSetupScreen __instance, int index)
+        {
+            Console.Write("MapSizeExtensions_OnMapSizeChanged");
+            Console.Write(index);
+            Console.Write(Enum.GetValues<MapSize>().Length);
+            int num = index;
+            if (GameManager.PreliminaryGameSettings.GameType != GameType.Matchmaking)
+            {
+                num++;
+            }
+            if (num >= Enum.GetValues<MapSize>().Length)
+            {
+                GameManager.PreliminaryGameSettings.MapSize = 50;
+                __instance.UpdateOpponentList();
+                GameManager.PreliminaryGameSettings.SaveToDisk();
+                __instance.RefreshInfo();
+                mapSizeInputField = CreateNameInputRowFix(__instance, "gamesettings.mapsize", "", null, new Action<string>(OnMapSizeChangedInput) );
+            }
+            else if (mapSizeInputField != null)
+            {
+                __instance.rows.Remove(mapSizeInputField.gameObject);
+                GameObject.Destroy(mapSizeInputField.gameObject);
+                mapSizeInputField = null;
+            }
+        }
+
+        private static void OnMapSizeChangedInput(string value)
+        {
+            if (mapSizeInputField != null)
+            {
+                string numericalInput = new string(value.Where(char.IsDigit).ToArray());
+                if (int.TryParse(numericalInput, out int mapSize))
+                {
+                    if (mapSize > MapMaker.MAX_MAP_SIZE)
+                    {
+                        numericalInput = numericalInput.Remove(numericalInput.Length - 1);
+                        NotificationManager.Notify("Your MapSize should not exceed 100x100.");
+                    }
+                    else
+                    {
+                        GameManager.PreliminaryGameSettings.MapSize = mapSize;
+                    }
+                }
+                mapSizeInputField.inputField.text = numericalInput;
+            }
+        }
+
+        private static void OnMapSizeFinishedInput(string value)
+        {
+            Console.Write(value);
+            if (int.TryParse(value, out int result))
+            {
+                GameManager.PreliminaryGameSettings.MapSize = result;
+            }
+        }
+
+        private static Action<string> _dynamicValueChangedAction;
+        private static GameSetupNameRow CreateNameInputRowFix(GameSetupScreen __instance, string headerKey, string name, Action<string>? inputDoneCallback = null, Action<string>? onValueChangedAction = null, RectTransform parent = null)
+        {
+            GameSetupNameRow gameSetupNameRow = GameObject.Instantiate<GameSetupNameRow>(__instance.nameRowPrefab, parent ?? __instance.VerticalListRectTr);
+            gameSetupNameRow.HeaderKey = headerKey;
+            gameSetupNameRow.inputDoneCallback = inputDoneCallback;
+            gameSetupNameRow.Name = name;
+            __instance.totalHeight += gameSetupNameRow.rectTransform.sizeDelta.y;
+            __instance.rows.Add(gameSetupNameRow.gameObject);
+            if (onValueChangedAction != null)
+            {
+                _dynamicValueChangedAction = onValueChangedAction;
+                gameSetupNameRow.inputField.onValueChanged.AddListener((UnityEngine.Events.UnityAction<string>)OnValueChangedHandler);
+            }
+            return gameSetupNameRow;
+        }
+        private static void OnValueChangedHandler(string newValue)
+        {
+            if (_dynamicValueChangedAction != null)
+                _dynamicValueChangedAction(newValue);
+        }
+
         private static void OnMapGenTypeChanged(int index)
         {
             Console.Write("OnMapGenTypeChanged: " + index);
@@ -138,6 +245,7 @@ namespace PolytopiaMapManager
 
                 }
                 gameSetupScreen.CreateHorizontalList("gamesettings.maps", visualMaps.ToArray(), new Action<int>(OnCustomMapChanged));
+                GameManager.PreliminaryGameSettings.mapPreset = EnumCache<MapPreset>.GetType("custom");
             }
             else
             {
@@ -354,23 +462,26 @@ namespace PolytopiaMapManager
         [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
         internal static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
         {
-            UI.AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MenuButtonOnClicked, __instance.buttonArray, "Menu");
-            // AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)SaveMapButtonOnClicked, __instance.buttonArray, "Save Map");
-            __instance.nextTurnButton.gameObject.SetActive(false);
-            __instance.techTreeButton.gameObject.SetActive(false);
-            __instance.statsButton.gameObject.SetActive(false);
-            __instance.Show();
-            __instance.Update();
-            // __instance.buttonBar.statsButton.BlockButton = true;
-            void MenuButtonOnClicked(int id, BaseEventData eventdata)
+            if (MapMaker.IsMapMaker())
             {
-                CustomPopup.Show();
-            }
+                UI.AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MenuButtonOnClicked, __instance.buttonArray, "Menu");
+                // AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)SaveMapButtonOnClicked, __instance.buttonArray, "Save Map");
+                __instance.nextTurnButton.gameObject.SetActive(false);
+                __instance.techTreeButton.gameObject.SetActive(false);
+                __instance.statsButton.gameObject.SetActive(false);
+                __instance.Show();
+                __instance.Update();
+                // __instance.buttonBar.statsButton.BlockButton = true;
+                void MenuButtonOnClicked(int id, BaseEventData eventdata)
+                {
+                    CustomPopup.Show();
+                }
 
-            void SaveMapButtonOnClicked(int id, BaseEventData eventdata)
-            {
-                // BuildMapFile(chosenMapName + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
-                NotificationManager.Notify($"Saved map.", "Map Maker", null, null);
+                void SaveMapButtonOnClicked(int id, BaseEventData eventdata)
+                {
+                    // BuildMapFile(chosenMapName + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
+                    NotificationManager.Notify($"Saved map.", "Map Maker", null, null);
+                }
             }
         }
     }

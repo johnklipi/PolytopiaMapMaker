@@ -5,6 +5,7 @@ using System.Text.Json;
 using HarmonyLib;
 using Polytopia.Data;
 using UnityEngine.EventSystems;
+using UnityEngine;
 
 namespace PolytopiaMapManager;
 
@@ -47,6 +48,7 @@ public static class MapMaker
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
     internal static int chosenClimate = 1;
     internal static SkinType chosenSkinType = SkinType.Default;
+    internal const uint MAX_MAP_SIZE = 100;
 
     public static void Load(ManualLogSource logger)
     {
@@ -56,6 +58,7 @@ public static class MapMaker
         Harmony.CreateAndPatchAll(typeof(UI));
         PolyMod.Loader.AddGameModeButton("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, PolyMod.Registry.GetSprite("mapmaker"));
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
+        PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
         Directory.CreateDirectory(MAPS_PATH);
 
         void OnMapMaker(int id, BaseEventData eventData = null)
@@ -98,6 +101,21 @@ public static class MapMaker
                 GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
             }
             MapRenderer.Current.Refresh(false);
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+    private static void GameManager_Update()
+    {
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Tab))
+        {
+            for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
+            {
+                GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
+            }
+            MapRenderer.Current.Refresh(false);
+            NotificationManager.Notify("Map has been revealed.");
         }
     }
 
@@ -145,6 +163,7 @@ public static class MapMaker
             MapTile mapTile = new MapTile
             {
                 climate = tileData.climate,
+                skinType = tileData.Skin,
                 terrain = tileData.terrain,
             };
             if (tileData.resource != null)
