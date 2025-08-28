@@ -90,5 +90,21 @@
     "gamesettings_maps":
     {
         "English": "Available Maps"
+    },
+    "gamesettings_nomaps":
+    {
+        "English": "No maps has been found!"
+    },
+    "gamesettings_mapwidth":
+    {
+        "English": "Map Width (max is {0})"
+    },
+    "gamesettings_size_custom":
+    {
+        "English": "Custom"
+    },
+    "gamesettings_map_custom":
+    {
+        "English": "Custom"
     }
 }

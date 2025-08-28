@@ -23,16 +23,16 @@ public static class MapMaker
         public Polytopia.Data.TerrainData.Type terrain = Polytopia.Data.TerrainData.Type.Field;
         [JsonInclude]
         [JsonConverter(typeof(EnumCacheJson<Polytopia.Data.ResourceData.Type>))]
-        public ResourceData.Type? resource;
+        public Polytopia.Data.ResourceData.Type? resource;
         [JsonInclude]
         [JsonConverter(typeof(EnumCacheJson<Polytopia.Data.ImprovementData.Type>))]
-        public ImprovementData.Type? improvement;
+        public Polytopia.Data.ImprovementData.Type? improvement;
         [JsonInclude]
         [JsonConverter(typeof(EnumCacheListJson<TileData.EffectType>))]
         public List<TileData.EffectType> effects = new();
     }
 
-    public class MapData
+    public class MapInfo
     {
         [JsonInclude]
         public ushort size;
@@ -44,11 +44,13 @@ public static class MapMaker
         Default,
         Custom
     }
+    internal const uint MAX_MAP_SIZE = 100;
     internal static ManualLogSource? modLogger;
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
     internal static int chosenClimate = 1;
     internal static SkinType chosenSkinType = SkinType.Default;
-    internal const uint MAX_MAP_SIZE = 100;
+    internal static List<MapInfo> maps = new();
+    internal static MapInfo? chosenMap;
 
     public static void Load(ManualLogSource logger)
     {
@@ -63,6 +65,7 @@ public static class MapMaker
 
         void OnMapMaker(int id, BaseEventData eventData = null)
         {
+            UI.inMapMaker = true;
             GameSettings gameSettings = new GameSettings();
             gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
             gameSettings.SetUnlockedTribes(GameManager.GetPurchaseManager().GetUnlockedTribes(false));
@@ -101,6 +104,7 @@ public static class MapMaker
                 GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
             }
             MapRenderer.Current.Refresh(false);
+            UI.inMapMaker = false;
         }
     }
 
@@ -155,6 +159,90 @@ public static class MapMaker
         return 1;
     }
 
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
+    private static bool MapGenerator_Generate(ref GameState state, ref MapGeneratorSettings settings)
+    {
+        PreGenerate(ref state, ref settings);
+        return true;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
+    private static void MapGenerator_Generate_Postfix(ref GameState state, ref MapGeneratorSettings settings)
+    {
+        PostGenerate(ref state);
+    }
+
+    private static void PreGenerate(ref GameState state, ref MapGeneratorSettings settings)
+    {
+        if (chosenMap == null)
+        {
+            return;
+        }
+        //ushort size = (ushort)_map["size"];
+        //state.Map = new(size, size);
+        //settings.mapType = PolytopiaBackendBase.Game.MapPreset.Dryland;
+    }
+
+    private static void PostGenerate(ref GameState state)
+    {
+        if (chosenMap == null)
+        {
+            return;
+        }
+        MapData originalMap = state.Map;
+        Console.Write("PostGenerate");
+        Console.Write(chosenMap.map.Count);
+        Console.Write(originalMap.Tiles.Count);
+        for (int i = 0; i < chosenMap.map.Count; i++)
+        {
+            TileData tile = originalMap.tiles[i];
+            MapTile customTile = chosenMap.map[i];
+
+            tile.climate = (customTile.climate < 0 || customTile.climate > 16) ? 1 : customTile.climate;
+            tile.Skin = customTile.skinType;
+            tile.terrain = customTile.terrain;
+            tile.resource = customTile.resource == null ? null : new() { type = (Polytopia.Data.ResourceData.Type)customTile.resource };
+            tile.effects = new Il2CppSystem.Collections.Generic.List<TileData.EffectType>();
+
+            if (tile.rulingCityCoordinates != tile.coordinates)
+            {
+                tile.improvement = customTile.improvement == null ? null : new() { type = (Polytopia.Data.ImprovementData.Type)customTile.improvement };
+                if (tile.improvement != null && tile.improvement.type == ImprovementData.Type.City)
+                {
+                    tile.improvement = new ImprovementState
+                    {
+                        type = ImprovementData.Type.City,
+                        founded = 0,
+                        level = 1,
+                        borderSize = 1,
+                        production = 1
+                    };
+                }
+            }
+            originalMap.tiles[i] = tile;
+        }
+
+        chosenMap = null;
+    }
+
+    internal static MapInfo? LoadMapFile(string name)
+    {
+        string filePath = Path.Combine(MAPS_PATH, $"{name}.json");
+
+        if (!File.Exists(filePath))
+        {
+            return null;
+        }
+
+        string json = File.ReadAllText(filePath);
+
+        MapInfo? mapInfo = JsonSerializer.Deserialize<MapInfo>(json);
+
+        return mapInfo;
+    }
+
     internal static void BuildMapFile(string name, ushort size, List<TileData> tiles)
     {
         List<MapTile> mapTiles = new();
@@ -180,14 +268,14 @@ public static class MapMaker
             }
             mapTiles.Add(mapTile);
         }
-        MapData mapData = new MapData
+        MapInfo mapInfo = new MapInfo
         {
             size = size,
             map = mapTiles
         };
         File.WriteAllTextAsync(
             Path.Combine(MAPS_PATH, name),
-            JsonSerializer.Serialize(mapData, new JsonSerializerOptions { WriteIndented = true })
+            JsonSerializer.Serialize(mapInfo, new JsonSerializerOptions { WriteIndented = true })
         );
     }
     public static bool IsMapMaker(GameMode gameMode)
@@ -197,6 +285,8 @@ public static class MapMaker
 
     public static bool IsMapMaker(GameState gameState)
     {
+        Console.Write("IsMapMaker");
+        Console.Write(gameState.Settings.BaseGameMode);
         return IsMapMaker(gameState.Settings.BaseGameMode);
     }
 
@@ -206,6 +296,7 @@ public static class MapMaker
         {
             return IsMapMaker(GameManager.GameState);
         }
+        Console.Write("Level is not loaded!!!");
         return false;
     }
 }
