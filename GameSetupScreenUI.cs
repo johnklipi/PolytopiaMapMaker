@@ -9,14 +9,15 @@ using UnityEngine.EventSystems;
 
 namespace PolytopiaMapManager
 {
-    public static class UI
+    public static class GameSetupScreenUI
     {
+        // This code is fucking stupid. Half of it is due to me not being able to move hl's.
+        // Like, even if i change the position in the rows array, it gets placed in the end and i tbh do not get it.
+        // Im too lazy to manually change ts but i have to when i will refactor this shitcode
         internal const float CAMERA_MAXZOOM_CONSTANT = 1000;
-        internal const int SKINS_NUM = 1000;
         private static GameSetupNameRow? mapSizeInputField = null;
         private static Action<string>? dynamicValueChangedAction;
         private static List<string> visualMaps = new();
-        internal static bool inMapMaker = false; //my stuff was failing due to level not being loaded, so uhhhh, thats a problem though
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(SettingsUtils), nameof(SettingsUtils.UseCompactUI), MethodType.Getter)]
@@ -34,19 +35,6 @@ namespace PolytopiaMapManager
 			CameraController.Instance.maxZoom = CAMERA_MAXZOOM_CONSTANT;
 		}
 
-        #region ClimateChanger
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SelectViewmodePopup), nameof(SelectViewmodePopup.OnPlayerButtonClicked))]
-        private static bool SelectViewmodePopup_OnPlayerButtonClicked(SelectViewmodePopup __instance, int id, BaseEventData eventData)
-        {
-            if (MapMaker.IsMapMaker())
-                __instance.SetSelectedButton(id);
-            return !MapMaker.IsMapMaker();
-        }
-
-        #endregion
-
         #region Horizontal Lists
 
         [HarmonyPrefix]
@@ -57,7 +45,7 @@ namespace PolytopiaMapManager
             if (headerKey == "gamesettings.size")
             {
                 List<string> list = items.ToList();
-                list.Add("gamesettings.size.custom");
+                list.Add(Localization.Get("gamesettings.size.custom", new Il2CppSystem.Object[]{}));
                 items = list.ToArray();
             }
             return true;
@@ -335,7 +323,7 @@ namespace PolytopiaMapManager
         private static void OnCustomMapChanged(int index)
         {
             MapMaker.modLogger!.LogInfo("OnCustomMapChanged: " + index);
-            MapMaker.chosenMap = MapMaker.LoadMapFile(UI.visualMaps[index]);
+            MapMaker.chosenMap = MapMaker.LoadMapFile(GameSetupScreenUI.visualMaps[index]);
             Console.Write(visualMaps[index]);
             Console.Write(MapMaker.chosenMap != null);
             if (MapMaker.chosenMap != null)
@@ -343,7 +331,9 @@ namespace PolytopiaMapManager
                 GameManager.PreliminaryGameSettings.MapSize = MapMaker.chosenMap.size;
                 GameManager.PreliminaryGameSettings.mapPreset = EnumCache<MapPreset>.GetType("custom");
                 GameSetupScreen gameSetupScreen = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen>();
+                gameSetupScreen.UpdateOpponentList(); // i dont understand though? why doesnt it adapt properly but instead changes map size
                 gameSetupScreen.RefreshInfo();
+                Console.Write((int)Math.Pow((double)(GameManager.PreliminaryGameSettings.MapSize / 3), 2.0) - 1);
             }
         }
 
@@ -351,7 +341,7 @@ namespace PolytopiaMapManager
         [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
         internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
         {
-            if (!__result && MapMaker.IsMapMaker())
+            if (!__result && MapMaker.inMapMaker)
                 __result = true;
         }
 
@@ -381,184 +371,35 @@ namespace PolytopiaMapManager
             }
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-        private static void HudScreen_OnMatchStart(HudScreen __instance)
-        {
-            if (MapMaker.IsMapMaker())
-            {
-                MapMaker.modLogger!.LogInfo("IN MAP MAKERRRRRR");
-                __instance.replayInterface.gameObject.SetActive(true);
-                __instance.replayInterface.SetData(GameManager.GameState);
-                __instance.replayInterface.timeline.gameObject.SetActive(false);
-            }
-            else
-            {
-                MapMaker.modLogger!.LogInfo("NOOOOOOOOOOOT IN MAP MAKERRRRRR");
-            }
-        }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(ReplayInterface), nameof(ReplayInterface.ShowViewModePopup))]
-        private static bool ReplayInterface_ShowViewModePopup(ReplayInterface __instance)
-        {
-            if (MapMaker.IsMapMaker())
-            {
-                if (__instance.selectViewmodePopup != null && __instance.selectViewmodePopup.IsShowing())
-                {
-                    return false;
-                }
-                __instance.selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                __instance.selectViewmodePopup.Header = Localization.Get("mapmaker.choose.climate", new Il2CppSystem.Object[] { });
-                __instance.selectViewmodePopup.SetData(GameManager.GameState);
-                __instance.selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
-                };
-                void exit(int id, BaseEventData eventData)
-                {
-                    __instance.CloseViewModePopup();
-                }
-                __instance.selectViewmodePopup.Show(__instance.viewmodeSelectButton.rectTransform.position);
-            }
-            return !MapMaker.IsMapMaker();
-        }
+        // [HarmonyPostfix]
+        // [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
+        // internal static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
+        // {
+        //     Console.Write("HudButtonBar_Init");
+        //     Console.Write(MapMaker.IsMapMaker());
+        //     Console.Write(inMapMaker);
+        //     if (inMapMaker && !(GameManager.Instance.isLevelLoaded && GameManager.GameState.Settings.BaseGameMode == GameMode.Custom))
+        //     {
+        //         UI.AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MenuButtonOnClicked, __instance.buttonArray, "Menu");
+        //         AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)SaveMapButtonOnClicked, __instance.buttonArray, "Save Map");
+        //         __instance.nextTurnButton.gameObject.SetActive(false);
+        //         __instance.techTreeButton.gameObject.SetActive(false);
+        //         __instance.statsButton.gameObject.SetActive(false);
+        //         __instance.Show();
+        //         __instance.Update();
+        //         // __instance.buttonBar.statsButton.BlockButton = true;
+        //         void MenuButtonOnClicked(int id, BaseEventData eventdata)
+        //         {
+        //             CustomPopup.Show();
+        //         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(ReplayInterface), nameof(ReplayInterface.UpdateButton))]
-        internal static bool ReplayInterface_UpdateButton(ReplayInterface __instance)
-        {
-            if (MapMaker.IsMapMaker())
-            {
-                __instance.viewmodeSelectButton.rectTransform.sizeDelta = new Vector2(75f, 75f);
-                __instance.viewmodeSelectButton.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
-                GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                void TribeSpriteHandle(SpriteHandle spriteHandleCallback)
-                {
-                    __instance.viewmodeSelectButton.SetFaceIcon(spriteHandleCallback.sprite);
-                }
-                TribeData.Type tribeType = gameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate);
-                string spriteName;
-                if (MapMaker.chosenSkinType == SkinType.Default)
-                {
-                    spriteName = EnumCache<TribeData.Type>.GetName(tribeType);
-                }
-                else
-                {
-                    spriteName = EnumCache<SkinType>.GetName(MapMaker.chosenSkinType);
-                }
-                __instance.viewmodeSelectButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
-                __instance.viewmodeSelectButton.Outline.gameObject.SetActive(false);
-                __instance.viewmodeSelectButton.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, MapMaker.chosenSkinType)), 1f);
-            }
-            return !MapMaker.IsMapMaker();
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SelectViewmodePopup), nameof(SelectViewmodePopup.SetData))]
-        internal static bool SelectViewmodePopup_SetData(SelectViewmodePopup __instance, GameState gameState)
-        {
-            if (MapMaker.IsMapMaker(gameState))
-            {
-                __instance.ClearButtons();
-                __instance.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                GameLogicData gameLogicData = gameState.GameLogicData;
-                List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
-                foreach (TribeData tribeData in tribes)
-                {
-                    TribeData.Type tribeType = tribeData.type;
-                    string tribeName = Localization.Get(tribeData.displayName);
-                    CreatePlayerButton(__instance, gameState, tribeName, EnumCache<TribeData.Type>.GetName(tribeType), (int)tribeType, gameLogicData.GetTribeColor(tribeData.type, SkinType.Default), ref num);
-                    foreach (SkinType skinType in tribeData.skins)
-                    {
-                        // gameLogicData.TryGetData(skinType, out SkinData data);
-                        string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
-                        CreatePlayerButton(__instance, gameState, skinHeader, EnumCache<SkinType>.GetName(skinType), (int)skinType + 1000, gameLogicData.GetTribeColor(tribeData.type, skinType), ref num);
-                    }
-                }
-                __instance.gridLayout.spacing = new Vector2(__instance.gridLayout.spacing.x, num + 10f);
-                __instance.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                __instance.gridBottomSpacer.minHeight = num + 10f;
-            }
-            return !MapMaker.IsMapMaker(gameState);
-        }
-
-        internal static void CreatePlayerButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, int color, ref float num)
-        {
-            UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-            playerButton.id = (int)type;
-            playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-            playerButton.Outline.gameObject.SetActive(false);
-            playerButton.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(color), 1f);
-            playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-            playerButton.SetIconColor(Color.white);
-            playerButton.ButtonEnabled = true;
-            playerButton.OnClicked = (UIButtonBase.ButtonAction)OnClimateButtonClicked;
-            void OnClimateButtonClicked(int id, BaseEventData eventData)
-            {
-                int type = id;
-                MapMaker.modLogger!.LogInfo("Clicked i guess");
-                MapMaker.modLogger!.LogInfo(id);
-                if (type >= SKINS_NUM)
-                {
-                    type -= SKINS_NUM;
-                    SkinType skinType = (SkinType)type;
-                    MapMaker.chosenClimate = MapMaker.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
-                    MapMaker.chosenSkinType = skinType;
-                }
-                else
-                {
-                    MapMaker.chosenClimate = MapMaker.GetTribeClimateFromType((TribeData.Type)type, gameState.GameLogicData);
-                    MapMaker.chosenSkinType = SkinType.Default;
-                }
-                HudScreen hudScreen = UIManager.Instance.GetScreen(UIConstants.Screens.Hud).Cast<HudScreen>();
-                hudScreen.replayInterface.UpdateButton();
-                // viewmodePopup.Hide();
-            }
-            playerButton.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
-            void TribeSpriteHandle(SpriteHandle spriteHandleCallback)
-            {
-                playerButton.SetFaceIcon(spriteHandleCallback.sprite);
-            }
-            playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
-            if (playerButton.Label.PreferedValues.y > num)
-            {
-                num = playerButton.Label.PreferedValues.y;
-            }
-            viewmodePopup.buttons.Add(playerButton);
-        }
-
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
-        internal static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
-        {
-            Console.Write("HudButtonBar_Init");
-            Console.Write(MapMaker.IsMapMaker());
-            Console.Write(inMapMaker);
-            if (inMapMaker && !(GameManager.Instance.isLevelLoaded && GameManager.GameState.Settings.BaseGameMode == GameMode.Custom))
-            {
-                UI.AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MenuButtonOnClicked, __instance.buttonArray, "Menu");
-                AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)SaveMapButtonOnClicked, __instance.buttonArray, "Save Map");
-                __instance.nextTurnButton.gameObject.SetActive(false);
-                __instance.techTreeButton.gameObject.SetActive(false);
-                __instance.statsButton.gameObject.SetActive(false);
-                __instance.Show();
-                __instance.Update();
-                // __instance.buttonBar.statsButton.BlockButton = true;
-                void MenuButtonOnClicked(int id, BaseEventData eventdata)
-                {
-                    CustomPopup.Show();
-                }
-
-                void SaveMapButtonOnClicked(int id, BaseEventData eventdata)
-                {
-                    MapMaker.BuildMapFile("map" + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
-                    NotificationManager.Notify($"Saved map.", "Map Maker", null, null);
-                }
-            }
-        }
+        //         void SaveMapButtonOnClicked(int id, BaseEventData eventdata)
+        //         {
+        //             MapMaker.BuildMapFile("map" + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
+        //             NotificationManager.Notify($"Saved map.", "Map Maker", null, null);
+        //         }
+        //     }
+        // }
     }
 }

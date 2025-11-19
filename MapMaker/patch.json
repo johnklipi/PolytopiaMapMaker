@@ -178,11 +178,6 @@
 		},
 		"spawngame": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "forest"
-				}
-			],
 			"creates": [
 				{
 					"resource": "game"
@@ -198,11 +193,6 @@
 		},
 		"spawncrop": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "field"
-				}
-			],
 			"creates": [
 				{
 					"resource": "crop"
@@ -218,14 +208,6 @@
 		},
 		"spawnfish": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "water"
-				},
-				{
-					"terrain": "ocean"
-				}
-			],
 			"creates": [
 				{
 					"resource": "fish"
@@ -241,14 +223,6 @@
 		},
 		"spawnwhale": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "water"
-				},
-				{
-					"terrain": "ocean"
-				}
-			],
 			"creates": [
 				{
 					"resource": "whale"
@@ -264,11 +238,6 @@
 		},
 		"spawnmetal": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "mountain"
-				}
-			],
 			"creates": [
 				{
 					"resource": "metal"
@@ -284,11 +253,6 @@
 		},
 		"spawnfruit": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "field"
-				}
-			],
 			"creates": [
 				{
 					"resource": "fruit"
@@ -304,14 +268,6 @@
 		},
 		"spawnspores": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "field"
-				},
-				{
-					"terrain": "forest"
-				}
-			],
 			"creates": [
 				{
 					"resource": "spores"
@@ -327,14 +283,6 @@
 		},
 		"spawnstarfish": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "water"
-				},
-				{
-					"terrain": "ocean"
-				}
-			],
 			"creates": [
 				{
 					"resource": "starfish"
@@ -350,14 +298,6 @@
 		},
 		"spawnaquacrop": {
 			"cost": 0,
-			"terrainRequirements": [
-				{
-					"terrain": "water"
-				},
-				{
-					"terrain": "ocean"
-				}
-			],
 			"creates": [
 				{
 					"resource": "aquacrop"
