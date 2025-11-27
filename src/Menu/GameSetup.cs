@@ -7,9 +7,9 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-namespace PolytopiaMapManager
+namespace PolytopiaMapManager.Menu
 {
-    public static class GameSetupScreenUI
+    public static class GameSetup
     {
         // This code is fucking stupid. Half of it is due to me not being able to move hl's.
         // Like, even if i change the position in the rows array, it gets placed in the end and i tbh do not get it.
@@ -323,7 +323,7 @@ namespace PolytopiaMapManager
         private static void OnCustomMapChanged(int index)
         {
             MapMaker.modLogger!.LogInfo("OnCustomMapChanged: " + index);
-            MapMaker.chosenMap = MapMaker.LoadMapFile(GameSetupScreenUI.visualMaps[index]);
+            MapMaker.chosenMap = MapMaker.LoadMapFile(visualMaps[index]);
             Console.Write(visualMaps[index]);
             Console.Write(MapMaker.chosenMap != null);
             if (MapMaker.chosenMap != null)

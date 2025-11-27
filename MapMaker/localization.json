@@ -83,6 +83,10 @@
     {
         "English": "Choose skin climate"
     },
+    "mapmaker_choose_terrain":
+    {
+        "English": "Choose terrain"
+    },
     "gamesettings_generationtype":
     {
         "English": "Generation Type"

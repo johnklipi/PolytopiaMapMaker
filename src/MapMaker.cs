@@ -50,18 +50,23 @@ public static class MapMaker
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
     internal static int chosenClimate = 1;
     internal static SkinType chosenSkinType = SkinType.Default;
+    internal static Polytopia.Data.TerrainData.Type chosenTerrain = Polytopia.Data.TerrainData.Type.Field;
+    internal static Polytopia.Data.ResourceData.Type chosenResource = Polytopia.Data.ResourceData.Type.None;
+    internal static ImprovementData.Type chosenBuilding = ImprovementData.Type.None;
     internal static List<MapInfo> maps = new();
     internal static MapInfo? chosenMap;
     internal static bool inMapMaker = false; //my stuff was failing due to level not being loaded, so uhhhh, thats a problem though
-    internal static ImprovementData.Type lastType = ImprovementData.Type.None;
+
+    internal static ImprovementData.Type chosenType = ImprovementData.Type.None;
 
     public static void Load(ManualLogSource logger)
     {
         inMapMaker = true;
         modLogger = logger;
         Harmony.CreateAndPatchAll(typeof(MapMaker));
-        Harmony.CreateAndPatchAll(typeof(GameSetupScreenUI));
-        Harmony.CreateAndPatchAll(typeof(ClimatePickerUI));
+        Harmony.CreateAndPatchAll(typeof(Menu.GameSetup));
+        Harmony.CreateAndPatchAll(typeof(Level.ClimatePicker));
+        Harmony.CreateAndPatchAll(typeof(Level.TerrainPicker));
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
@@ -118,7 +123,7 @@ public static class MapMaker
         {
             if (GameManager.Instance.isLevelLoaded)
             {
-                GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, lastType, __instance.data.coordinates), out string error);
+                GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenType, __instance.data.coordinates), out string error);
             }
         }
     }
@@ -152,7 +157,7 @@ public static class MapMaker
         PlayerState playerState;
         if (tile != null && gameState.GameLogicData.TryGetData(__instance.Type, out improvementData) && gameState.TryGetPlayer(__instance.PlayerId, out playerState))
         {
-            lastType = __instance.Type;
+            chosenType = __instance.Type;
             if (improvementData.HasAbility(EnumCache<ImprovementAbility.Type>.GetType("climatechanger")))
             {
                 tile.climate = chosenClimate;
@@ -335,25 +340,4 @@ public static class MapMaker
             JsonSerializer.Serialize(mapInfo, new JsonSerializerOptions { WriteIndented = true })
         );
     }
-    // public static bool IsMapMaker(GameMode gameMode)
-    // {
-    //     return gameMode == EnumCache<GameMode>.GetType("mapmaker");
-    // }
-
-    // public static bool IsMapMaker(GameState gameState)
-    // {
-    //     Console.Write("IsMapMaker");
-    //     Console.Write(gameState.Settings.BaseGameMode);
-    //     return IsMapMaker(gameState.Settings.BaseGameMode);
-    // }
-
-    // public static bool IsMapMaker()
-    // {
-    //     if (GameManager.Instance.isLevelLoaded)
-    //     {
-    //         return IsMapMaker(GameManager.GameState);
-    //     }
-    //     Console.Write("Level is not loaded!!!");
-    //     return false;
-    // }
 }
