@@ -7,6 +7,7 @@ using Polytopia.Data;
 using UnityEngine.EventSystems;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
+using PolytopiaMapManager.Level;
 
 namespace PolytopiaMapManager;
 
@@ -50,14 +51,13 @@ public static class MapMaker
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
     internal static int chosenClimate = 1;
     internal static SkinType chosenSkinType = SkinType.Default;
-    internal static Polytopia.Data.TerrainData.Type chosenTerrain = Polytopia.Data.TerrainData.Type.Field;
+    internal static Polytopia.Data.TerrainData.Type chosenTerrain = Polytopia.Data.TerrainData.Type.None;
     internal static Polytopia.Data.ResourceData.Type chosenResource = Polytopia.Data.ResourceData.Type.None;
+    internal static TileData.EffectType chosenTileEffect = TileData.EffectType.None;
     internal static ImprovementData.Type chosenBuilding = ImprovementData.Type.None;
     internal static List<MapInfo> maps = new();
     internal static MapInfo? chosenMap;
     internal static bool inMapMaker = false; //my stuff was failing due to level not being loaded, so uhhhh, thats a problem though
-
-    internal static ImprovementData.Type chosenType = ImprovementData.Type.None;
 
     public static void Load(ManualLogSource logger)
     {
@@ -67,6 +67,9 @@ public static class MapMaker
         Harmony.CreateAndPatchAll(typeof(Menu.GameSetup));
         Harmony.CreateAndPatchAll(typeof(Level.ClimatePicker));
         Harmony.CreateAndPatchAll(typeof(Level.TerrainPicker));
+        Harmony.CreateAndPatchAll(typeof(Level.ResourcePicker));
+        Harmony.CreateAndPatchAll(typeof(Level.ImprovementPicker));
+        Harmony.CreateAndPatchAll(typeof(Level.TileEffectPicker));
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
@@ -123,7 +126,40 @@ public static class MapMaker
         {
             if (GameManager.Instance.isLevelLoaded)
             {
-                GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenType, __instance.data.coordinates), out string error);
+                if(chosenResource == ResourceData.Type.None)
+                {
+                    __instance.data.resource = null;
+                    ActionUtils.CheckSurroundingArea(GameManager.GameState, GameManager.LocalPlayer.Id, __instance.data);
+                }
+                else
+                {
+                    __instance.data.resource = new ResourceState
+                    {
+                        type = chosenResource
+                    };
+                    ActionUtils.CheckSurroundingArea(GameManager.GameState, GameManager.LocalPlayer.Id, __instance.data);
+                }
+                if(chosenTerrain != Polytopia.Data.TerrainData.Type.None)
+                    __instance.data.terrain = chosenTerrain;
+                if(!__instance.data.HasEffect(chosenTileEffect))
+                {
+                    __instance.data.AddEffect(chosenTileEffect);
+                }
+                else
+                {
+                    __instance.data.RemoveEffect(chosenTileEffect);
+                }
+                if(chosenBuilding == ImprovementData.Type.None)
+                {
+                    GameManager.Client.ActionManager.ExecuteCommand(new DestroyCommand(GameManager.LocalPlayer.Id, __instance.data.coordinates), out string error);
+                }
+                else
+                {
+                    GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenBuilding, __instance.data.coordinates), out string error);
+                }
+                __instance.data.climate = chosenClimate;
+                __instance.data.Skin = chosenSkinType;
+                __instance.Render();
             }
         }
     }
@@ -157,7 +193,6 @@ public static class MapMaker
         PlayerState playerState;
         if (tile != null && gameState.GameLogicData.TryGetData(__instance.Type, out improvementData) && gameState.TryGetPlayer(__instance.PlayerId, out playerState))
         {
-            chosenType = __instance.Type;
             if (improvementData.HasAbility(EnumCache<ImprovementAbility.Type>.GetType("climatechanger")))
             {
                 tile.climate = chosenClimate;

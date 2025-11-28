@@ -19,15 +19,6 @@ namespace PolytopiaMapManager.Menu
         private static Action<string>? dynamicValueChangedAction;
         private static List<string> visualMaps = new();
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(SettingsUtils), nameof(SettingsUtils.UseCompactUI), MethodType.Getter)]
-        private static void SettingsUtils_UseCompactUI_Get(ref bool __result)
-        {
-            // PlayerPrefsUtils.GetBoolValue("useCompactUI", false)
-            // __result = IsMapMaker();
-            __result = true;
-        }
-
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(CameraController), nameof(CameraController.Awake))]
 		private static void CameraController_Awake()

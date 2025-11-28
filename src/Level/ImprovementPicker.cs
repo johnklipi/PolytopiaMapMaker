@@ -7,14 +7,15 @@ using DG.Tweening;
 
 namespace PolytopiaMapManager.Level
 {
-    internal static class TerrainPicker
+    internal static class ImprovementPicker
     {
-        internal static List<Polytopia.Data.TerrainData.Type> excludedTerrains = new()
+        internal static List<Polytopia.Data.ImprovementData.Type> allowedImprovements = new()
         {
-            Polytopia.Data.TerrainData.Type.Wetland,
-            Polytopia.Data.TerrainData.Type.Mangrove
+            Polytopia.Data.ImprovementData.Type.None,
+            Polytopia.Data.ImprovementData.Type.City,
+            Polytopia.Data.ImprovementData.Type.Ruin
         };
-        internal static UIRoundButton? terrainButton = null;
+        internal static UIRoundButton? improvementButton = null;
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
@@ -22,30 +23,30 @@ namespace PolytopiaMapManager.Level
         {
             if (MapMaker.inMapMaker)
             {
-                terrainButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                terrainButton.transform.position = terrainButton.transform.position + new Vector3(180, 0, 0);
-                terrainButton.gameObject.SetActive(true);
-                terrainButton.OnClicked = (UIButtonBase.ButtonAction)ShowTerrainPopup;
-                terrainButton.text = string.Empty;
-                UpdateTerrainButton(terrainButton);
+                improvementButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
+                improvementButton.transform.position = improvementButton.transform.position + new Vector3(360, 0, 0);
+                improvementButton.gameObject.SetActive(true);
+                improvementButton.OnClicked = (UIButtonBase.ButtonAction)ShowImprovementPopup;
+                improvementButton.text = string.Empty;
+                UpdateImprovementButton(improvementButton);
 
-                void ShowTerrainPopup(int id, BaseEventData eventData)
+                void ShowImprovementPopup(int id, BaseEventData eventData)
                 {
                     SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
                     // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.terrain", new Il2CppSystem.Object[] { });
+                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.improvement", new Il2CppSystem.Object[] { });
                     GameState gameState = GameManager.GameState;
                     // Set Data
                     selectViewmodePopup.ClearButtons();
                     selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
                     float num = 0f;
-                    foreach (Polytopia.Data.TerrainData terrainData in gameState.GameLogicData.AllTerrainData.Values)
+                    foreach (Polytopia.Data.ImprovementData improvementData in gameState.GameLogicData.AllImprovementData.Values)
                     {
-                        Polytopia.Data.TerrainData.Type terrainType = terrainData.type;
-                        if(excludedTerrains.Contains(terrainType))
+                        Polytopia.Data.ImprovementData.Type improvementType = improvementData.type;
+                        if(!allowedImprovements.Contains(improvementType))
                             continue;
-                        string terrainName = Localization.Get(terrainType.GetDisplayName());
-                        CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
+                        string improvementName = Localization.Get(improvementType.GetDisplayName());
+                        CreateImprovementChoiceButton(selectViewmodePopup, gameState, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
                     }
                     selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
                     selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
@@ -61,26 +62,26 @@ namespace PolytopiaMapManager.Level
                     {
                         selectViewmodePopup.Hide();
                     }
-                    selectViewmodePopup.Show(terrainButton!.rectTransform.position);
+                    selectViewmodePopup.Show(improvementButton!.rectTransform.position);
                 }
             }
         }
 
-        internal static void UpdateTerrainButton(UIRoundButton button)
+        internal static void UpdateImprovementButton(UIRoundButton button)
         {
             if (MapMaker.inMapMaker)
             {
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
                 SpriteAtlasManager manager = GameManager.GetSpriteAtlasManager();
                 GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(SpriteData.TerrainToString(MapMaker.chosenTerrain), gameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate), MapMaker.chosenSkinType, false);
+                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(SpriteData.ImprovementToString(MapMaker.chosenBuilding), gameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate), MapMaker.chosenSkinType, false);
                 button.icon.sprite = lookupResult.sprite;
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 1f);
             }
         }
 
-        internal static void CreateTerrainChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
+        internal static void CreateImprovementChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
         {
             UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
             playerButton.id = (int)type;
@@ -90,14 +91,14 @@ namespace PolytopiaMapManager.Level
             playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
             playerButton.SetIconColor(Color.white);
             playerButton.ButtonEnabled = true;
-            playerButton.OnClicked = (UIButtonBase.ButtonAction)OnTerrainButtonClicked;
-            void OnTerrainButtonClicked(int id, BaseEventData eventData)
+            playerButton.OnClicked = (UIButtonBase.ButtonAction)OnImprovementButtonClicked;
+            void OnImprovementButtonClicked(int id, BaseEventData eventData)
             {
                 int type = id;
                 MapMaker.modLogger!.LogInfo("Clicked i guess");
                 MapMaker.modLogger!.LogInfo(id);
-                MapMaker.chosenTerrain = (Polytopia.Data.TerrainData.Type)type;
-                UpdateTerrainButton(terrainButton!);
+                MapMaker.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
+                UpdateImprovementButton(improvementButton!);
                 // viewmodePopup.Hide();
             }
             SpriteAtlasManager manager = GameManager.GetSpriteAtlasManager();
