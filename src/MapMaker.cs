@@ -13,6 +13,9 @@ namespace PolytopiaMapManager;
 
 public static class MapMaker
 {
+
+    public static string MapName = "Untitled Map";
+
     public class MapTile
     {
         [JsonInclude]
@@ -118,6 +121,26 @@ public static class MapMaker
         }
     }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+        public static void MapRename()
+        {
+            if(Input.GetKeyDown(KeyCode.W) && Input.GetKey(KeyCode.LeftControl)){
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Rename Map";
+            popup.Description = "Naming your map is an exciting step! Press enter if done, don't forget to save.";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
+            };
+            void exit(int id, BaseEventData eventData)
+            {
+                CustomInput.RemoveInputFromPopup(popup);
+            }
+            CustomInput.AddInputToPopup(popup);
+            }
+        }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(Tile), nameof(Tile.OnHoverStart))]
     private static void Tile_OnHoverStart(Tile __instance)
@@ -179,7 +202,7 @@ public static class MapMaker
         }
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
         {
-            MapMaker.BuildMapFile("map" + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
+            MapMaker.BuildMapFile(MapName + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
             NotificationManager.Notify("Map has been saved.");
         }
     }
