@@ -44,7 +44,7 @@ namespace PolytopiaMapManager.Level
                         Polytopia.Data.ImprovementData.Type improvementType = improvementData.type;
                         if(!allowedImprovements.Contains(improvementType))
                             continue;
-                        string improvementName = Localization.Get(improvementType.GetDisplayName());
+                        string improvementName = Localization.Get(improvementData.displayName);
                         CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
                     }
                     selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);

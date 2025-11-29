@@ -123,6 +123,10 @@ namespace PolytopiaMapManager.Level
                     MapMaker.chosenSkinType = SkinType.Default;
                 }
                 UpdateClimateButton(climateButton!);
+                ImprovementPicker.UpdateImprovementButton(ImprovementPicker.improvementButton!);
+                ResourcePicker.UpdateResourceButton(ResourcePicker.resourceButton!);
+                TerrainPicker.UpdateTerrainButton(TerrainPicker.terrainButton!);
+                TileEffectPicker.UpdateTileEffectButton(TileEffectPicker.tileEffectButton!);
                 // viewmodePopup.Hide();
             }
             playerButton.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);

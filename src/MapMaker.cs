@@ -8,6 +8,8 @@ using UnityEngine.EventSystems;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
 using PolytopiaMapManager.Level;
+using TMPro;
+using UnityEngine.UI;
 
 namespace PolytopiaMapManager;
 
@@ -269,6 +271,70 @@ public static class MapMaker
         if (chosenMap == null)
         {
             return;
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
+    internal static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
+    {
+        if (inMapMaker)
+        {
+            __instance.nextTurnButton.gameObject.SetActive(false);
+            __instance.techTreeButton.gameObject.SetActive(false);
+            __instance.statsButton.gameObject.SetActive(false);
+            __instance.Show();
+            __instance.Update();
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(ResourceBar), nameof(ResourceBar.OnEnable))]
+    internal static void OnEnable(ResourceBar __instance)
+    {
+        Transform? topRowContainer = null;
+        for (int i = 0; i < __instance.transform.childCount; i++)
+        {
+            Transform resourceBarChild = __instance.transform.GetChild(i);
+            if (resourceBarChild.gameObject.name == "Top Row Container")
+            {
+                topRowContainer = resourceBarChild;
+            }
+        }
+        Transform? topRow = null;
+        if (topRowContainer != null)
+        {
+            for (int i = 0; i < topRowContainer.childCount; i++)
+            {
+                Transform topRowContainerChild = topRowContainer.GetChild(i);
+                if (topRowContainerChild.gameObject.name == "Top Row")
+                {
+                    topRow = topRowContainerChild;
+                }
+            }
+        }
+        if (topRow != null)
+        {
+            for (int i = 0; i < topRow.childCount; i++)
+            {
+                Transform topRowChild = topRow.GetChild(i);
+                topRowChild.gameObject.SetActive(false);
+            }
+
+            // HudScreen hudScreen = UIManager.Instance.GetScreen(UIConstants.Screens.Hud).Cast<HudScreen>();
+            // TextMeshProUGUI text = GameObject.Instantiate(hudScreen.interactionBar.header, topRow);
+            // text.name = "MapName";
+
+            // RectTransform rect = text.GetComponent<RectTransform>();
+            // rect.anchoredPosition = new Vector2(265, 40);
+            // rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
+            // rect.anchorMax = Vector2.zero;
+            // rect.anchorMin = Vector2.zero;
+
+            // text.fontSize = 18;
+            // text.alignment = TextAlignmentOptions.BottomLeft;
+
+            // text.GetComponent<TMPLocalizer>().Text = MapMaker.MapName;
         }
     }
 

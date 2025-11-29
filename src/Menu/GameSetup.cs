@@ -361,36 +361,5 @@ namespace PolytopiaMapManager.Menu
                 }
             }
         }
-
-
-        // [HarmonyPostfix]
-        // [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
-        // internal static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
-        // {
-        //     Console.Write("HudButtonBar_Init");
-        //     Console.Write(MapMaker.IsMapMaker());
-        //     Console.Write(inMapMaker);
-        //     if (inMapMaker && !(GameManager.Instance.isLevelLoaded && GameManager.GameState.Settings.BaseGameMode == GameMode.Custom))
-        //     {
-        //         UI.AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)MenuButtonOnClicked, __instance.buttonArray, "Menu");
-        //         AddUiButtonToArray(__instance.menuButton, __instance.hudScreen, (UIButtonBase.ButtonAction)SaveMapButtonOnClicked, __instance.buttonArray, "Save Map");
-        //         __instance.nextTurnButton.gameObject.SetActive(false);
-        //         __instance.techTreeButton.gameObject.SetActive(false);
-        //         __instance.statsButton.gameObject.SetActive(false);
-        //         __instance.Show();
-        //         __instance.Update();
-        //         // __instance.buttonBar.statsButton.BlockButton = true;
-        //         void MenuButtonOnClicked(int id, BaseEventData eventdata)
-        //         {
-        //             CustomPopup.Show();
-        //         }
-
-        //         void SaveMapButtonOnClicked(int id, BaseEventData eventdata)
-        //         {
-        //             MapMaker.BuildMapFile("map" + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
-        //             NotificationManager.Notify($"Saved map.", "Map Maker", null, null);
-        //         }
-        //     }
-        // }
     }
 }
