@@ -32,7 +32,7 @@ namespace PolytopiaMapManager.Menu
         [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateHorizontalList))]
         private static bool GameSetupScreen_CreateHorizontalList(GameSetupScreen __instance, string headerKey, ref Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStringArray items, Il2CppSystem.Action<int> indexChangedCallback, int selectedIndex , RectTransform parent, int enabledItemCount, Il2CppSystem.Action onClickDisabledItemCallback)
         {
-            MapMaker.modLogger!.LogInfo(headerKey);
+            Main.modLogger!.LogInfo(headerKey);
             if (headerKey == "gamesettings.size")
             {
                 List<string> list = items.ToList();
@@ -65,7 +65,7 @@ namespace PolytopiaMapManager.Menu
 
         internal static bool ContainsHorizontalList(GameSetupScreen __instance, string headerKey)
         {
-            MapMaker.modLogger!.LogInfo("DestroyHorizontalList: " + headerKey);
+            Main.modLogger!.LogInfo("DestroyHorizontalList: " + headerKey);
             foreach (GameObject item in __instance.rows)
             {
                 if (item.TryGetComponent<UIHorizontalList>(out UIHorizontalList list))
@@ -74,19 +74,19 @@ namespace PolytopiaMapManager.Menu
                     {
                         if (list.HeaderKey == headerKey)
                         {
-                            MapMaker.modLogger!.LogInfo("True");
+                            Main.modLogger!.LogInfo("True");
                             return true;
                         }
                     }
                 }
             }
-            MapMaker.modLogger!.LogInfo("False");
+            Main.modLogger!.LogInfo("False");
             return false;
         }
 
         internal static void DestroyHorizontalList(GameSetupScreen __instance, string headerKey)
         {
-            MapMaker.modLogger!.LogInfo("DestroyHorizontalList: " + headerKey);
+            Main.modLogger!.LogInfo("DestroyHorizontalList: " + headerKey);
             GameObject? toDestroy = null;
             foreach (GameObject item in __instance.rows)
             {
@@ -112,7 +112,7 @@ namespace PolytopiaMapManager.Menu
 
         internal static void DestroyStartGameButton(GameSetupScreen __instance)
         {
-            MapMaker.modLogger!.LogInfo("DestroyStartGameButton");
+            Main.modLogger!.LogInfo("DestroyStartGameButton");
             if (__instance.continueButtonRow != null)
             {
                 __instance.rows.Remove(__instance.continueButtonRow.gameObject);
@@ -122,7 +122,7 @@ namespace PolytopiaMapManager.Menu
 
         internal static void ClearSpacers(GameSetupScreen __instance)
         {
-            MapMaker.modLogger!.LogInfo("ClearSpacers");
+            Main.modLogger!.LogInfo("ClearSpacers");
             List<GameObject> toDestroy = new();
             foreach (GameObject item in __instance.rows)
             {
@@ -181,9 +181,9 @@ namespace PolytopiaMapManager.Menu
         [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.OnMapSizeChanged))]
         private static void GameSetupScreen_OnMapSizeChanged(GameSetupScreen __instance, int index)
         {
-            MapMaker.modLogger!.LogInfo("MapSizeExtensions_OnMapSizeChanged");
-            MapMaker.modLogger!.LogInfo(index);
-            MapMaker.modLogger!.LogInfo(Enum.GetValues<MapSize>().Length);
+            Main.modLogger!.LogInfo("MapSizeExtensions_OnMapSizeChanged");
+            Main.modLogger!.LogInfo(index);
+            Main.modLogger!.LogInfo(Enum.GetValues<MapSize>().Length);
             int num = index;
             if (GameManager.PreliminaryGameSettings.GameType != GameType.Matchmaking)
             {
@@ -238,7 +238,7 @@ namespace PolytopiaMapManager.Menu
 
         private static void OnMapSizeFinishedInput(string value)
         {
-            MapMaker.modLogger!.LogInfo(value);
+            Main.modLogger!.LogInfo(value);
             if (int.TryParse(value, out int result))
             {
                 GameManager.PreliminaryGameSettings.MapSize = result;
@@ -268,7 +268,7 @@ namespace PolytopiaMapManager.Menu
 
         private static void OnMapGenTypeChanged(int index)
         {
-            MapMaker.modLogger!.LogInfo("OnMapGenTypeChanged: " + index);
+            Main.modLogger!.LogInfo("OnMapGenTypeChanged: " + index);
             GameSetupScreen gameSetupScreen = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen>();
             bool shouldBlockStart = false;
             ClearSpacers(gameSetupScreen);
@@ -306,14 +306,14 @@ namespace PolytopiaMapManager.Menu
             gameSetupScreen.CreateSpacer(20f, null);
             DestroyStartGameButton(gameSetupScreen);
             gameSetupScreen.CreateStartGameButton();
-            MapMaker.modLogger!.LogInfo("shouldBlockStart: " + shouldBlockStart);
+            Main.modLogger!.LogInfo("shouldBlockStart: " + shouldBlockStart);
             gameSetupScreen.continueButtonRow.buttonComp.ButtonEnabled = !shouldBlockStart; // I do not know why this fucking shit doesnt work
             gameSetupScreen.RefreshInfo();
         }
 
         private static void OnCustomMapChanged(int index)
         {
-            MapMaker.modLogger!.LogInfo("OnCustomMapChanged: " + index);
+            Main.modLogger!.LogInfo("OnCustomMapChanged: " + index);
             MapMaker.chosenMap = MapMaker.LoadMapFile(visualMaps[index]);
             Console.Write(visualMaps[index]);
             Console.Write(MapMaker.chosenMap != null);
@@ -351,13 +351,13 @@ namespace PolytopiaMapManager.Menu
 
                 if (child != null)
                 {
-                    MapMaker.modLogger!.LogInfo("Found child: " + child.name);
+                    Main.modLogger!.LogInfo("Found child: " + child.name);
                     TMPLocalizer localizer = child.gameObject.GetComponent<TMPLocalizer>();
                     localizer.Text = description;
                 }
                 else
                 {
-                    MapMaker.modLogger!.LogInfo("Child not found.");
+                    Main.modLogger!.LogInfo("Child not found.");
                 }
             }
         }

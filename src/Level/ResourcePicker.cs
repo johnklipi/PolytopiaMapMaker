@@ -70,12 +70,11 @@ namespace PolytopiaMapManager.Level
             if (MapMaker.inMapMaker)
             {
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
-                SpriteAtlasManager manager = GameManager.GetSpriteAtlasManager();
-                GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(SpriteData.ResourceToString(MapMaker.chosenResource), gameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate), MapMaker.chosenSkinType, false);
-                button.icon.sprite = lookupResult.sprite;
                 button.Outline.gameObject.SetActive(false);
-                button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 1f);
+                GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
+                button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenResource, SpriteData.ResourceToString(MapMaker.chosenResource), gameLogicData);
+                button.Outline.gameObject.SetActive(false);
+                button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
             }
         }
 
@@ -85,7 +84,7 @@ namespace PolytopiaMapManager.Level
             playerButton.id = (int)type;
             playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
             playerButton.Outline.gameObject.SetActive(false);
-            playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 1f);
+            playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
             playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
             playerButton.SetIconColor(Color.white);
             playerButton.ButtonEnabled = true;
@@ -93,15 +92,16 @@ namespace PolytopiaMapManager.Level
             void OnResourceButtonClicked(int id, BaseEventData eventData)
             {
                 int type = id;
-                MapMaker.modLogger!.LogInfo("Clicked i guess");
-                MapMaker.modLogger!.LogInfo(id);
+                Main.modLogger!.LogInfo("Clicked i guess");
+                Main.modLogger!.LogInfo(id);
                 MapMaker.chosenResource = (Polytopia.Data.ResourceData.Type)type;
                 UpdateResourceButton(resourceButton!);
                 // viewmodePopup.Hide();
             }
-            SpriteAtlasManager manager = GameManager.GetSpriteAtlasManager();
-            SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(spriteName, gameState.GameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate), MapMaker.chosenSkinType, false);
-            playerButton.icon.sprite = lookupResult.sprite;
+
+            GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
+            playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);
+
             if (playerButton.Label.PreferedValues.y > num)
             {
                 num = playerButton.Label.PreferedValues.y;

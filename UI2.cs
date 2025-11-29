@@ -19,7 +19,7 @@ namespace PolytopiaMapManager
 
         public static void OnInputDone(string value, BasicPopup popup)
         {
-            MapMaker.modLogger!.LogMessage(value);
+            Main.modLogger!.LogMessage(value);
             MapMaker.MapName = value;
         }
 

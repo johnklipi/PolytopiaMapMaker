@@ -50,7 +50,6 @@ public static class MapMaker
         Custom
     }
     internal const uint MAX_MAP_SIZE = 100;
-    internal static ManualLogSource? modLogger;
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
     internal static int chosenClimate = 1;
     internal static SkinType chosenSkinType = SkinType.Default;
@@ -62,84 +61,68 @@ public static class MapMaker
     internal static MapInfo? chosenMap;
     internal static bool inMapMaker = false; //my stuff was failing due to level not being loaded, so uhhhh, thats a problem though
 
-    public static void Load(ManualLogSource logger)
+    public static void Init()
     {
         inMapMaker = true;
-        modLogger = logger;
-        Harmony.CreateAndPatchAll(typeof(MapMaker));
-        Harmony.CreateAndPatchAll(typeof(Menu.GameSetup));
-        Harmony.CreateAndPatchAll(typeof(Level.ClimatePicker));
-        Harmony.CreateAndPatchAll(typeof(Level.TerrainPicker));
-        Harmony.CreateAndPatchAll(typeof(Level.ResourcePicker));
-        Harmony.CreateAndPatchAll(typeof(Level.ImprovementPicker));
-        Harmony.CreateAndPatchAll(typeof(Level.TileEffectPicker));
-        PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker);
-        PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
-        PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
-        Directory.CreateDirectory(MAPS_PATH);
+        GameSettings gameSettings = new GameSettings();
+        gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
+        gameSettings.SetUnlockedTribes(GameManager.GetPurchaseManager().GetUnlockedTribes(false));
+        gameSettings.mapPreset = MapPreset.Dryland;
+        gameSettings.MapSize = 16;
+        GameManager.StartingTribe = EnumCache<TribeType>.GetType("mapmaker");
+        GameManager.StartingTribeMix = TribeType.None;
+        GameManager.StartingSkin = SkinType.Default;
+        GameManager.PreliminaryGameSettings = gameSettings;
+        GameManager.PreliminaryGameSettings.OpponentCount = 0;
+        GameManager.PreliminaryGameSettings.Difficulty = BotDifficulty.Frozen;
+        //UIBlackFader.FadeIn(0.5f, DelegateSupport.ConvertDelegate<Il2CppSystem.Action>((Action)CreateGame), "gamesettings.creatingworld", null, null);
 
-        void OnMapMaker(int id, BaseEventData eventData = null)
+        GameManager.Instance.CreateSinglePlayerGame();
+
+        int num = 0;
+        for (int j = 0; j < (int)GameManager.GameState.Map.Height; j++)
         {
-            GameSettings gameSettings = new GameSettings();
-            gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
-            gameSettings.SetUnlockedTribes(GameManager.GetPurchaseManager().GetUnlockedTribes(false));
-            gameSettings.mapPreset = MapPreset.Dryland;
-            gameSettings.MapSize = 16;
-            GameManager.StartingTribe = EnumCache<TribeType>.GetType("mapmaker");
-            GameManager.StartingTribeMix = TribeType.None;
-            GameManager.StartingSkin = SkinType.Default;
-            GameManager.PreliminaryGameSettings = gameSettings;
-            GameManager.PreliminaryGameSettings.OpponentCount = 0;
-            GameManager.PreliminaryGameSettings.Difficulty = BotDifficulty.Frozen;
-            //UIBlackFader.FadeIn(0.5f, DelegateSupport.ConvertDelegate<Il2CppSystem.Action>((Action)CreateGame), "gamesettings.creatingworld", null, null);
-
-            GameManager.Instance.CreateSinglePlayerGame();
-
-            int num = 0;
-            for (int j = 0; j < (int)GameManager.GameState.Map.Height; j++)
+            for (int k = 0; k < (int)GameManager.GameState.Map.Width; k++)
             {
-                for (int k = 0; k < (int)GameManager.GameState.Map.Width; k++)
+                TileData tileData = new TileData
                 {
-                    TileData tileData = new TileData
-                    {
-                        coordinates = new WorldCoordinates(k, j),
-                        terrain = Polytopia.Data.TerrainData.Type.Field,
-                        climate = 0,
-                        altitude = 1,
-                        improvement = null,
-                        resource = null,
-                        owner = 0
-                    };
-                    GameManager.GameState.Map.Tiles[num++] = tileData;
-                }
+                    coordinates = new WorldCoordinates(k, j),
+                    terrain = Polytopia.Data.TerrainData.Type.Field,
+                    climate = 0,
+                    altitude = 1,
+                    improvement = null,
+                    resource = null,
+                    owner = 0
+                };
+                GameManager.GameState.Map.Tiles[num++] = tileData;
             }
-            for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
-            {
-                GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
-            }
-            MapRenderer.Current.Refresh(false);
         }
+        for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
+        {
+            GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
+        }
+        MapRenderer.Current.Refresh(false);
     }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
-        public static void MapRename()
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+    public static void MapRename()
+    {
+        if(Input.GetKeyDown(KeyCode.W) && Input.GetKey(KeyCode.LeftControl)){
+        BasicPopup popup = PopupManager.GetBasicPopup();
+        popup.Header = "Rename Map";
+        popup.Description = "Naming your map is an exciting step! Press enter if done, don't forget to save.";
+        popup.buttonData = new PopupBase.PopupButtonData[]
         {
-            if(Input.GetKeyDown(KeyCode.W) && Input.GetKey(KeyCode.LeftControl)){
-            BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = "Rename Map";
-            popup.Description = "Naming your map is an exciting step! Press enter if done, don't forget to save.";
-            popup.buttonData = new PopupBase.PopupButtonData[]
-            {
-                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
-            };
-            void exit(int id, BaseEventData eventData)
-            {
-                CustomInput.RemoveInputFromPopup(popup);
-            }
-            CustomInput.AddInputToPopup(popup);
-            }
+            new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
+        };
+        void exit(int id, BaseEventData eventData)
+        {
+            CustomInput.RemoveInputFromPopup(popup);
         }
+        CustomInput.AddInputToPopup(popup);
+        }
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(Tile), nameof(Tile.OnHoverStart))]
@@ -164,13 +147,24 @@ public static class MapMaker
                 }
                 if(chosenTerrain != Polytopia.Data.TerrainData.Type.None)
                     __instance.data.terrain = chosenTerrain;
-                if(!__instance.data.HasEffect(chosenTileEffect))
+                // if(!__instance.data.HasEffect(chosenTileEffect))
+                // {
+                //     if(chosenTileEffect != TileData.EffectType.None)
+                //         __instance.data.AddEffect(chosenTileEffect);
+                // }
+                // else
+                // {
+                //     __instance.data.RemoveEffect(chosenTileEffect);
+                // }
+                if(chosenTileEffect != TileData.EffectType.None)
                 {
-                    __instance.data.AddEffect(chosenTileEffect);
+                    if(!__instance.data.HasEffect(chosenTileEffect))
+                        __instance.data.AddEffect(chosenTileEffect);
                 }
                 else
                 {
-                    __instance.data.RemoveEffect(chosenTileEffect);
+                    TileData.EffectType lastEffect = __instance.data.effects.ToArray().ToList().LastOrDefault(TileData.EffectType.None);
+                    __instance.data.RemoveEffect(lastEffect);
                 }
                 if(chosenBuilding == ImprovementData.Type.None)
                 {

@@ -108,8 +108,8 @@ namespace PolytopiaMapManager.Level
             void OnClimateButtonClicked(int id, BaseEventData eventData)
             {
                 int type = id;
-                MapMaker.modLogger!.LogInfo("Clicked i guess");
-                MapMaker.modLogger!.LogInfo(id);
+                Main.modLogger!.LogInfo("Clicked i guess");
+                Main.modLogger!.LogInfo(id);
                 if (type >= SKINS_NUM)
                 {
                     type -= SKINS_NUM;
