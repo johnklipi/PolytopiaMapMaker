@@ -16,8 +16,25 @@ namespace PolytopiaMapManager;
 public static class MapMaker
 {
 
-    public static string MapName = "Untitled Map";
-
+    private static string mapName = "Untitled Map";
+    public static string MapName
+    {
+        set
+        {
+            if(!string.IsNullOrEmpty(value))
+            {
+                mapName = value;
+                if(mapNameContainer != null)
+                {
+                    mapNameContainer.GetComponent<TMPLocalizer>().Text = value;
+                }
+            }
+        }
+        get
+        {
+            return mapName;
+        }
+    }
     public class MapTile
     {
         [JsonInclude]
@@ -62,6 +79,7 @@ public static class MapMaker
     internal static List<MapInfo> maps = new();
     internal static MapInfo? chosenMap;
     internal static bool inMapMaker = false; //my stuff was failing due to level not being loaded, so uhhhh, thats a problem though
+    private static Transform? mapNameContainer;
 
     public static void Init()
     {
@@ -292,50 +310,26 @@ public static class MapMaker
     [HarmonyPatch(typeof(ResourceBar), nameof(ResourceBar.OnEnable))]
     internal static void OnEnable(ResourceBar __instance)
     {
-        Transform? topRowContainer = null;
-        for (int i = 0; i < __instance.transform.childCount; i++)
-        {
-            Transform resourceBarChild = __instance.transform.GetChild(i);
-            if (resourceBarChild.gameObject.name == "Top Row Container")
-            {
-                topRowContainer = resourceBarChild;
-            }
-        }
-        Transform? topRow = null;
-        if (topRowContainer != null)
-        {
-            for (int i = 0; i < topRowContainer.childCount; i++)
-            {
-                Transform topRowContainerChild = topRowContainer.GetChild(i);
-                if (topRowContainerChild.gameObject.name == "Top Row")
-                {
-                    topRow = topRowContainerChild;
-                }
-            }
-        }
-        if (topRow != null)
-        {
-            for (int i = 0; i < topRow.childCount; i++)
-            {
-                Transform topRowChild = topRow.GetChild(i);
-                topRowChild.gameObject.SetActive(false);
-            }
+        __instance.currencyContainer.gameObject.SetActive(false);
+        __instance.scoreContainer.gameObject.SetActive(false);
+        __instance.turnsContainer.gameObject.SetActive(false);
 
-            // HudScreen hudScreen = UIManager.Instance.GetScreen(UIConstants.Screens.Hud).Cast<HudScreen>();
-            // TextMeshProUGUI text = GameObject.Instantiate(hudScreen.interactionBar.header, topRow);
-            // text.name = "MapName";
+        TextMeshProUGUI text = GameObject.Instantiate(__instance.currencyContainer.headerLabel, __instance.turnsContainer.transform.parent);
+        text.name = "MapName";
 
-            // RectTransform rect = text.GetComponent<RectTransform>();
-            // rect.anchoredPosition = new Vector2(265, 40);
-            // rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
-            // rect.anchorMax = Vector2.zero;
-            // rect.anchorMin = Vector2.zero;
+        RectTransform rect = text.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
+        rect.anchoredPosition = new Vector2((Screen.width / 2) - (500 / 8), 40);
+        rect.anchorMax = Vector2.zero;
+        rect.anchorMin = Vector2.zero;
 
-            // text.fontSize = 18;
-            // text.alignment = TextAlignmentOptions.BottomLeft;
+        text.fontSize = 35;
+        text.alignment = TextAlignmentOptions.Center;
 
-            // text.GetComponent<TMPLocalizer>().Text = MapMaker.MapName;
-        }
+        text.GetComponent<TMPLocalizer>().Text = MapMaker.MapName;
+        text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+        mapNameContainer = text.transform;
     }
 
     [HarmonyPostfix]
