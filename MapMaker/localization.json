@@ -110,5 +110,8 @@
     "gamesettings_map_custom":
     {
         "English": "Custom"
+    },
+    "buttons_set":{
+        "English": "SET"
     }
 }

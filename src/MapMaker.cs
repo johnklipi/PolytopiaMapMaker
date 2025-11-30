@@ -17,6 +17,7 @@ public static class MapMaker
 {
 
     private static string mapName = "Untitled Map";
+    public static bool MapSaved = false; // Can also use this to indicate unsaved maps in UI?
     public static string MapName
     {
         set
@@ -84,6 +85,8 @@ public static class MapMaker
     public static void Init()
     {
         inMapMaker = true;
+        MapName = "Untitled Map";
+        MapSaved = false;
         GameSettings gameSettings = new GameSettings();
         gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
         gameSettings.SetUnlockedTribes(GameManager.GetPurchaseManager().GetUnlockedTribes(false));
@@ -131,13 +134,19 @@ public static class MapMaker
         if(Input.GetKeyDown(KeyCode.W) && Input.GetKey(KeyCode.LeftControl)){
         BasicPopup popup = PopupManager.GetBasicPopup();
         popup.Header = "Rename Map";
-        popup.Description = "Naming your map is an exciting step! Press enter if done, don't forget to save.";
+        popup.Description = "Naming your map is an exciting step! Click SET if done, don't forget to save!";
         popup.buttonData = new PopupBase.PopupButtonData[]
         {
-            new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
+            new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null),
+            new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)savename, -1, true, null)
         };
         void exit(int id, BaseEventData eventData)
         {
+            CustomInput.RemoveInputFromPopup(popup);
+        }
+        void savename(int id, BaseEventData eventData){
+            MapName = CustomInput.GetInputFromPopup(popup).text;
+            NotificationManager.Notify("New name is "+MapName, "Map name set!");
             CustomInput.RemoveInputFromPopup(popup);
         }
         CustomInput.AddInputToPopup(popup);
@@ -201,6 +210,14 @@ public static class MapMaker
         }
     }
 
+    public static void SaveMap()
+    {
+        MapMaker.BuildMapFile(MapName + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
+        NotificationManager.Notify(MapName + " has been saved.");
+        MapSaved = true;
+    }
+
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
     private static void GameManager_Update()
@@ -216,8 +233,26 @@ public static class MapMaker
         }
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
         {
-            MapMaker.BuildMapFile(MapName + ".json", (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length), GameManager.GameState.Map.Tiles.ToArray().ToList());
-            NotificationManager.Notify("Map has been saved.");
+            if(!MapSaved && MapName == "Untitled Map"){
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Rename Your Map!";
+            popup.Description = "Before saving, please name your map!";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
+            };
+            void exit(int id, BaseEventData eventData)
+            {
+                MapName = CustomInput.GetInputFromPopup(popup).text;
+                SaveMap();
+                CustomInput.RemoveInputFromPopup(popup);
+            }
+            CustomInput.AddInputToPopup(popup);
+            }
+            else
+            {
+                SaveMap();
+            }
         }
     }
 

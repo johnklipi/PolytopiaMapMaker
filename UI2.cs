@@ -20,7 +20,7 @@ namespace PolytopiaMapManager
         public static void OnInputDone(string value, BasicPopup popup)
         {
             Main.modLogger!.LogMessage(value);
-            MapMaker.MapName = value;
+            //MapMaker.MapName = value;
         }
 
         public static void RemoveInputFromPopup(BasicPopup popup)
