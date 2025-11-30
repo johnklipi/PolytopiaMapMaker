@@ -26,7 +26,7 @@ namespace PolytopiaMapManager.Level
                 if(excludedTerrains.Contains(terrainType))
                     continue;
                 string terrainName = Localization.Get(terrainType.GetDisplayName());
-                CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
+                CreateChoiceButton(selectViewmodePopup, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
             }
         }
 
@@ -43,34 +43,13 @@ namespace PolytopiaMapManager.Level
             }
         }
 
-        internal static void CreateTerrainChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
+        protected override void OnButtonClicked(int id, BaseEventData eventData)
         {
-            UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-            playerButton.id = (int)type;
-            playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-            playerButton.Outline.gameObject.SetActive(false);
-            playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-            playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-            playerButton.SetIconColor(Color.white);
-            playerButton.ButtonEnabled = true;
-            playerButton.OnClicked = (UIButtonBase.ButtonAction)OnTerrainButtonClicked;
-            void OnTerrainButtonClicked(int id, BaseEventData eventData)
-            {
-                int type = id;
-                Main.modLogger!.LogInfo("Clicked i guess");
-                Main.modLogger!.LogInfo(id);
-                MapMaker.chosenTerrain = (Polytopia.Data.TerrainData.Type)type;
-                UpdateButton(terrainButton!);
-            }
-
-            GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-            playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);
-
-            if (playerButton.Label.PreferedValues.y > num)
-            {
-                num = playerButton.Label.PreferedValues.y;
-            }
-            viewmodePopup.buttons.Add(playerButton);
+            int type = id;
+            Main.modLogger!.LogInfo("Clicked i guess");
+            Main.modLogger!.LogInfo(id);
+            MapMaker.chosenTerrain = (Polytopia.Data.TerrainData.Type)type;
+            UpdateButton(terrainButton!);
         }
     }
 }

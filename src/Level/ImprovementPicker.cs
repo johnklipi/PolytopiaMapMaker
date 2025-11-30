@@ -28,7 +28,7 @@ namespace PolytopiaMapManager.Level
                 if(!allowedImprovements.Contains(improvementType))
                     continue;
                 string improvementName = Localization.Get(improvementData.displayName);
-                CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
+                CreateChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
             }
         }
 
@@ -45,31 +45,13 @@ namespace PolytopiaMapManager.Level
             }
         }
 
-        internal static void CreateImprovementChoiceButton(SelectViewmodePopup viewmodePopup, GameLogicData gameLogicData, string header, string spriteName, int type, ref float num)
+        protected override void OnButtonClicked(int id, BaseEventData eventData)
         {
-            UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-            playerButton.id = type;
-            playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-            playerButton.Outline.gameObject.SetActive(false);
-            playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-            playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-            playerButton.SetIconColor(Color.white);
-            playerButton.ButtonEnabled = true;
-            playerButton.OnClicked = (UIButtonBase.ButtonAction)OnImprovementButtonClicked;
-            void OnImprovementButtonClicked(int id, BaseEventData eventData)
-            {
-                int type = id;
-                Main.modLogger!.LogInfo("Clicked i guess");
-                Main.modLogger!.LogInfo(id);
-                MapMaker.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
-                UpdateButton(improvementButton!);
-            }
-            playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);
-            if (playerButton.Label.PreferedValues.y > num)
-            {
-                num = playerButton.Label.PreferedValues.y;
-            }
-            viewmodePopup.buttons.Add(playerButton);
+            int type = id;
+            Main.modLogger!.LogInfo("Clicked i guess");
+            Main.modLogger!.LogInfo(id);
+            MapMaker.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
+            UpdateButton(improvementButton!);
         }
     }
 }

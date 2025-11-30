@@ -26,7 +26,7 @@ namespace PolytopiaMapManager.Level
                     continue;
                 EnumCache<TileData.EffectType>.GetName(tileEffect);
                 string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
-                CreateTileEffectChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
+                CreateChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
             }
         }
 
@@ -43,34 +43,13 @@ namespace PolytopiaMapManager.Level
             }
         }
 
-        internal static void CreateTileEffectChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
+        protected override void OnButtonClicked(int id, BaseEventData eventData)
         {
-            UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-            playerButton.id = (int)type;
-            playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-            playerButton.Outline.gameObject.SetActive(false);
-            playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-            playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-            playerButton.SetIconColor(Color.white);
-            playerButton.ButtonEnabled = true;
-            playerButton.OnClicked = (UIButtonBase.ButtonAction)OnTileEffectButtonClicked;
-            void OnTileEffectButtonClicked(int id, BaseEventData eventData)
-            {
-                int type = id;
-                Main.modLogger!.LogInfo("Clicked i guess");
-                Main.modLogger!.LogInfo(id);
-                MapMaker.chosenTileEffect = (TileData.EffectType)type;
-                UpdateButton(tileEffectButton!);
-            }
-
-            GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-            playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);
-
-            if (playerButton.Label.PreferedValues.y > num)
-            {
-                num = playerButton.Label.PreferedValues.y;
-            }
-            viewmodePopup.buttons.Add(playerButton);
+            int type = id;
+            Main.modLogger!.LogInfo("Clicked i guess");
+            Main.modLogger!.LogInfo(id);
+            MapMaker.chosenTileEffect = (TileData.EffectType)type;
+            UpdateButton(tileEffectButton!);
         }
 
         internal static string TileEffectToString(TileData.EffectType tileEffect)
