@@ -7,7 +7,7 @@ using DG.Tweening;
 
 namespace PolytopiaMapManager.Level
 {
-    internal static class ImprovementPicker
+    internal static class ImprovementPicker : BasePicker
     {
         internal static List<Polytopia.Data.ImprovementData.Type> allowedImprovements = new()
         {
@@ -16,57 +16,23 @@ namespace PolytopiaMapManager.Level
             Polytopia.Data.ImprovementData.Type.Ruin
         };
         internal static UIRoundButton? improvementButton = null;
+        protected override int transformPositionOffsetX = 360;
+        protected override string popupHeaderLocalizationKey = "improvement";
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-        private static void HudScreen_OnMatchStart(HudScreen __instance)
+
+        protected override void CreateButtons(SelectViewmodePopup selectViewmodePopup, GameState gameState, ref float num)
         {
-            if (MapMaker.inMapMaker)
+            foreach (Polytopia.Data.ImprovementData improvementData in gameState.GameLogicData.AllImprovementData.Values)
             {
-                improvementButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                improvementButton.transform.position = improvementButton.transform.position + new Vector3(360, 0, 0);
-                improvementButton.gameObject.SetActive(true);
-                improvementButton.OnClicked = (UIButtonBase.ButtonAction)ShowImprovementPopup;
-                improvementButton.text = string.Empty;
-                UpdateImprovementButton(improvementButton);
-
-                void ShowImprovementPopup(int id, BaseEventData eventData)
-                {
-                    SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.improvement", new Il2CppSystem.Object[] { });
-                    GameState gameState = GameManager.GameState;
-                    // Set Data
-                    selectViewmodePopup.ClearButtons();
-                    selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                    float num = 0f;
-                    foreach (Polytopia.Data.ImprovementData improvementData in gameState.GameLogicData.AllImprovementData.Values)
-                    {
-                        Polytopia.Data.ImprovementData.Type improvementType = improvementData.type;
-                        if(!allowedImprovements.Contains(improvementType))
-                            continue;
-                        string improvementName = Localization.Get(improvementData.displayName);
-                        CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
-                    }
-                    selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                    selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                    selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                    selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                    {
-                        new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                    };
-
-                    void Exit(int id, BaseEventData eventData)
-                    {
-                        selectViewmodePopup.Hide();
-                    }
-                    selectViewmodePopup.Show(improvementButton!.rectTransform.position);
-                }
+                Polytopia.Data.ImprovementData.Type improvementType = improvementData.type;
+                if(!allowedImprovements.Contains(improvementType))
+                    continue;
+                string improvementName = Localization.Get(improvementData.displayName);
+                CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
             }
         }
 
-        internal static void UpdateImprovementButton(UIRoundButton button)
+        protected override void UpdateButton(UIRoundButton button)
         {
             if (MapMaker.inMapMaker)
             {
@@ -75,6 +41,7 @@ namespace PolytopiaMapManager.Level
                 button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenBuilding, SpriteData.ImprovementToString(MapMaker.chosenBuilding), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+                improvementButton = button;
             }
         }
 
@@ -95,7 +62,7 @@ namespace PolytopiaMapManager.Level
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
                 MapMaker.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
-                UpdateImprovementButton(improvementButton!);
+                UpdateButton(improvementButton!);
             }
             playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);
             if (playerButton.Label.PreferedValues.y > num)

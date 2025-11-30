@@ -14,58 +14,22 @@ namespace PolytopiaMapManager.Level
             Polytopia.Data.ResourceData.Type.Whale,
         };
         internal static UIRoundButton? resourceButton = null;
+        protected override int transformPositionOffsetX = 90;
+        protected override string popupHeaderLocalizationKey = "resource";
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-        private static void HudScreen_OnMatchStart(HudScreen __instance)
+        protected override void CreateButtons(SelectViewmodePopup selectViewmodePopup, GameState gameState, ref float num)
         {
-            if (MapMaker.inMapMaker)
+            foreach (Polytopia.Data.ResourceData resourceData in gameState.GameLogicData.AllResourceData.Values)
             {
-                resourceButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                resourceButton.transform.position = resourceButton.transform.position + new Vector3(90, 0, 0);
-                resourceButton.gameObject.SetActive(true);
-                resourceButton.OnClicked = (UIButtonBase.ButtonAction)ShowResourcePopup;
-                resourceButton.text = string.Empty;
-                UpdateResourceButton(resourceButton);
-
-                void ShowResourcePopup(int id, BaseEventData eventData)
-                {
-                    SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                    // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.resource", new Il2CppSystem.Object[] { });
-                    GameState gameState = GameManager.GameState;
-                    // Set Data
-                    selectViewmodePopup.ClearButtons();
-                    selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                    float num = 0f;
-                    foreach (Polytopia.Data.ResourceData resourceData in gameState.GameLogicData.AllResourceData.Values)
-                    {
-                        Polytopia.Data.ResourceData.Type resourceType = resourceData.type;
-                        if(excludedResources.Contains(resourceType))
-                            continue;
-                        string resourceName = Localization.Get(resourceData.displayName);
-                        CreateResourceChoiceButton(selectViewmodePopup, gameState, resourceName, SpriteData.ResourceToString(resourceType), (int)resourceType, ref num);
-                    }
-                    selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                    selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                    selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                    selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                    {
-                        new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                    };
-
-                    void Exit(int id, BaseEventData eventData)
-                    {
-                        selectViewmodePopup.Hide();
-                    }
-                    selectViewmodePopup.Show(resourceButton!.rectTransform.position);
-                }
+                Polytopia.Data.ResourceData.Type resourceType = resourceData.type;
+                if(excludedResources.Contains(resourceType))
+                    continue;
+                string resourceName = Localization.Get(resourceData.displayName);
+                CreateResourceChoiceButton(selectViewmodePopup, gameState, resourceName, SpriteData.ResourceToString(resourceType), (int)resourceType, ref num);
             }
         }
 
-        internal static void UpdateResourceButton(UIRoundButton button)
+        protected override void UpdateButton(UIRoundButton button)
         {
             if (MapMaker.inMapMaker)
             {
@@ -75,6 +39,7 @@ namespace PolytopiaMapManager.Level
                 button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenResource, SpriteData.ResourceToString(MapMaker.chosenResource), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+                resourceButton = button;
             }
         }
 
@@ -95,8 +60,7 @@ namespace PolytopiaMapManager.Level
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
                 MapMaker.chosenResource = (Polytopia.Data.ResourceData.Type)type;
-                UpdateResourceButton(resourceButton!);
-                // viewmodePopup.Hide();
+                UpdateButton(resourceButton!);
             }
 
             GameLogicData gameLogicData = GameManager.GameState.GameLogicData;

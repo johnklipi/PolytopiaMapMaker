@@ -15,58 +15,22 @@ namespace PolytopiaMapManager.Level
             TileData.EffectType.Tentacle,
         };
         internal static UIRoundButton? tileEffectButton = null;
+        protected override int transformPositionOffsetX = 270;
+        protected override string popupHeaderLocalizationKey = "tileeffect";
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-        private static void HudScreen_OnMatchStart(HudScreen __instance)
+        protected override void CreateButtons(SelectViewmodePopup selectViewmodePopup, GameState gameState, ref float num)
         {
-            if (MapMaker.inMapMaker)
+            foreach (TileData.EffectType tileEffect in Enum.GetValues(typeof(TileData.EffectType)))
             {
-                tileEffectButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                tileEffectButton.transform.position = tileEffectButton.transform.position + new Vector3(270, 0, 0);
-                tileEffectButton.gameObject.SetActive(true);
-                tileEffectButton.OnClicked = (UIButtonBase.ButtonAction)ShowTileEffectPopup;
-                tileEffectButton.text = string.Empty;
-                UpdateTileEffectButton(tileEffectButton);
-
-                void ShowTileEffectPopup(int id, BaseEventData eventData)
-                {
-                    SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                    // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.tileeffect", new Il2CppSystem.Object[] { });
-                    GameState gameState = GameManager.GameState;
-                    // Set Data
-                    selectViewmodePopup.ClearButtons();
-                    selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                    float num = 0f;
-                    foreach (TileData.EffectType tileEffect in Enum.GetValues(typeof(TileData.EffectType)))
-                    {
-                        if(excludedTileEffects.Contains(tileEffect))
-                            continue;
-                        EnumCache<TileData.EffectType>.GetName(tileEffect);
-                        string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
-                        CreateTileEffectChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
-                    }
-                    selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                    selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                    selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                    selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                    {
-                        new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                    };
-
-                    void Exit(int id, BaseEventData eventData)
-                    {
-                        selectViewmodePopup.Hide();
-                    }
-                    selectViewmodePopup.Show(tileEffectButton!.rectTransform.position);
-                }
+                if(excludedTileEffects.Contains(tileEffect))
+                    continue;
+                EnumCache<TileData.EffectType>.GetName(tileEffect);
+                string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
+                CreateTileEffectChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
             }
         }
 
-        internal static void UpdateTileEffectButton(UIRoundButton button)
+        protected override void UpdateButton(UIRoundButton button)
         {
             if (MapMaker.inMapMaker)
             {
@@ -75,6 +39,7 @@ namespace PolytopiaMapManager.Level
                 button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenTileEffect, TileEffectToString(MapMaker.chosenTileEffect), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+                tileEffectButton = button;
             }
         }
 
@@ -95,8 +60,7 @@ namespace PolytopiaMapManager.Level
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
                 MapMaker.chosenTileEffect = (TileData.EffectType)type;
-                UpdateTileEffectButton(tileEffectButton!);
-                // viewmodePopup.Hide();
+                UpdateButton(tileEffectButton!);
             }
 
             GameLogicData gameLogicData = GameManager.GameState.GameLogicData;

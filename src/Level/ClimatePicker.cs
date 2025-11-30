@@ -6,68 +6,31 @@ using PolytopiaBackendBase.Common;
 
 namespace PolytopiaMapManager.Level
 {
-    internal static class ClimatePicker
+    internal static class ClimatePicker : BasePicker
     {
         internal const int SKINS_NUM = 1000;
         internal static UIRoundButton? climateButton = null;
+        protected override int transformPositionOffsetX = 0;
+        protected override string popupHeaderLocalizationKey = "climate";
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-        private static void HudScreen_OnMatchStart(HudScreen __instance)
+        protected override void CreateButtons(SelectViewmodePopup selectViewmodePopup, GameState gameState, ref float num)
         {
-            if (MapMaker.inMapMaker)
+            GameLogicData gameLogicData = gameState.GameLogicData;
+            List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
+            foreach (TribeData tribeData in tribes)
             {
-                climateButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                climateButton.gameObject.SetActive(true);
-                climateButton.OnClicked = (UIButtonBase.ButtonAction)ShowClimatePopup;
-                climateButton.text = string.Empty;
-                UpdateClimateButton(climateButton);
-
-                void ShowClimatePopup(int id, BaseEventData eventData)
+                TribeType tribeType = tribeData.type;
+                string tribeName = Localization.Get(tribeData.displayName);
+                CreateClimateChoiceButton(selectViewmodePopup, gameState, tribeName, EnumCache<TribeType>.GetName(tribeType), (int)tribeType, gameLogicData.GetTribeColor(tribeData.type, SkinType.Default), ref num);
+                foreach (SkinType skinType in tribeData.skins)
                 {
-                    SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                    // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.climate", new Il2CppSystem.Object[] { });
-                    GameState gameState = GameManager.GameState;
-
-                    // Set Data
-                    selectViewmodePopup.ClearButtons();
-                    selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                    float num = 0f;
-                    GameLogicData gameLogicData = gameState.GameLogicData;
-                    List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
-                    foreach (TribeData tribeData in tribes)
-                    {
-                        TribeType tribeType = tribeData.type;
-                        string tribeName = Localization.Get(tribeData.displayName);
-                        CreateClimateChoiceButton(selectViewmodePopup, gameState, tribeName, EnumCache<TribeType>.GetName(tribeType), (int)tribeType, gameLogicData.GetTribeColor(tribeData.type, SkinType.Default), ref num);
-                        foreach (SkinType skinType in tribeData.skins)
-                        {
-                            // gameLogicData.TryGetData(skinType, out SkinData data);
-                            string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
-                            CreateClimateChoiceButton(selectViewmodePopup, gameState, skinHeader, EnumCache<SkinType>.GetName(skinType), (int)skinType + 1000, gameLogicData.GetTribeColor(tribeData.type, skinType), ref num);
-                        }
-                    }
-                    selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                    selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                    selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                    selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                    {
-                        new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                    };
-
-                    void Exit(int id, BaseEventData eventData)
-                    {
-                        selectViewmodePopup.Hide();
-                    }
-                    selectViewmodePopup.Show(climateButton!.rectTransform.position);
+                    string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
+                    CreateClimateChoiceButton(selectViewmodePopup, gameState, skinHeader, EnumCache<SkinType>.GetName(skinType), (int)skinType + 1000, gameLogicData.GetTribeColor(tribeData.type, skinType), ref num);
                 }
             }
         }
 
-        internal static void UpdateClimateButton(UIRoundButton button)
+        protected override void UpdateButton(UIRoundButton button)
         {
             if (MapMaker.inMapMaker)
             {
@@ -91,6 +54,7 @@ namespace PolytopiaMapManager.Level
                 button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, MapMaker.chosenSkinType)), 1f);
+                climateButton = button;
             }
         }
 
@@ -122,12 +86,11 @@ namespace PolytopiaMapManager.Level
                     MapMaker.chosenClimate = MapMaker.GetTribeClimateFromType((TribeType)type, gameState.GameLogicData);
                     MapMaker.chosenSkinType = SkinType.Default;
                 }
-                UpdateClimateButton(climateButton!);
-                ImprovementPicker.UpdateImprovementButton(ImprovementPicker.improvementButton!);
-                ResourcePicker.UpdateResourceButton(ResourcePicker.resourceButton!);
-                TerrainPicker.UpdateTerrainButton(TerrainPicker.terrainButton!);
-                TileEffectPicker.UpdateTileEffectButton(TileEffectPicker.tileEffectButton!);
-                // viewmodePopup.Hide();
+                UpdateButton(climateButton!);
+                ImprovementPicker.UpdateButton(ImprovementPicker.improvementButton!);
+                ResourcePicker.UpdateButton(ResourcePicker.resourceButton!);
+                TerrainPicker.UpdateButton(TerrainPicker.terrainButton!);
+                TileEffectPicker.UpdateButton(TileEffectPicker.tileEffectButton!);
             }
             playerButton.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
             void TribeSpriteHandle(SpriteHandle spriteHandleCallback)

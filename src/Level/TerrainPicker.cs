@@ -15,58 +15,22 @@ namespace PolytopiaMapManager.Level
             Polytopia.Data.TerrainData.Type.Mangrove
         };
         internal static UIRoundButton? terrainButton = null;
+        protected override int transformPositionOffsetX = 180;
+        protected override string popupHeaderLocalizationKey = "terrain";
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-        private static void HudScreen_OnMatchStart(HudScreen __instance)
+        protected override void CreateButtons(SelectViewmodePopup selectViewmodePopup, GameState gameState, ref float num)
         {
-            if (MapMaker.inMapMaker)
+            foreach (Polytopia.Data.TerrainData terrainData in gameState.GameLogicData.AllTerrainData.Values)
             {
-                terrainButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                terrainButton.transform.position = terrainButton.transform.position + new Vector3(180, 0, 0);
-                terrainButton.gameObject.SetActive(true);
-                terrainButton.OnClicked = (UIButtonBase.ButtonAction)ShowTerrainPopup;
-                terrainButton.text = string.Empty;
-                UpdateTerrainButton(terrainButton);
-
-                void ShowTerrainPopup(int id, BaseEventData eventData)
-                {
-                    SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                    // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                    selectViewmodePopup.Header = Localization.Get("mapmaker.choose.terrain", new Il2CppSystem.Object[] { });
-                    GameState gameState = GameManager.GameState;
-                    // Set Data
-                    selectViewmodePopup.ClearButtons();
-                    selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                    float num = 0f;
-                    foreach (Polytopia.Data.TerrainData terrainData in gameState.GameLogicData.AllTerrainData.Values)
-                    {
-                        Polytopia.Data.TerrainData.Type terrainType = terrainData.type;
-                        if(excludedTerrains.Contains(terrainType))
-                            continue;
-                        string terrainName = Localization.Get(terrainType.GetDisplayName());
-                        CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
-                    }
-                    selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                    selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                    selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                    selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                    {
-                        new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                    };
-
-                    void Exit(int id, BaseEventData eventData)
-                    {
-                        selectViewmodePopup.Hide();
-                    }
-                    selectViewmodePopup.Show(terrainButton!.rectTransform.position);
-                }
+                Polytopia.Data.TerrainData.Type terrainType = terrainData.type;
+                if(excludedTerrains.Contains(terrainType))
+                    continue;
+                string terrainName = Localization.Get(terrainType.GetDisplayName());
+                CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
             }
         }
 
-        internal static void UpdateTerrainButton(UIRoundButton button)
+        protected override void UpdateButton(UIRoundButton button)
         {
             if (MapMaker.inMapMaker)
             {
@@ -75,6 +39,7 @@ namespace PolytopiaMapManager.Level
                 button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenTerrain, SpriteData.TerrainToString(MapMaker.chosenTerrain), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+                terrainButton = button;
             }
         }
 
@@ -95,8 +60,7 @@ namespace PolytopiaMapManager.Level
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
                 MapMaker.chosenTerrain = (Polytopia.Data.TerrainData.Type)type;
-                UpdateTerrainButton(terrainButton!);
-                // viewmodePopup.Hide();
+                UpdateButton(terrainButton!);
             }
 
             GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
