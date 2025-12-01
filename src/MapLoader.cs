@@ -95,13 +95,19 @@ public static class MapLoader
     }
 
 
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
+    private static void GameManager_ReturnToMenu()
+    {
+        inMapMaker = false;
+    }
+
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CommandUtils), nameof(CommandUtils.GetBuildableImprovements))]
     private static bool CommandUtils_GetBuildableImprovements(ref Il2CppSystem.Collections.Generic.List<CommandBase> __result, GameState gameState, PlayerState player, TileData tile, bool includeUnavailable)
     {
         return true;
     }
-
 
     internal static int GetTribeClimateFromType(TribeType type, GameLogicData gameLogicData)
     {

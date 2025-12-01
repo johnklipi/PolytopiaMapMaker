@@ -35,24 +35,24 @@ public static class MapMaker
     public static void MapRename()
     {
         if(Input.GetKeyDown(KeyCode.W) && Input.GetKey(KeyCode.LeftControl)){
-        BasicPopup popup = PopupManager.GetBasicPopup();
-        popup.Header = "Rename Map";
-        popup.Description = "Naming your map is an exciting step! Click SET if done, don't forget to save!";
-        popup.buttonData = new PopupBase.PopupButtonData[]
-        {
-            new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null),
-            new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)savename, -1, true, null)
-        };
-        void exit(int id, BaseEventData eventData)
-        {
-            Popup.CustomInput.RemoveInputFromPopup(popup);
-        }
-        void savename(int id, BaseEventData eventData){
-            MapName = Popup.CustomInput.GetInputFromPopup(popup).text;
-            NotificationManager.Notify($"New name is {MapName}", "Map name set!");
-            Popup.CustomInput.RemoveInputFromPopup(popup);
-        }
-        Popup.CustomInput.AddInputToPopup(popup);
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Rename Map";
+            popup.Description = "Naming your map is an exciting step! Click SET if done, don't forget to save!";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)SaveName, -1, true, null)
+            };
+            void Exit(int id, BaseEventData eventData)
+            {
+                Popup.CustomInput.RemoveInputFromPopup(popup);
+            }
+            void SaveName(int id, BaseEventData eventData){
+                MapName = Popup.CustomInput.GetInputFromPopup(popup).text;
+                NotificationManager.Notify($"New name is {MapName}", "Map name set!");
+                Popup.CustomInput.RemoveInputFromPopup(popup);
+            }
+            Popup.CustomInput.AddInputToPopup(popup);
         }
     }
 
@@ -79,20 +79,25 @@ public static class MapMaker
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
         {
             if(!MapSaved && MapName == "Untitled Map"){
-            BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = "Rename Your Map!";
-            popup.Description = "Before saving, please name your map!";
-            popup.buttonData = new PopupBase.PopupButtonData[]
-            {
-                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)exit, -1, true, null)
-            };
-            void exit(int id, BaseEventData eventData)
-            {
-                MapName = Popup.CustomInput.GetInputFromPopup(popup).text;
-                SaveMap();
-                Popup.CustomInput.RemoveInputFromPopup(popup);
-            }
-            Popup.CustomInput.AddInputToPopup(popup);
+                BasicPopup popup = PopupManager.GetBasicPopup();
+                popup.Header = "Rename Your Map!";
+                popup.Description = "Before saving, please name your map!";
+                popup.buttonData = new PopupBase.PopupButtonData[]
+                {
+                    new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                    new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Save, -1, true, null)
+                };
+                void Exit(int id, BaseEventData eventData)
+                {
+                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                }
+                void Save(int id, BaseEventData eventData)
+                {
+                    MapName = Popup.CustomInput.GetInputFromPopup(popup).text;
+                    SaveMap();
+                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                }
+                Popup.CustomInput.AddInputToPopup(popup);
             }
             else
             {
@@ -105,25 +110,28 @@ public static class MapMaker
     [HarmonyPatch(typeof(ResourceBar), nameof(ResourceBar.OnEnable))]
     internal static void OnEnable(ResourceBar __instance)
     {
-        __instance.currencyContainer.gameObject.SetActive(false);
-        __instance.scoreContainer.gameObject.SetActive(false);
-        __instance.turnsContainer.gameObject.SetActive(false);
+        if(MapLoader.inMapMaker)
+        {
+            __instance.currencyContainer.gameObject.SetActive(false);
+            __instance.scoreContainer.gameObject.SetActive(false);
+            __instance.turnsContainer.gameObject.SetActive(false);
 
-        TextMeshProUGUI text = GameObject.Instantiate(__instance.currencyContainer.headerLabel, __instance.turnsContainer.transform.parent);
-        text.name = "MapName";
+            TextMeshProUGUI text = GameObject.Instantiate(__instance.currencyContainer.headerLabel, __instance.turnsContainer.transform.parent);
+            text.name = "MapName";
 
-        RectTransform rect = text.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
-        rect.anchoredPosition = new Vector2((Screen.width / 2) - (500 / 8), 40);
-        rect.anchorMax = Vector2.zero;
-        rect.anchorMin = Vector2.zero;
+            RectTransform rect = text.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
+            rect.anchoredPosition = new Vector2((Screen.width / 2) - (500 / 8), 40);
+            rect.anchorMax = Vector2.zero;
+            rect.anchorMin = Vector2.zero;
 
-        text.fontSize = 35;
-        text.alignment = TextAlignmentOptions.Center;
+            text.fontSize = 35;
+            text.alignment = TextAlignmentOptions.Center;
 
-        text.GetComponent<TMPLocalizer>().Text = MapName;
-        text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            text.GetComponent<TMPLocalizer>().Text = MapName;
+            text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-        mapNameContainer = text.transform;
+            mapNameContainer = text.transform;
+        }
     }
 }

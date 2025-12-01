@@ -14,6 +14,12 @@
 		}
 	},
 	"techData": {
+		"basic": {
+			"improvementUnlocks": [
+				"-city",
+				"-ruin"
+			]
+		},
 		"basicmapbuilder": {
 			"improvementUnlocks": [
 				"city",
