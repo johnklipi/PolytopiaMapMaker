@@ -19,7 +19,7 @@ namespace PolytopiaMapManager.Level
         [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
         private static void HudScreen_OnMatchStart(HudScreen __instance)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 resourceButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
                 resourceButton.transform.position = resourceButton.transform.position + new Vector3(90, 0, 0);
@@ -67,12 +67,12 @@ namespace PolytopiaMapManager.Level
 
         internal static void UpdateResourceButton(UIRoundButton button)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
                 button.Outline.gameObject.SetActive(false);
                 GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenResource, SpriteData.ResourceToString(MapMaker.chosenResource), gameLogicData);
+                button.icon.sprite = PickersHelper.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
             }
@@ -94,7 +94,7 @@ namespace PolytopiaMapManager.Level
                 int type = id;
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
-                MapMaker.chosenResource = (Polytopia.Data.ResourceData.Type)type;
+                Brush.chosenResource = (Polytopia.Data.ResourceData.Type)type;
                 UpdateResourceButton(resourceButton!);
                 // viewmodePopup.Hide();
             }

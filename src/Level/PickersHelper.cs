@@ -16,7 +16,7 @@ namespace PolytopiaMapManager.Level
             Sprite sprite;
             if(type != 0)
             {
-                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(spriteName, gameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate), MapMaker.chosenSkinType, false);
+                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(spriteName, gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate), Brush.chosenSkinType, false);
                 sprite = lookupResult.sprite;
             }
             else

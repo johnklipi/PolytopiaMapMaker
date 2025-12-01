@@ -21,7 +21,7 @@ namespace PolytopiaMapManager.Level
         [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
         private static void HudScreen_OnMatchStart(HudScreen __instance)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 improvementButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
                 improvementButton.transform.position = improvementButton.transform.position + new Vector3(360, 0, 0);
@@ -68,11 +68,11 @@ namespace PolytopiaMapManager.Level
 
         internal static void UpdateImprovementButton(UIRoundButton button)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
                 GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenBuilding, SpriteData.ImprovementToString(MapMaker.chosenBuilding), gameLogicData);
+                button.icon.sprite = PickersHelper.GetSprite((int)Brush.chosenBuilding, SpriteData.ImprovementToString(Brush.chosenBuilding), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
             }
@@ -94,7 +94,7 @@ namespace PolytopiaMapManager.Level
                 int type = id;
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
-                MapMaker.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
+                Brush.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
                 UpdateImprovementButton(improvementButton!);
             }
             playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);

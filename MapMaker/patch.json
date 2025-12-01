@@ -17,23 +17,7 @@
 		"basicmapbuilder": {
 			"improvementUnlocks": [
 				"city",
-				"ruin",
-				"createfield",
-				"createforest",
-				"createmountain",
-				"createwater",
-				"createocean",
-				"createice",
-				"createdryland",
-				"createwetland",
-				"spawngame",
-				"spawncrop",
-				"spawnfish",
-				"spawnmetal",
-				"spawnfruit",
-				"spawnspores",
-				"spawnstarfish",
-				"spawnaquacrop"
+				"ruin"
 			],
 			"cost": 0,
 			"idx": -1

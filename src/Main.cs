@@ -12,6 +12,8 @@ namespace PolytopiaMapManager
         {
             modLogger = logger;
             Harmony.CreateAndPatchAll(typeof(MapMaker));
+            Harmony.CreateAndPatchAll(typeof(MapLoader));
+            Harmony.CreateAndPatchAll(typeof(Brush));
             Harmony.CreateAndPatchAll(typeof(Menu.GameSetup));
             Harmony.CreateAndPatchAll(typeof(Level.ClimatePicker));
             Harmony.CreateAndPatchAll(typeof(Level.TerrainPicker));
@@ -21,11 +23,11 @@ namespace PolytopiaMapManager
             PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker);
             PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
             PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
-            Directory.CreateDirectory(MapMaker.MAPS_PATH);
+            Directory.CreateDirectory(MapLoader.MAPS_PATH);
 
             void OnMapMaker(int id, BaseEventData eventData)
             {
-                MapMaker.Init();
+                MapLoader.Init();
             }
         }
 

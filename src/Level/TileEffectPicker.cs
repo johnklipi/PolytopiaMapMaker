@@ -20,7 +20,7 @@ namespace PolytopiaMapManager.Level
         [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
         private static void HudScreen_OnMatchStart(HudScreen __instance)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 tileEffectButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
                 tileEffectButton.transform.position = tileEffectButton.transform.position + new Vector3(270, 0, 0);
@@ -68,11 +68,11 @@ namespace PolytopiaMapManager.Level
 
         internal static void UpdateTileEffectButton(UIRoundButton button)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
                 GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                button.icon.sprite = PickersHelper.GetSprite((int)MapMaker.chosenTileEffect, TileEffectToString(MapMaker.chosenTileEffect), gameLogicData);
+                button.icon.sprite = PickersHelper.GetSprite((int)Brush.chosenTileEffect, TileEffectToString(Brush.chosenTileEffect), gameLogicData);
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
             }
@@ -94,7 +94,7 @@ namespace PolytopiaMapManager.Level
                 int type = id;
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
-                MapMaker.chosenTileEffect = (TileData.EffectType)type;
+                Brush.chosenTileEffect = (TileData.EffectType)type;
                 UpdateTileEffectButton(tileEffectButton!);
                 // viewmodePopup.Hide();
             }

@@ -15,7 +15,7 @@ namespace PolytopiaMapManager.Level
         [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
         private static void HudScreen_OnMatchStart(HudScreen __instance)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 climateButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
                 climateButton.gameObject.SetActive(true);
@@ -69,7 +69,7 @@ namespace PolytopiaMapManager.Level
 
         internal static void UpdateClimateButton(UIRoundButton button)
         {
-            if (MapMaker.inMapMaker)
+            if (MapLoader.inMapMaker)
             {
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
                 button.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
@@ -78,19 +78,19 @@ namespace PolytopiaMapManager.Level
                 {
                     button.SetFaceIcon(spriteHandleCallback.sprite);
                 }
-                TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(MapMaker.chosenClimate);
+                TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate);
                 string spriteName;
-                if (MapMaker.chosenSkinType == SkinType.Default)
+                if (Brush.chosenSkinType == SkinType.Default)
                 {
                     spriteName = EnumCache<TribeType>.GetName(tribeType);
                 }
                 else
                 {
-                    spriteName = EnumCache<SkinType>.GetName(MapMaker.chosenSkinType);
+                    spriteName = EnumCache<SkinType>.GetName(Brush.chosenSkinType);
                 }
                 button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
                 button.Outline.gameObject.SetActive(false);
-                button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, MapMaker.chosenSkinType)), 1f);
+                button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, Brush.chosenSkinType)), 1f);
             }
         }
 
@@ -114,13 +114,13 @@ namespace PolytopiaMapManager.Level
                 {
                     type -= SKINS_NUM;
                     SkinType skinType = (SkinType)type;
-                    MapMaker.chosenClimate = MapMaker.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
-                    MapMaker.chosenSkinType = skinType;
+                    Brush.chosenClimate = MapLoader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
+                    Brush.chosenSkinType = skinType;
                 }
                 else
                 {
-                    MapMaker.chosenClimate = MapMaker.GetTribeClimateFromType((TribeType)type, gameState.GameLogicData);
-                    MapMaker.chosenSkinType = SkinType.Default;
+                    Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)type, gameState.GameLogicData);
+                    Brush.chosenSkinType = SkinType.Default;
                 }
                 UpdateClimateButton(climateButton!);
                 ImprovementPicker.UpdateImprovementButton(ImprovementPicker.improvementButton!);

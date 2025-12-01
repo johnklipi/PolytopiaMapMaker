@@ -11,6 +11,12 @@ namespace PolytopiaMapManager.Menu
 {
     public static class GameSetup
     {
+        public enum MapGenerationType
+        {
+            Default,
+            Custom
+        }
+
         // This code is fucking stupid. Half of it is due to me not being able to move hl's.
         // Like, even if i change the position in the rows array, it gets placed in the end and i tbh do not get it.
         // Im too lazy to manually change ts but i have to when i will refactor this shitcode
@@ -53,7 +59,7 @@ namespace PolytopiaMapManager.Menu
             }
             if (num >= Enum.GetValues<MapSize>().Length && headerKey == "gamesettings.size")
             {
-                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ MapMaker.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
+                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ MapLoader.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
             }
             else if (mapSizeInputField != null)
             {
@@ -145,11 +151,11 @@ namespace PolytopiaMapManager.Menu
             if (!ContainsHorizontalList(__instance, "gamesettings.generationtype") && GameManager.PreliminaryGameSettings.BaseGameMode == GameMode.Custom)
             {
                 List<string> types = new();
-                foreach (MapMaker.MapGenerationType value in Enum.GetValues(typeof(MapMaker.MapGenerationType)))
+                foreach (MapGenerationType value in Enum.GetValues(typeof(MapGenerationType)))
                 {
                     types.Add(value.ToString());
                 }
-                string[] maps = Directory.GetFiles(MapMaker.MAPS_PATH, "*.json");
+                string[] maps = Directory.GetFiles(MapLoader.MAPS_PATH, "*.json");
                 visualMaps = new();
                 int num = 1;
                 if (maps.Length > 0)
@@ -194,7 +200,7 @@ namespace PolytopiaMapManager.Menu
                 GameManager.PreliminaryGameSettings.MapSize = 50;
                 __instance.UpdateOpponentList();
                 GameManager.PreliminaryGameSettings.SaveToDisk();
-                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ MapMaker.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
+                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ MapLoader.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
                 if (__instance.singlePlayerInfoRow != null)
                 {
                     __instance.rows.Remove(__instance.singlePlayerInfoRow.gameObject);
@@ -222,7 +228,7 @@ namespace PolytopiaMapManager.Menu
                 string numericalInput = new string(value.Where(char.IsDigit).ToArray());
                 if (int.TryParse(numericalInput, out int mapSize))
                 {
-                    if (mapSize > MapMaker.MAX_MAP_SIZE)
+                    if (mapSize > MapLoader.MAX_MAP_SIZE)
                     {
                         numericalInput = numericalInput.Remove(numericalInput.Length - 1);
                         NotificationManager.Notify("Your MapSize should not exceed 100x100.");
@@ -314,12 +320,12 @@ namespace PolytopiaMapManager.Menu
         private static void OnCustomMapChanged(int index)
         {
             Main.modLogger!.LogInfo("OnCustomMapChanged: " + index);
-            MapMaker.chosenMap = MapMaker.LoadMapFile(visualMaps[index]);
+            MapLoader.chosenMap = MapLoader.LoadMapFile(visualMaps[index]);
             Console.Write(visualMaps[index]);
-            Console.Write(MapMaker.chosenMap != null);
-            if (MapMaker.chosenMap != null)
+            Console.Write(MapLoader.chosenMap != null);
+            if (MapLoader.chosenMap != null)
             {
-                GameManager.PreliminaryGameSettings.MapSize = MapMaker.chosenMap.size;
+                GameManager.PreliminaryGameSettings.MapSize = MapLoader.chosenMap.size;
                 GameManager.PreliminaryGameSettings.mapPreset = EnumCache<MapPreset>.GetType("custom");
                 GameSetupScreen gameSetupScreen = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen>();
                 gameSetupScreen.UpdateOpponentList(); // i dont understand though? why doesnt it adapt properly but instead changes map size
@@ -332,7 +338,7 @@ namespace PolytopiaMapManager.Menu
         [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
         internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
         {
-            if (!__result && MapMaker.inMapMaker)
+            if (!__result && MapLoader.inMapMaker)
                 __result = true;
         }
 
