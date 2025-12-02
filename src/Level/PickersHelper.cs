@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
 using UnityEngine;
@@ -16,7 +12,12 @@ namespace PolytopiaMapManager.Level
             Sprite sprite;
             if(type != 0)
             {
-                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(spriteName, gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate), Brush.chosenSkinType, false);
+                TribeType tribeType = TribeType.Xinxi;
+                if(Brush.chosenClimate != 0)
+                {
+                    tribeType = gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate);
+                }
+                SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(spriteName, tribeType, Brush.chosenSkinType, false);
                 sprite = lookupResult.sprite;
             }
             else
@@ -24,6 +25,19 @@ namespace PolytopiaMapManager.Level
                 sprite = PolyMod.Registry.GetSprite("none")!;
             }
             return sprite;
+        }
+        public static void SetIcon(UIRoundButton button, Sprite icon, float iconSizeMultiplier = 0.8f)
+        {
+            if(string.IsNullOrEmpty(icon.name))
+                iconSizeMultiplier = 0.8f;
+            button.faceIconSizeMultiplier = iconSizeMultiplier;
+            button.icon.sprite = icon;
+            button.icon.useSpriteMesh = true;
+            button.icon.SetNativeSize();
+            Vector2 sizeDelta = button.icon.rectTransform.sizeDelta;
+            button.icon.rectTransform.sizeDelta = sizeDelta * button.faceIconSizeMultiplier;
+            button.icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            button.icon.gameObject.SetActive(true);
         }
     }
 }

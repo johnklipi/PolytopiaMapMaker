@@ -1,15 +1,9 @@
 using System.Text.Json.Serialization;
-using BepInEx.Logging;
 using PolytopiaBackendBase.Game;
 using System.Text.Json;
 using HarmonyLib;
 using Polytopia.Data;
-using UnityEngine.EventSystems;
-using UnityEngine;
 using PolytopiaBackendBase.Common;
-using PolytopiaMapManager.Level;
-using TMPro;
-using UnityEngine.UI;
 
 namespace PolytopiaMapManager;
 

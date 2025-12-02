@@ -87,6 +87,21 @@
     {
         "English": "Choose terrain"
     },
+    "mapmaker_choose_resource":
+    {
+        "English": "Choose resource"
+    },
+    "mapmaker_choose_tileeffect":
+    {
+        "English": "Choose tile effect"
+    },
+    "mapmaker_choose_improvement":
+    {
+        "English": "Choose improvement"
+    },
+    "mapmaker_creation_failed":{
+        "English": "{0} cannot be created on {1}"
+    },
     "gamesettings_generationtype":
     {
         "English": "Generation Type"
@@ -113,5 +128,20 @@
     },
     "buttons_set":{
         "English": "SET"
+    },
+    "gamelogicdata_retrieve_failed":{
+        "English": "Failed to get data for {0}"
+    },
+    "resource_names_none":{
+        "English": "None"
+    },
+    "terrain_none":{
+        "English": "None"
+    },
+    "tile_effect_none":{
+        "English": "None"
+    },
+    "building_names_none":{
+        "English": "None"
     }
 }

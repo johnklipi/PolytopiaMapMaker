@@ -1,8 +1,5 @@
-using HarmonyLib;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace PolytopiaMapManager.Popup;
 

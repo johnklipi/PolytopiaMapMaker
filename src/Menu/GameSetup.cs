@@ -1,11 +1,7 @@
 using HarmonyLib;
-using Il2CppInterop.Runtime.Runtime;
 using Polytopia.Data;
 using PolytopiaBackendBase.Game;
-using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 
 namespace PolytopiaMapManager.Menu
 {

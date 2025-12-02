@@ -34,6 +34,7 @@ namespace PolytopiaMapManager.Level
                     selectViewmodePopup.ClearButtons();
                     selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
                     float num = 0f;
+                    CreateClimateChoiceButton(selectViewmodePopup, gameState, "none", EnumCache<TribeType>.GetName(TribeType.None), (int)TribeType.None, 16777215, ref num);
                     GameLogicData gameLogicData = gameState.GameLogicData;
                     List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
                     foreach (TribeData tribeData in tribes)
@@ -78,19 +79,27 @@ namespace PolytopiaMapManager.Level
                 {
                     button.SetFaceIcon(spriteHandleCallback.sprite);
                 }
-                TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate);
-                string spriteName;
-                if (Brush.chosenSkinType == SkinType.Default)
+                if(Brush.chosenClimate != 0)
                 {
-                    spriteName = EnumCache<TribeType>.GetName(tribeType);
+                    TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate);
+                    string spriteName;
+                    if (Brush.chosenSkinType == SkinType.Default)
+                    {
+                        spriteName = EnumCache<TribeType>.GetName(tribeType);
+                    }
+                    else
+                    {
+                        spriteName = EnumCache<SkinType>.GetName(Brush.chosenSkinType);
+                    }
+                    button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
+                    button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, Brush.chosenSkinType)), 1f);
                 }
                 else
                 {
-                    spriteName = EnumCache<SkinType>.GetName(Brush.chosenSkinType);
+                    button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(SpriteData.SpecialFaceIcon.neutral));
+                    button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 1f);
                 }
-                button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
                 button.Outline.gameObject.SetActive(false);
-                button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, Brush.chosenSkinType)), 1f);
             }
         }
 
@@ -119,7 +128,14 @@ namespace PolytopiaMapManager.Level
                 }
                 else
                 {
-                    Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)type, gameState.GameLogicData);
+                    if((TribeType)type != TribeType.None)
+                    {
+                        Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)type, gameState.GameLogicData);
+                    }
+                    else
+                    {
+                        Brush.chosenClimate = 0;
+                    }
                     Brush.chosenSkinType = SkinType.Default;
                 }
                 UpdateClimateButton(climateButton!);
@@ -134,7 +150,14 @@ namespace PolytopiaMapManager.Level
             {
                 playerButton.SetFaceIcon(spriteHandleCallback.sprite);
             }
-            playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
+            if((TribeType)type != TribeType.None)
+            {
+                playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
+            }
+            else
+            {
+                playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(SpriteData.SpecialFaceIcon.neutral));
+            }
             if (playerButton.Label.PreferedValues.y > num)
             {
                 num = playerButton.Label.PreferedValues.y;

@@ -7,7 +7,7 @@ namespace PolytopiaMapManager;
 
 public static class Brush
 {
-    internal static int chosenClimate = 1;
+    internal static int chosenClimate = 0;
     internal static SkinType chosenSkinType = SkinType.Default;
     internal static Polytopia.Data.TerrainData.Type chosenTerrain = Polytopia.Data.TerrainData.Type.None;
     internal static Polytopia.Data.ResourceData.Type chosenResource = Polytopia.Data.ResourceData.Type.None;
@@ -42,13 +42,13 @@ public static class Brush
                     }
                     else if(Time.time >= nextAllowedTimeForPopup)
                     {
-                        NotificationManager.Notify($"{data.displayName} cannot be created on {__instance.data.terrain.GetDisplayName()}");
+                        NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
                         nextAllowedTimeForPopup = Time.time + 1f;
                     }
                 }
                 else if(Time.time >= nextAllowedTimeForPopup)
                 {
-                    NotificationManager.Notify($"Failed to get data for Resource {__instance.data.resource}");
+                    NotificationManager.Notify(Localization.Get("gamelogicdata.retrieve.failed", new Il2CppSystem.Object[] { __instance.data.resource}));
                     nextAllowedTimeForPopup = Time.time + 1f;
                 }
                 // if(!__instance.data.HasEffect(chosenTileEffect))
@@ -63,7 +63,32 @@ public static class Brush
                 if(chosenTileEffect != TileData.EffectType.None)
                 {
                     if(!__instance.data.HasEffect(chosenTileEffect))
-                        __instance.data.AddEffect(chosenTileEffect);
+                    {
+                        if(chosenTileEffect == TileData.EffectType.Flooded)
+                        {
+                            if(__instance.data.isFloodable())
+                            {
+                                __instance.data.AddEffect(chosenTileEffect);
+                            }
+                            else if(Time.time >= nextAllowedTimeForPopup)
+                            {
+                                NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                                nextAllowedTimeForPopup = Time.time + 1f;
+                            }
+                        }
+                        else if(chosenTileEffect == TileData.EffectType.Algae)
+                        {
+                            if(__instance.data.IsWater)
+                            {
+                                __instance.data.AddEffect(chosenTileEffect);
+                            }
+                            else if(Time.time >= nextAllowedTimeForPopup)
+                            {
+                                NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                                nextAllowedTimeForPopup = Time.time + 1f;
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -76,10 +101,17 @@ public static class Brush
                 }
                 else
                 {
-                    GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenBuilding, __instance.data.coordinates), out string error);
+                    bool succeded = GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenBuilding, __instance.data.coordinates), out string error);
+                    // if(!succeded && Time.time >= nextAllowedTimeForPopup)
+                    // {
+                    //     NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get(chosenBuilding.GetDisplayName()), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                    // }
                 }
-                __instance.data.climate = chosenClimate;
-                __instance.data.Skin = chosenSkinType;
+                if(chosenClimate != 0)
+                {
+                    __instance.data.climate = chosenClimate;
+                    __instance.data.Skin = chosenSkinType;
+                }
                 __instance.Render();
             }
         }

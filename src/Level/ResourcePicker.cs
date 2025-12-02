@@ -2,8 +2,6 @@ using HarmonyLib;
 using UnityEngine.EventSystems;
 using Polytopia.Data;
 using UnityEngine;
-using PolytopiaBackendBase.Common;
-using DG.Tweening;
 
 namespace PolytopiaMapManager.Level
 {
@@ -72,7 +70,7 @@ namespace PolytopiaMapManager.Level
                 button.rectTransform.sizeDelta = new Vector2(75f, 75f);
                 button.Outline.gameObject.SetActive(false);
                 GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-                button.icon.sprite = PickersHelper.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData);
+                PickersHelper.SetIcon(button, PickersHelper.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData));
                 button.Outline.gameObject.SetActive(false);
                 button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
             }
@@ -100,8 +98,7 @@ namespace PolytopiaMapManager.Level
             }
 
             GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-            playerButton.icon.sprite = PickersHelper.GetSprite(type, spriteName, gameLogicData);
-
+            PickersHelper.SetIcon(playerButton, PickersHelper.GetSprite(type, spriteName, gameLogicData));
             if (playerButton.Label.PreferedValues.y > num)
             {
                 num = playerButton.Label.PreferedValues.y;
