@@ -81,6 +81,17 @@ public static class MapMaker
         }
     }
 
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(PlayerExtensions), nameof(PlayerExtensions.CountCapitals))]
+	public static bool PlayerExtensions_CountCapitals(ref int __result, PlayerState player, GameState gameState)
+	{
+        if(MapLoader.inMapMaker)
+        {
+            __result = 0;
+        }
+		return !MapLoader.inMapMaker;
+	}
+
     internal static void ResizeMap(ref GameState gameState, int size)
     {
         gameState.Settings.MapSize = size;

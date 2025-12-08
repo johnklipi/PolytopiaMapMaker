@@ -144,6 +144,7 @@ public static class MapLoader
     private static void MapGenerator_Generate_Postfix(ref GameState state, ref MapGeneratorSettings settings)
     {
         LoadMapInState(ref state);
+        chosenMap = null;
     }
 
     [HarmonyPostfix]
@@ -170,63 +171,72 @@ public static class MapLoader
         __result = (ushort)(blocksNeeded * 3);
     }
 
-    public static void LoadMapInState(ref GameState state)
+    public static void LoadMapInState(ref GameState gameState)
     {
         if (chosenMap == null)
         {
             return;
         }
-        MapData originalMap = state.Map;
-        for (int i = 0; i < chosenMap.map.Count; i++)
+        WorldCoordinates[] corners = ExploreLightHouseTask.GetCorners(gameState);
+        List<TileData> newTiles = new();
+        for (int y = 0; y < chosenMap.size; y++)
         {
-            TileData tile = originalMap.tiles[i];
-            MapTile customTile = chosenMap.map[i];
-
-            tile.climate = (customTile.climate < 0 || customTile.climate > 16) ? 1 : customTile.climate;
-            tile.Skin = customTile.skinType;
-            tile.terrain = customTile.terrain;
-            tile.resource = customTile.resource == null ? null : new() { type = (Polytopia.Data.ResourceData.Type)customTile.resource };
-            tile.effects = new Il2CppSystem.Collections.Generic.List<TileData.EffectType>();
-            foreach (TileData.EffectType effect in customTile.effects)
+            for (int x = 0; x < chosenMap.size; x++)
             {
-                tile.effects.Add(effect);
-            }
-            if (tile.rulingCityCoordinates != tile.coordinates)
-            {
-                tile.improvement = customTile.improvement == null ? null : new() { type = (Polytopia.Data.ImprovementData.Type)customTile.improvement };
-                if (tile.improvement != null && tile.improvement.type == ImprovementData.Type.City)
+                WorldCoordinates worldCoordinates = new WorldCoordinates(x, y);
+                int index = worldCoordinates.X + worldCoordinates.Y * chosenMap.size;
+                MapTile customTile = chosenMap.map[index];
+                TileData tile = new TileData();
+                tile.coordinates = worldCoordinates;
+                tile.climate = (customTile.climate < 0 || customTile.climate > 16) ? 1 : customTile.climate;
+                tile.Skin = customTile.skinType;
+                tile.terrain = customTile.terrain;
+                tile.resource = customTile.resource == null ? null : new() { type = (Polytopia.Data.ResourceData.Type)customTile.resource };
+                tile.effects = new Il2CppSystem.Collections.Generic.List<TileData.EffectType>();
+                foreach (TileData.EffectType effect in customTile.effects)
+                {
+                    tile.effects.Add(effect);
+                }
+                if (tile.rulingCityCoordinates != tile.coordinates)
+                {
+                    tile.improvement = customTile.improvement == null ? null : new() { type = (Polytopia.Data.ImprovementData.Type)customTile.improvement };
+                    if (tile.improvement != null && tile.improvement.type == ImprovementData.Type.City)
+                    {
+                        tile.improvement = new ImprovementState
+                        {
+                            type = ImprovementData.Type.City,
+                            founded = 0,
+                            level = 1,
+                            borderSize = 1,
+                            production = 1
+                        };
+                    }
+                }
+                if(corners.Contains(tile.coordinates))
                 {
                     tile.improvement = new ImprovementState
                     {
-                        type = ImprovementData.Type.City,
-                        founded = 0,
+                        type = ImprovementData.Type.LightHouse,
+                        borderSize = 0,
                         level = 1,
-                        borderSize = 1,
-                        production = 1
+                        production = 0,
+                        founded = 0
                     };
+                    if (!tile.IsWater)
+                    {
+                        tile.terrain = Polytopia.Data.TerrainData.Type.Field;
+                    }
                 }
+                newTiles.Add(tile);
             }
-            originalMap.tiles[i] = tile;
+            gameState.Map.tiles = newTiles
+                .OrderBy(t => t.coordinates.y)
+                .ThenBy(t => t.coordinates.x)
+                .ToList().ToArray();
+            gameState.Map.width = chosenMap.size;
+            gameState.Map.height = chosenMap.size;
+            gameState.Map.GenerateShoreLines();
         }
-        WorldCoordinates[] corners = ExploreLightHouseTask.GetCorners(state);
-        for (int i = 0; i < corners.Length; i++)
-        {
-            TileData tile = originalMap.GetTile(corners[i]);
-            tile.improvement = new ImprovementState
-            {
-                type = ImprovementData.Type.LightHouse,
-                borderSize = 0,
-                level = 1,
-                production = 0,
-                founded = 0
-            };
-            if (!tile.IsWater)
-            {
-                tile.terrain = Polytopia.Data.TerrainData.Type.Field;
-            }
-        }
-        originalMap.GenerateShoreLines();
-        chosenMap = null;
     }
 
     internal static MapInfo? LoadMapFile(string name)
