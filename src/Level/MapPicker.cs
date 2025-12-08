@@ -94,7 +94,8 @@ namespace PolytopiaMapManager.Level
                 Main.modLogger!.LogInfo("Clicked i guess");
                 Main.modLogger!.LogInfo(id);
                 GameState gameState = GameManager.GameState;
-                MapLoader.chosenMap = MapLoader.LoadMapFile(visualMaps[id]);
+                MapMaker.MapName = visualMaps[id];
+                MapLoader.chosenMap = MapLoader.LoadMapFile(MapMaker.MapName);
                 MapLoader.LoadMapInState(ref gameState);
                 GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                 // Brush.chosenBuilding = (Polytopia.Data.MapData.Type)type;
