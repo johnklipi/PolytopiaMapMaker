@@ -66,21 +66,11 @@ public static class MapLoader
         GameManager.Instance.CreateSinglePlayerGame();
 
         int num = 0;
-        for (int j = 0; j < (int)GameManager.GameState.Map.Height; j++)
+        for (int y = 0; y < (int)GameManager.GameState.Map.Height; y++)
         {
-            for (int k = 0; k < (int)GameManager.GameState.Map.Width; k++)
+            for (int x = 0; x < (int)GameManager.GameState.Map.Width; x++)
             {
-                TileData tileData = new TileData
-                {
-                    coordinates = new WorldCoordinates(k, j),
-                    terrain = Polytopia.Data.TerrainData.Type.Field,
-                    climate = 0,
-                    altitude = 1,
-                    improvement = null,
-                    resource = null,
-                    owner = 0
-                };
-                GameManager.GameState.Map.Tiles[num++] = tileData;
+                GameManager.GameState.Map.Tiles[num++] = GetBasicTile(x, y);
             }
         }
         for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
@@ -91,6 +81,19 @@ public static class MapLoader
         UIManager.Instance.BlockHints(); // Uhhhh shouldnt it block suggestions but it doesnt. Later...
     }
 
+    public static TileData GetBasicTile(int x, int y)
+    {
+        return new TileData
+        {
+            coordinates = new WorldCoordinates(x, y),
+            terrain = Polytopia.Data.TerrainData.Type.Field,
+            climate = 0,
+            altitude = 1,
+            improvement = null,
+            resource = null,
+            owner = 0
+        };
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]

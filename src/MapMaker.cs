@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -29,6 +30,82 @@ public static class MapMaker
         }
     }
     private static Transform? mapNameContainer;
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
+    private static void HudScreen_OnMatchStart(HudScreen __instance)
+    {
+        if (MapLoader.inMapMaker)
+        {
+            UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
+            mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 180, 0);
+            mapSizeButton.gameObject.SetActive(true);
+            mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
+            mapSizeButton.text = string.Empty;
+
+            void ShowMapPopup(int id, BaseEventData eventData)
+            {
+                BasicPopup popup = PopupManager.GetBasicPopup();
+                popup.Header = "Resize Map";
+                popup.Description = "";
+                popup.buttonData = new PopupBase.PopupButtonData[]
+                {
+                    new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                    new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Resize, -1, true, null)
+                };
+                void Exit(int id, BaseEventData eventData)
+                {
+                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                }
+                void Resize(int id, BaseEventData eventData){
+                    if(int.TryParse(Popup.CustomInput.GetInputFromPopup(popup).text, out int size))
+                    {
+                        GameState gameState = GameManager.GameState;
+                        ResizeMap(ref gameState, size);
+                        GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                        for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
+                        {
+                            GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
+                        }
+                        MapRenderer.Current.Refresh(false);
+                        NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");
+                    }
+                    else
+                    {
+                        NotificationManager.Notify("Only numbers are allowed", "Error");
+                    }
+                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                }
+                Popup.CustomInput.AddInputToPopup(popup);
+            }
+        }
+    }
+
+    internal static void ResizeMap(ref GameState gameState, int size)
+    {
+        gameState.Settings.MapSize = size;
+        List<TileData> tiles = gameState.Map.Tiles.ToList();
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                WorldCoordinates worldCoordinates = new WorldCoordinates(x, y);
+                TileData? tileData = gameState.Map.GetTile(worldCoordinates);
+                if(tileData == null)
+                {
+                    TileData tile = MapLoader.GetBasicTile(worldCoordinates.x, worldCoordinates.y);
+                    tiles.Add(tile);
+                }
+            }
+        }
+        gameState.Map.tiles = tiles
+            .OrderBy(t => t.coordinates.y)
+            .ThenBy(t => t.coordinates.x)
+            .ToList().ToArray();
+        gameState.Map.width = (ushort)size;
+        gameState.Map.height = (ushort)size;
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
@@ -106,9 +183,16 @@ public static class MapMaker
         }
     }
 
+    public static WorldCoordinates GetTileCoordinates(int index, int width)
+    {
+        int x = index % width;
+        int y = index / width;
+        return new WorldCoordinates(x, y);
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(ResourceBar), nameof(ResourceBar.OnEnable))]
-    internal static void OnEnable(ResourceBar __instance)
+    internal static void ResourceBar_OnEnable(ResourceBar __instance)
     {
         if(MapLoader.inMapMaker)
         {
