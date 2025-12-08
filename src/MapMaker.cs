@@ -8,7 +8,7 @@ namespace PolytopiaMapManager;
 
 public static class MapMaker
 {
-    private static string mapName = "Untitled Map";
+    private static string mapName = "";
     public static bool MapSaved = false; // Can also use this to indicate unsaved maps in UI?
     public static string MapName
     {

@@ -20,6 +20,7 @@ namespace PolytopiaMapManager
             Harmony.CreateAndPatchAll(typeof(Level.ResourcePicker));
             Harmony.CreateAndPatchAll(typeof(Level.ImprovementPicker));
             Harmony.CreateAndPatchAll(typeof(Level.TileEffectPicker));
+            Harmony.CreateAndPatchAll(typeof(Level.MapPicker));
             PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker);
             PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
             PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));

@@ -4,6 +4,7 @@ using System.Text.Json;
 using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
+using PolyMod.Managers;
 
 namespace PolytopiaMapManager;
 
@@ -42,11 +43,12 @@ public static class MapLoader
     internal static List<MapInfo> maps = new();
     internal static MapInfo? chosenMap;
     internal static bool inMapMaker = false; //my stuff was failing due to level not being loaded, so uhhhh, thats a problem though
+    internal const string DEFAULT_MAP_NAME_KEY = "mapmaker.map.untitled";
 
     public static void Init()
     {
         inMapMaker = true;
-        MapMaker.MapName = "Untitled Map";
+        MapMaker.MapName = Localization.Get(DEFAULT_MAP_NAME_KEY);
         MapMaker.MapSaved = false;
         GameSettings gameSettings = new GameSettings();
         gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
@@ -122,27 +124,18 @@ public static class MapLoader
         return 1;
     }
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
-    private static bool MapGenerator_Generate(ref GameState state, ref MapGeneratorSettings settings)
-    {
-        PreGenerate(ref state, ref settings);
-        return true;
-    }
+    // [HarmonyPrefix]
+    // [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
+    // private static bool MapGenerator_Generate(ref GameState state, ref MapGeneratorSettings settings)
+    // {
+    //     return true;
+    // }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
     private static void MapGenerator_Generate_Postfix(ref GameState state, ref MapGeneratorSettings settings)
     {
-        PostGenerate(ref state);
-    }
-
-    private static void PreGenerate(ref GameState state, ref MapGeneratorSettings settings)
-    {
-        if (chosenMap == null)
-        {
-            return;
-        }
+        LoadMapInState(ref state);
     }
 
     [HarmonyPostfix]
@@ -169,7 +162,7 @@ public static class MapLoader
         __result = (ushort)(blocksNeeded * 3);
     }
 
-    private static void PostGenerate(ref GameState state)
+    public static void LoadMapInState(ref GameState state)
     {
         if (chosenMap == null)
         {
