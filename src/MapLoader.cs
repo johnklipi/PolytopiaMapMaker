@@ -88,6 +88,7 @@ public static class MapLoader
             GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
         }
         MapRenderer.Current.Refresh(false);
+        UIManager.Instance.BlockHints(); // Uhhhh shouldnt it block suggestions but it doesnt. Later...
     }
 
 
@@ -95,7 +96,11 @@ public static class MapLoader
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
     private static void GameManager_ReturnToMenu()
     {
-        inMapMaker = false;
+        if(inMapMaker)
+        {
+            inMapMaker = false;
+            UIManager.Instance.UnblockHints();
+        }
     }
 
     [HarmonyPrefix]

@@ -18,7 +18,7 @@ namespace PolytopiaMapManager.Level
             if (MapLoader.inMapMaker)
             {
                 mapChoiceButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-                mapChoiceButton.transform.position = mapChoiceButton.transform.position + new Vector3(1000, 0, 0);
+                mapChoiceButton.transform.position = mapChoiceButton.transform.position - new Vector3(0, 90, 0);
                 mapChoiceButton.gameObject.SetActive(true);
                 mapChoiceButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
                 mapChoiceButton.text = string.Empty;
@@ -96,6 +96,7 @@ namespace PolytopiaMapManager.Level
                 GameState gameState = GameManager.GameState;
                 MapLoader.chosenMap = MapLoader.LoadMapFile(visualMaps[id]);
                 MapLoader.LoadMapInState(ref gameState);
+                GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                 // Brush.chosenBuilding = (Polytopia.Data.MapData.Type)type;
                 UpdatemapChoiceButton(mapChoiceButton!);
             }
