@@ -420,6 +420,18 @@ internal static class PickersManager
         button.icon.gameObject.SetActive(true);
     }
 
+    private static void CreatePicker(ref UIRoundButton? picker, UIRoundButton referenceButton, Transform parent, UIButtonBase.ButtonAction showAction, Vector3? indent = null)
+    {
+        picker = GameObject.Instantiate<UIRoundButton>(referenceButton, parent);
+        if(indent != null)
+        {
+            picker.transform.position = picker.transform.position + (Vector3)indent;
+        }
+        picker.gameObject.SetActive(true);
+        picker.OnClicked = showAction;
+        picker.text = string.Empty;
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
     private static void HudScreen_OnMatchStart(HudScreen __instance)
@@ -427,11 +439,13 @@ internal static class PickersManager
         if (MapLoader.inMapMaker)
         {
             // CLIMATE PICKER
-            climateButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            climateButton.gameObject.SetActive(true);
-            climateButton.OnClicked = (UIButtonBase.ButtonAction)ShowClimatePopup;
-            climateButton.text = string.Empty;
-
+            UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
+            CreatePicker(ref climateButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowClimatePopup);
+            CreatePicker(ref mapChoiceButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowMapPopup, new Vector3(0, -90, 0));
+            CreatePicker(ref resourceButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowResourcePopup, new Vector3(90, 0, 0));
+            CreatePicker(ref terrainButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowTerrainPopup, new Vector3(180, 0, 0));
+            CreatePicker(ref tileEffectButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowTileEffectPopup, new Vector3(270, 0, 0));
+            CreatePicker(ref improvementButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowImprovementPopup, new Vector3(360, 0, 0));
             void ShowClimatePopup(int id, BaseEventData eventData)
             {
                 SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
@@ -477,12 +491,6 @@ internal static class PickersManager
             // CLIMATE PICKER END
 
             // IMPROVEMENT PICKER
-            improvementButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            improvementButton.transform.position = improvementButton.transform.position + new Vector3(360, 0, 0);
-            improvementButton.gameObject.SetActive(true);
-            improvementButton.OnClicked = (UIButtonBase.ButtonAction)ShowImprovementPopup;
-            improvementButton.text = string.Empty;
-
             void ShowImprovementPopup(int id, BaseEventData eventData)
             {
                 SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
@@ -519,12 +527,6 @@ internal static class PickersManager
             // IMPROVEMENT PICKER END
 
             // MAP PICKER
-            mapChoiceButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            mapChoiceButton.transform.position = mapChoiceButton.transform.position - new Vector3(0, 90, 0);
-            mapChoiceButton.gameObject.SetActive(true);
-            mapChoiceButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
-            mapChoiceButton.text = string.Empty;
-
             void ShowMapPopup(int id, BaseEventData eventData)
             {
                 SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
@@ -565,11 +567,6 @@ internal static class PickersManager
             // MAP PICKER END
 
             // RESOURCE PICKER
-            resourceButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            resourceButton.transform.position = resourceButton.transform.position + new Vector3(90, 0, 0);
-            resourceButton.gameObject.SetActive(true);
-            resourceButton.OnClicked = (UIButtonBase.ButtonAction)ShowResourcePopup;
-            resourceButton.text = string.Empty;
 
             void ShowResourcePopup(int id, BaseEventData eventData)
             {
@@ -608,11 +605,6 @@ internal static class PickersManager
             // RESOURCE PICKER END
 
             // TERRAIN PICKER
-            terrainButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            terrainButton.transform.position = terrainButton.transform.position + new Vector3(180, 0, 0);
-            terrainButton.gameObject.SetActive(true);
-            terrainButton.OnClicked = (UIButtonBase.ButtonAction)ShowTerrainPopup;
-            terrainButton.text = string.Empty;
 
             void ShowTerrainPopup(int id, BaseEventData eventData)
             {
@@ -651,12 +643,6 @@ internal static class PickersManager
             // TERRAIN PICKER END
 
             // TILE EFFECT PICKER
-            tileEffectButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            tileEffectButton.transform.position = tileEffectButton.transform.position + new Vector3(270, 0, 0);
-            tileEffectButton.gameObject.SetActive(true);
-            tileEffectButton.OnClicked = (UIButtonBase.ButtonAction)ShowTileEffectPopup;
-            tileEffectButton.text = string.Empty;
-
             void ShowTileEffectPopup(int id, BaseEventData eventData)
             {
                 SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
@@ -693,11 +679,11 @@ internal static class PickersManager
             }
             // TILE EFFECT PICKER END
 
-            UpdateClimateButton(climateButton);
-            UpdateImprovementButton(improvementButton);
-            UpdateResourceButton(resourceButton);
-            UpdateTerrainButton(terrainButton);
-            UpdateTileEffectButton(tileEffectButton);
+            UpdateClimateButton(climateButton!);
+            UpdateImprovementButton(improvementButton!);
+            UpdateResourceButton(resourceButton!);
+            UpdateTerrainButton(terrainButton!);
+            UpdateTileEffectButton(tileEffectButton!);
         }
     }
 
