@@ -6,6 +6,7 @@ using Polytopia.Data;
 using PolytopiaBackendBase.Common;
 using PolyMod.Managers;
 using PolyMod;
+using Il2CppInterop.Runtime;
 
 namespace PolytopiaMapManager;
 
@@ -40,6 +41,7 @@ public static class MapLoader
         public List<MapTile> map = new();
     }
     internal const uint MAX_MAP_SIZE = 100;
+    internal const uint MIN_MAP_SIZE = 3;
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
     internal static List<MapInfo> maps = new();
     internal static MapInfo? chosenMap;
@@ -62,7 +64,7 @@ public static class MapLoader
         GameManager.PreliminaryGameSettings = gameSettings;
         GameManager.PreliminaryGameSettings.OpponentCount = 0;
         GameManager.PreliminaryGameSettings.Difficulty = BotDifficulty.Frozen;
-        //UIBlackFader.FadeIn(0.5f, DelegateSupport.ConvertDelegate<Il2CppSystem.Action>((Action)CreateGame), "gamesettings.creatingworld", null, null);
+        // UIBlackFader.FadeIn(0.5f, DelegateSupport.ConvertDelegate<Il2CppSystem.Action>((Action)CreateGame), "gamesettings.creatingworld", null, null); Can someone make this thing working pls?
 
         GameManager.Instance.CreateSinglePlayerGame();
 

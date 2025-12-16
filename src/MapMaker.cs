@@ -1,5 +1,5 @@
-using System.Linq.Expressions;
 using HarmonyLib;
+using PolytopiaMapManager.Popup;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -58,7 +58,8 @@ public static class MapMaker
                     Popup.CustomInput.RemoveInputFromPopup(popup);
                 }
                 void Resize(int id, BaseEventData eventData){
-                    if(int.TryParse(Popup.CustomInput.GetInputFromPopup(popup).text, out int size))
+                    var input = Popup.CustomInput.GetInputFromPopup(popup);
+                    if(input != null && int.TryParse(input.text, out int size))
                     {
                         GameState gameState = GameManager.GameState;
                         ResizeMap(ref gameState, size);
@@ -72,7 +73,36 @@ public static class MapMaker
                     }
                     Popup.CustomInput.RemoveInputFromPopup(popup);
                 }
-                Popup.CustomInput.AddInputToPopup(popup);
+                Popup.CustomInput.AddInputToPopup(popup, GameManager.GameState.Map.Width.ToString(), onValueChanged: new Action<string>(value => MapResizeValueChanged(value, popup)));
+            }
+        }
+    }
+
+    public static void MapResizeValueChanged(string value, BasicPopup popup)
+    {
+        if(!string.IsNullOrEmpty(value) && value.Length > 0)
+        {
+            bool couldntParse = !int.TryParse(value, out int result);
+            bool isTooBig = result > MapLoader.MAX_MAP_SIZE;
+            // bool isTooSmall = result < MapLoader.MIN_MAP_SIZE;
+            if(couldntParse || isTooBig)
+            {
+                string message = "";
+                if(couldntParse)
+                {
+                    message = "Only numbers are allowed";
+                }
+                else if (isTooBig)
+                {
+                    message = $"Value is too big! Maximal size allowed is {MapLoader.MAX_MAP_SIZE}.";
+                }
+                value = value.Remove(value.Length - 1);
+                var input = CustomInput.GetInputFromPopup(popup);
+                if(input != null)
+                {
+                    input.text = value;
+                }
+                NotificationManager.Notify(message, "Error");
             }
         }
     }
@@ -132,12 +162,35 @@ public static class MapMaker
             {
                 Popup.CustomInput.RemoveInputFromPopup(popup);
             }
-            void SaveName(int id, BaseEventData eventData){
-                MapName = Popup.CustomInput.GetInputFromPopup(popup).text;
-                NotificationManager.Notify($"New name is {MapName}", "Map name set!");
-                Popup.CustomInput.RemoveInputFromPopup(popup);
+            void SaveName(int id, BaseEventData eventData)
+            {
+                var input = Popup.CustomInput.GetInputFromPopup(popup);
+                if(input != null)
+                {
+                    MapName = input.text;
+                    NotificationManager.Notify($"New name is {MapName}", "Map name set!");
+                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                }
             }
-            Popup.CustomInput.AddInputToPopup(popup);
+            Popup.CustomInput.AddInputToPopup(popup, MapName);
+        }
+    }
+
+    public static void MapRenameValueChanged(string value, BasicPopup popup)
+    {
+        if(!string.IsNullOrEmpty(value) && value.Length > 0)
+        {
+            bool isTooLong = value.Length > 12;
+            if (isTooLong)
+            {
+                value = value.Remove(value.Length - 1);
+                var input = CustomInput.GetInputFromPopup(popup);
+                if(input != null)
+                {
+                    input.text = value;
+                }
+                NotificationManager.Notify($"Text is too long. Maximal length allowed is 12.", "Error");
+            }
         }
     }
 
@@ -174,11 +227,15 @@ public static class MapMaker
                 }
                 void Save(int id, BaseEventData eventData)
                 {
-                    MapName = Popup.CustomInput.GetInputFromPopup(popup).text;
-                    SaveMap();
-                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                    var input = Popup.CustomInput.GetInputFromPopup(popup);
+                    if(input != null)
+                    {
+                        MapName = input.text;
+                        SaveMap();
+                        Popup.CustomInput.RemoveInputFromPopup(popup);
+                    }
                 }
-                Popup.CustomInput.AddInputToPopup(popup);
+                Popup.CustomInput.AddInputToPopup(popup, MapName);
             }
             else
             {

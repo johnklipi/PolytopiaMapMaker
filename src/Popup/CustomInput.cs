@@ -18,11 +18,6 @@ public static class CustomInput
         }
 	}
 
-    public static void OnInputDone(string value, BasicPopup popup)
-    {
-        Main.modLogger!.LogMessage(value);
-    }
-
     public static void RemoveInputFromPopup(BasicPopup popup)
     {
         var input = GetInputFromPopup(popup);
@@ -39,7 +34,7 @@ public static class CustomInput
     }
 
 
-    public static void AddInputToPopup(BasicPopup popup)
+    public static void AddInputToPopup(BasicPopup popup, string baseValue = "", Action<string>? onSubmit = null, Action<string>? onValueChanged = null)
     {
         Transform parent = popup.transform; //Popup is parent
 
@@ -108,10 +103,18 @@ public static class CustomInput
         input.textComponent = text;
         input.placeholder = placeholder;
         input.interactable = true;
-        input.text = MapMaker.MapName;
+        input.text = baseValue;
         popup.IsUnskippable = true;
-        input.onSubmit.RemoveAllListeners();
-        input.onSubmit.AddListener(new Action<string>(value => OnInputDone(value, popup)));
+        if(onSubmit != null)
+        {
+            input.onSubmit.RemoveAllListeners();
+            input.onSubmit.AddListener(onSubmit);
+        }
+        if(onValueChanged != null)
+        {
+            input.onValueChanged.RemoveAllListeners();
+            input.onValueChanged.AddListener(onValueChanged);
+        }
         popup.Show();
         UINavigationManager.Select(input);
         popup.currentSelectable = input;
