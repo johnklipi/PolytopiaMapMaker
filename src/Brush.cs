@@ -69,6 +69,8 @@ public static class Brush
                             if(__instance.data.isFloodable())
                             {
                                 __instance.data.AddEffect(chosenTileEffect);
+                                if(chosenSkinType == SkinType.Swamp)
+                                    __instance.data.AddEffect(TileData.EffectType.Swamped);
                             }
                             else if(Time.time >= nextAllowedTimeForPopup)
                             {
@@ -81,6 +83,8 @@ public static class Brush
                             if(__instance.data.IsWater)
                             {
                                 __instance.data.AddEffect(chosenTileEffect);
+                                if(chosenSkinType == SkinType.Cute)
+                                    __instance.data.AddEffect(TileData.EffectType.Foam);
                             }
                             else if(Time.time >= nextAllowedTimeForPopup)
                             {

@@ -1,3 +1,4 @@
+using HarmonyLib;
 using TMPro;
 using UnityEngine;
 
@@ -5,15 +6,21 @@ namespace PolytopiaMapManager.Popup;
 
 public static class CustomInput
 {
-    ///// TO DO
-    ///     Normal functioning layout so inputtext is between description and buttons
-    ///     Clean up class a bit, lots of useless commands there, problem is that I've no idea what does what atp
-    ///     OnInputDone triggers two times?
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(BasicPopup), nameof(BasicPopup.Update))]
+	private static void BasicPopup_Update(BasicPopup __instance)
+	{
+        var input = GetInputFromPopup(__instance);
+        if(input != null)
+        {
+            var inputHeight = input.m_RectTransform.GetHeight();
+            __instance.rectTransform.SetHeight(__instance.content.GetHeight() + (inputHeight * 1.5f));
+        }
+	}
 
     public static void OnInputDone(string value, BasicPopup popup)
     {
         Main.modLogger!.LogMessage(value);
-        //MapMaker.MapName = value;
     }
 
     public static void RemoveInputFromPopup(BasicPopup popup)
@@ -23,7 +30,7 @@ public static class CustomInput
         UnityEngine.Object.Destroy(input.gameObject);
     }
 
-    public static TMP_InputField GetInputFromPopup(BasicPopup popup)
+    public static TMP_InputField? GetInputFromPopup(PopupBase popup)
     {
         Transform t = popup.transform.Find("InputBox");
         if (t == null) return null;
@@ -43,7 +50,7 @@ public static class CustomInput
         // Body
         RectTransform rt = go.AddComponent<RectTransform>();
         rt.sizeDelta = new Vector2(400, 50);
-        rt.anchoredPosition = new Vector2(0, -150);
+        rt.anchoredPosition = new Vector2(0, 0);
 
 
 

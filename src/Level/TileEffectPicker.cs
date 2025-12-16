@@ -11,6 +11,7 @@ namespace PolytopiaMapManager.Level
         {
             TileData.EffectType.Swamped,
             TileData.EffectType.Tentacle,
+            TileData.EffectType.Foam,
         };
         internal static UIRoundButton? tileEffectButton = null;
 

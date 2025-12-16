@@ -9,7 +9,7 @@ namespace PolytopiaMapManager.Level
         private static SpriteAtlasManager manager = GameManager.GetSpriteAtlasManager();
         public static Sprite GetSprite(int type, string spriteName, GameLogicData gameLogicData)
         {
-            Sprite sprite;
+            Sprite? sprite = null;
             if(type != 0)
             {
                 TribeType tribeType = TribeType.Xinxi;
@@ -20,7 +20,7 @@ namespace PolytopiaMapManager.Level
                 SpriteAtlasManager.SpriteLookupResult lookupResult = manager.DoSpriteLookup(spriteName, tribeType, Brush.chosenSkinType, false);
                 sprite = lookupResult.sprite;
             }
-            else
+            if(sprite == null)
             {
                 sprite = PolyMod.Registry.GetSprite("none")!;
             }

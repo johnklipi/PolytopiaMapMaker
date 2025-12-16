@@ -74,6 +74,7 @@ public static class MapLoader
                 GameManager.GameState.Map.Tiles[num++] = GetBasicTile(x, y);
             }
         }
+        SetLighthouses(GameManager.GameState);
         RevealMap(GameManager.LocalPlayer.Id);
         UIManager.Instance.BlockHints(); // Uhhhh shouldnt it block suggestions but it doesnt. Later...
     }
@@ -232,25 +233,35 @@ public static class MapLoader
                 .ThenBy(t => t.coordinates.x)
                 .ToList().ToArray();
 
-            WorldCoordinates[] corners = ExploreLightHouseTask.GetCorners(gameState);
-            foreach (var corner in corners)
-            {
-                TileData lighthouseTile = gameState.Map.GetTile(corner);
-                if(lighthouseTile != null)
-                {
-                    lighthouseTile.improvement = new()
-                    {
-                        type = ImprovementData.Type.LightHouse,
-                        borderSize = 0,
-                        level = 1,
-                        production = 0,
-                        founded = 0
-                    };
+            SetLighthouses(gameState);
+        }
+    }
 
-                    if (!lighthouseTile.IsWater)
-                    {
-                        lighthouseTile.terrain = Polytopia.Data.TerrainData.Type.Field;
-                    }
+    public static void SetLighthouses(GameState gameState)
+    {
+        foreach(TileData tileData in gameState.Map.Tiles)
+        {
+            if(tileData.HasImprovement(ImprovementData.Type.LightHouse))
+                tileData.improvement = null;
+        }
+        WorldCoordinates[] corners = ExploreLightHouseTask.GetCorners(gameState);
+        foreach (var corner in corners)
+        {
+            TileData lighthouseTile = gameState.Map.GetTile(corner);
+            if(lighthouseTile != null)
+            {
+                lighthouseTile.improvement = new()
+                {
+                    type = ImprovementData.Type.LightHouse,
+                    borderSize = 0,
+                    level = 1,
+                    production = 0,
+                    founded = 0
+                };
+
+                if (!lighthouseTile.IsWater)
+                {
+                    lighthouseTile.terrain = Polytopia.Data.TerrainData.Type.Field;
                 }
             }
         }

@@ -91,8 +91,7 @@ public static class MapMaker
     internal static void ResizeMap(ref GameState gameState, int size)
     {
         gameState.Settings.MapSize = size;
-        List<TileData> tiles = gameState.Map.Tiles.ToList();
-
+        List<TileData> tiles = new();
         for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
@@ -101,9 +100,9 @@ public static class MapMaker
                 TileData? tileData = gameState.Map.GetTile(worldCoordinates);
                 if(tileData == null)
                 {
-                    TileData tile = MapLoader.GetBasicTile(worldCoordinates.x, worldCoordinates.y);
-                    tiles.Add(tile);
+                    tileData = MapLoader.GetBasicTile(worldCoordinates.x, worldCoordinates.y);
                 }
+                tiles.Add(tileData);
             }
         }
         gameState.Map.tiles = tiles
@@ -112,6 +111,8 @@ public static class MapMaker
             .ToList().ToArray();
         gameState.Map.width = (ushort)size;
         gameState.Map.height = (ushort)size;
+
+        MapLoader.SetLighthouses(gameState);
     }
 
     [HarmonyPostfix]

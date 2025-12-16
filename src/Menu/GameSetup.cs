@@ -247,7 +247,7 @@ namespace PolytopiaMapManager.Menu
             }
         }
 
-        private static GameSetupNameRow CreateNameInputRowFix(GameSetupScreen __instance, string headerKey, string name, Action<string>? inputDoneCallback = null, Action<string>? onValueChangedAction = null, RectTransform parent = null)
+        private static GameSetupNameRow CreateNameInputRowFix(GameSetupScreen __instance, string headerKey, string name, Action<string>? inputDoneCallback = null, Action<string>? onValueChangedAction = null, RectTransform? parent = null)
         {
             GameSetupNameRow gameSetupNameRow = GameObject.Instantiate<GameSetupNameRow>(__instance.nameRowPrefab, parent ?? __instance.VerticalListRectTr);
             gameSetupNameRow.HeaderKey = headerKey;
