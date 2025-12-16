@@ -63,11 +63,7 @@ public static class MapMaker
                         GameState gameState = GameManager.GameState;
                         ResizeMap(ref gameState, size);
                         GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-                        for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
-                        {
-                            GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
-                        }
-                        MapRenderer.Current.Refresh(false);
+                        MapLoader.RevealMap(GameManager.LocalPlayer.Id);
                         NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");
                     }
                     else
@@ -157,11 +153,7 @@ public static class MapMaker
     {
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Tab))
         {
-            for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
-            {
-                GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
-            }
-            MapRenderer.Current.Refresh(false);
+            MapLoader.RevealMap(GameManager.LocalPlayer.Id);
             NotificationManager.Notify("Map has been revealed.");
         }
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))

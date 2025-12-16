@@ -98,6 +98,7 @@ namespace PolytopiaMapManager.Level
                 MapLoader.chosenMap = MapLoader.LoadMapFile(MapMaker.MapName);
                 MapLoader.LoadMapInState(ref gameState);
                 GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                MapLoader.RevealMap(GameManager.LocalPlayer.Id);
                 // Brush.chosenBuilding = (Polytopia.Data.MapData.Type)type;
                 UpdatemapChoiceButton(mapChoiceButton!);
             }

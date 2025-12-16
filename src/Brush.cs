@@ -95,17 +95,20 @@ public static class Brush
                     TileData.EffectType lastEffect = __instance.data.effects.ToArray().ToList().LastOrDefault(TileData.EffectType.None);
                     __instance.data.RemoveEffect(lastEffect);
                 }
-                if(chosenBuilding == ImprovementData.Type.None)
+                if(!__instance.data.HasImprovement(ImprovementData.Type.LightHouse))
                 {
-                    GameManager.Client.ActionManager.ExecuteCommand(new DestroyCommand(GameManager.LocalPlayer.Id, __instance.data.coordinates), out string error);
-                }
-                else
-                {
-                    bool succeded = GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenBuilding, __instance.data.coordinates), out string error);
-                    // if(!succeded && Time.time >= nextAllowedTimeForPopup)
-                    // {
-                    //     NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get(chosenBuilding.GetDisplayName()), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
-                    // }
+                    if(chosenBuilding == ImprovementData.Type.None)
+                    {
+                        GameManager.Client.ActionManager.ExecuteCommand(new DestroyCommand(GameManager.LocalPlayer.Id, __instance.data.coordinates), out string error);
+                    }
+                    else
+                    {
+                        bool succeded = GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenBuilding, __instance.data.coordinates), out string error);
+                        // if(!succeded && Time.time >= nextAllowedTimeForPopup)
+                        // {
+                        //     NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get(chosenBuilding.GetDisplayName()), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                        // }
+                    }
                 }
                 if(chosenClimate != 0)
                 {

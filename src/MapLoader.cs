@@ -5,6 +5,7 @@ using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
 using PolyMod.Managers;
+using PolyMod;
 
 namespace PolytopiaMapManager;
 
@@ -73,12 +74,18 @@ public static class MapLoader
                 GameManager.GameState.Map.Tiles[num++] = GetBasicTile(x, y);
             }
         }
+        RevealMap(GameManager.LocalPlayer.Id);
+        UIManager.Instance.BlockHints(); // Uhhhh shouldnt it block suggestions but it doesnt. Later...
+    }
+
+    public static void RevealMap(byte playerId)
+    {
         for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
         {
-            GameManager.GameState.Map.Tiles[i].SetExplored(GameManager.LocalPlayer.Id, true);
+            GameManager.GameState.Map.Tiles[i].SetExplored(playerId, true);
         }
+        GameManager.GameState.Map.GenerateShoreLines();
         MapRenderer.Current.Refresh(false);
-        UIManager.Instance.BlockHints(); // Uhhhh shouldnt it block suggestions but it doesnt. Later...
     }
 
     public static TileData GetBasicTile(int x, int y)
@@ -177,7 +184,6 @@ public static class MapLoader
         {
             return;
         }
-        WorldCoordinates[] corners = ExploreLightHouseTask.GetCorners(gameState);
         List<TileData> newTiles = new();
         for (int y = 0; y < chosenMap.size; y++)
         {
@@ -197,11 +203,13 @@ public static class MapLoader
                 {
                     tile.effects.Add(effect);
                 }
-                if (tile.rulingCityCoordinates != tile.coordinates)
+                switch(customTile.improvement)
                 {
-                    tile.improvement = customTile.improvement == null ? null : new() { type = (Polytopia.Data.ImprovementData.Type)customTile.improvement };
-                    if (tile.improvement != null && tile.improvement.type == ImprovementData.Type.City)
-                    {
+                    case null:
+                    case ImprovementData.Type.LightHouse:
+                        tile.improvement = null;
+                        break;
+                    case ImprovementData.Type.City:
                         tile.improvement = new ImprovementState
                         {
                             type = ImprovementData.Type.City,
@@ -210,11 +218,27 @@ public static class MapLoader
                             borderSize = 1,
                             production = 1
                         };
-                    }
+                        break;
+                    default:
+                        tile.improvement = new() { type = (Polytopia.Data.ImprovementData.Type)customTile.improvement };
+                        break;
                 }
-                if(corners.Contains(tile.coordinates))
+                newTiles.Add(tile);
+            }
+            gameState.Map.width = chosenMap.size;
+            gameState.Map.height = chosenMap.size;
+            gameState.Map.tiles = newTiles
+                .OrderBy(t => t.coordinates.y)
+                .ThenBy(t => t.coordinates.x)
+                .ToList().ToArray();
+
+            WorldCoordinates[] corners = ExploreLightHouseTask.GetCorners(gameState);
+            foreach (var corner in corners)
+            {
+                TileData lighthouseTile = gameState.Map.GetTile(corner);
+                if(lighthouseTile != null)
                 {
-                    tile.improvement = new ImprovementState
+                    lighthouseTile.improvement = new()
                     {
                         type = ImprovementData.Type.LightHouse,
                         borderSize = 0,
@@ -222,20 +246,13 @@ public static class MapLoader
                         production = 0,
                         founded = 0
                     };
-                    if (!tile.IsWater)
+
+                    if (!lighthouseTile.IsWater)
                     {
-                        tile.terrain = Polytopia.Data.TerrainData.Type.Field;
+                        lighthouseTile.terrain = Polytopia.Data.TerrainData.Type.Field;
                     }
                 }
-                newTiles.Add(tile);
             }
-            gameState.Map.tiles = newTiles
-                .OrderBy(t => t.coordinates.y)
-                .ThenBy(t => t.coordinates.x)
-                .ToList().ToArray();
-            gameState.Map.width = chosenMap.size;
-            gameState.Map.height = chosenMap.size;
-            gameState.Map.GenerateShoreLines();
         }
     }
 
@@ -270,7 +287,7 @@ public static class MapLoader
             {
                 mapTile.resource = tileData.resource.type;
             }
-            if (tileData.improvement != null)
+            if (tileData.improvement != null && !tileData.HasImprovement(ImprovementData.Type.LightHouse))
             {
                 mapTile.improvement = tileData.improvement.type;
             }
