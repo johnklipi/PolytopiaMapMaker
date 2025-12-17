@@ -3,6 +3,9 @@ using UnityEngine.EventSystems;
 using Polytopia.Data;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
+using Il2CppSystem.Linq.Expressions.Interpreter;
+using Il2CppSystem;
+using AsmResolver;
 
 namespace PolytopiaMapManager.Level;
 internal static class PickersManager
@@ -165,7 +168,7 @@ internal static class PickersManager
     internal static UIRoundButton? mapChoiceButton = null;
     internal static List<string> visualMaps = new();
 
-    internal static void UpdatemapChoiceButton(UIRoundButton button)
+    internal static void UpdateMapChoiceButton(UIRoundButton button)
     {
         if (MapLoader.inMapMaker)
         {
@@ -200,7 +203,7 @@ internal static class PickersManager
             GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
             MapLoader.RevealMap(GameManager.LocalPlayer.Id);
             // Brush.chosenBuilding = (Polytopia.Data.MapData.Type)type;
-            UpdatemapChoiceButton(mapChoiceButton!);
+            UpdateMapChoiceButton(mapChoiceButton!);
         }
         // PickersHelper.SetIcon(playerButton, PickersHelper.GetSprite(idx, "", gameLogicData));
         if (playerButton.Label.PreferedValues.y > num)
@@ -420,7 +423,10 @@ internal static class PickersManager
         button.icon.gameObject.SetActive(true);
     }
 
-    private static void CreatePicker(ref UIRoundButton? picker, UIRoundButton referenceButton, Transform parent, UIButtonBase.ButtonAction showAction, Vector3? indent = null)
+    private delegate UIRoundButton PickerShowAction(UIRoundButton? picker, ref float num,
+                                            SelectViewmodePopup selectViewmodePopup, GameState gameState);
+
+    private static UIRoundButton CreatePicker(UIRoundButton? picker, UIRoundButton referenceButton, Transform parent, PickerShowAction showAction, Vector3? indent = null, string headerKey = "")
     {
         picker = GameObject.Instantiate<UIRoundButton>(referenceButton, parent);
         if(indent != null)
@@ -428,8 +434,38 @@ internal static class PickersManager
             picker.transform.position = picker.transform.position + (Vector3)indent;
         }
         picker.gameObject.SetActive(true);
-        picker.OnClicked = showAction;
+        picker.OnClicked = (UIButtonBase.ButtonAction)ShowPopup;
         picker.text = string.Empty;
+
+        void ShowPopup(int id, BaseEventData eventData)
+        {
+            SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
+            selectViewmodePopup.Header = Localization.Get(headerKey, new Il2CppSystem.Object[] { });
+            GameState gameState = GameManager.GameState;
+
+            selectViewmodePopup.ClearButtons();
+            selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
+            float num = 0f;
+
+            picker = showAction(picker, ref num, selectViewmodePopup, gameState);
+
+            selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
+            selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
+            selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
+
+
+            selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
+            };
+
+            void Exit(int id, BaseEventData eventData)
+            {
+                selectViewmodePopup.Hide();
+            }
+            selectViewmodePopup.Show(picker!.rectTransform.position);
+        }
+        return picker;
     }
 
     [HarmonyPostfix]
@@ -438,252 +474,144 @@ internal static class PickersManager
     {
         if (MapLoader.inMapMaker)
         {
-            // CLIMATE PICKER
             UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
-            CreatePicker(ref climateButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowClimatePopup);
-            CreatePicker(ref mapChoiceButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowMapPopup, new Vector3(0, -90, 0));
-            CreatePicker(ref resourceButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowResourcePopup, new Vector3(90, 0, 0));
-            CreatePicker(ref terrainButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowTerrainPopup, new Vector3(180, 0, 0));
-            CreatePicker(ref tileEffectButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowTileEffectPopup, new Vector3(270, 0, 0));
-            CreatePicker(ref improvementButton, referenceButton, __instance.transform, (UIButtonBase.ButtonAction)ShowImprovementPopup, new Vector3(360, 0, 0));
-            void ShowClimatePopup(int id, BaseEventData eventData)
+
+            // CLIMATE PICKER
+            climateButton = CreatePicker(climateButton, referenceButton, __instance.transform, CreateClimateButtons, headerKey: "mapmaker.choose.climate");
+            UIRoundButton? CreateClimateButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
             {
-                SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                selectViewmodePopup.Header = Localization.Get("mapmaker.choose.climate", new Il2CppSystem.Object[] { });
-                GameState gameState = GameManager.GameState;
-
-                // Set Data
-                selectViewmodePopup.ClearButtons();
-                selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                CreateClimateChoiceButton(selectViewmodePopup, gameState, "none", EnumCache<TribeType>.GetName(TribeType.None), (int)TribeType.None, 16777215, ref num);
-                GameLogicData gameLogicData = gameState.GameLogicData;
-                List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
-                foreach (TribeData tribeData in tribes)
+                if(picker != null)
                 {
-                    TribeType tribeType = tribeData.type;
-                    string tribeName = Localization.Get(tribeData.displayName);
-                    CreateClimateChoiceButton(selectViewmodePopup, gameState, tribeName, EnumCache<TribeType>.GetName(tribeType), (int)tribeType, gameLogicData.GetTribeColor(tribeData.type, SkinType.Default), ref num);
-                    foreach (SkinType skinType in tribeData.skins)
+                    CreateClimateChoiceButton(selectViewmodePopup, gameState, "none", EnumCache<TribeType>.GetName(TribeType.None), (int)TribeType.None, 16777215, ref num);
+                    GameLogicData gameLogicData = gameState.GameLogicData;
+                    List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
+                    foreach (TribeData tribeData in tribes)
                     {
-                        // gameLogicData.TryGetData(skinType, out SkinData data);
-                        string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
-                        CreateClimateChoiceButton(selectViewmodePopup, gameState, skinHeader, EnumCache<SkinType>.GetName(skinType), (int)skinType + 1000, gameLogicData.GetTribeColor(tribeData.type, skinType), ref num);
+                        TribeType tribeType = tribeData.type;
+                        string tribeName = Localization.Get(tribeData.displayName);
+                        CreateClimateChoiceButton(selectViewmodePopup, gameState, tribeName, EnumCache<TribeType>.GetName(tribeType), (int)tribeType, gameLogicData.GetTribeColor(tribeData.type, SkinType.Default), ref num);
+                        foreach (SkinType skinType in tribeData.skins)
+                        {
+                            string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
+                            CreateClimateChoiceButton(selectViewmodePopup, gameState, skinHeader, EnumCache<SkinType>.GetName(skinType), (int)skinType + 1000, gameLogicData.GetTribeColor(tribeData.type, skinType), ref num);
+                        }
                     }
+                    return picker;
                 }
-                selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                };
-
-                void Exit(int id, BaseEventData eventData)
-                {
-                    selectViewmodePopup.Hide();
-                }
-                selectViewmodePopup.Show(climateButton!.rectTransform.position);
+                return null;
             }
             // CLIMATE PICKER END
 
-            // IMPROVEMENT PICKER
-            void ShowImprovementPopup(int id, BaseEventData eventData)
-            {
-                SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                selectViewmodePopup.Header = Localization.Get("mapmaker.choose.improvement", new Il2CppSystem.Object[] { });
-                GameState gameState = GameManager.GameState;
-                // Set Data
-                selectViewmodePopup.ClearButtons();
-                selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                foreach (Polytopia.Data.ImprovementData improvementData in gameState.GameLogicData.AllImprovementData.Values)
-                {
-                    Polytopia.Data.ImprovementData.Type improvementType = improvementData.type;
-                    if(!allowedImprovements.Contains(improvementType))
-                        continue;
-                    string improvementName = Localization.Get(improvementData.displayName);
-                    CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
-                }
-                selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                };
-
-                void Exit(int id, BaseEventData eventData)
-                {
-                    selectViewmodePopup.Hide();
-                }
-                selectViewmodePopup.Show(improvementButton!.rectTransform.position);
-            }
-            // IMPROVEMENT PICKER END
-
             // MAP PICKER
-            void ShowMapPopup(int id, BaseEventData eventData)
+            mapChoiceButton = CreatePicker(mapChoiceButton, referenceButton, __instance.transform, CreateMapButtons, new Vector3(0, -90, 0), "mapmaker.choose.map");
+            UIRoundButton? CreateMapButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
             {
-                SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                selectViewmodePopup.Header = Localization.Get("mapmaker.choose.map", new Il2CppSystem.Object[] { });
-                GameState gameState = GameManager.GameState;
-                // Set Data
-                selectViewmodePopup.ClearButtons();
-                selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                string[] maps = Directory.GetFiles(MapLoader.MAPS_PATH, "*.json");
-                visualMaps = new();
-                if (maps.Length > 0)
+                if(picker != null)
                 {
-                    visualMaps = maps.Select(map => Path.GetFileNameWithoutExtension(map)).ToList();
-                    num++;
+                    string[] maps = Directory.GetFiles(MapLoader.MAPS_PATH, "*.json");
+                    visualMaps = new();
+                    if (maps.Length > 0)
+                    {
+                        visualMaps = maps.Select(map => Path.GetFileNameWithoutExtension(map)).ToList();
+                        num++;
+                    }
+                    for (int index = 0; index < visualMaps.Count(); index++)
+                    {
+                        string name = visualMaps[index];
+                        CreateMapChoiceButton(selectViewmodePopup, gameState.GameLogicData, name, index, ref num);
+                    }
+                    return picker;
                 }
-                for (int index = 0; index < visualMaps.Count(); index++)
-                {
-                    string name = visualMaps[index];
-                    CreateMapChoiceButton(selectViewmodePopup, gameState.GameLogicData, name, index, ref num);
-                }
-                selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                };
-
-                void Exit(int id, BaseEventData eventData)
-                {
-                    selectViewmodePopup.Hide();
-                }
-                selectViewmodePopup.Show(mapChoiceButton!.rectTransform.position);
+                return null;
             }
             // MAP PICKER END
 
             // RESOURCE PICKER
-
-            void ShowResourcePopup(int id, BaseEventData eventData)
+            resourceButton = CreatePicker(resourceButton, referenceButton, __instance.transform, CreateResourceButtons, new Vector3(90, 0, 0), "mapmaker.choose.resource");
+            UIRoundButton? CreateResourceButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
             {
-                SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                selectViewmodePopup.Header = Localization.Get("mapmaker.choose.resource", new Il2CppSystem.Object[] { });
-                GameState gameState = GameManager.GameState;
-                // Set Data
-                selectViewmodePopup.ClearButtons();
-                selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                foreach (Polytopia.Data.ResourceData resourceData in gameState.GameLogicData.AllResourceData.Values)
+                if(picker != null)
                 {
-                    Polytopia.Data.ResourceData.Type resourceType = resourceData.type;
-                    if(excludedResources.Contains(resourceType))
-                        continue;
-                    string resourceName = Localization.Get(resourceData.displayName);
-                    CreateResourceChoiceButton(selectViewmodePopup, gameState, resourceName, SpriteData.ResourceToString(resourceType), (int)resourceType, ref num);
+                    foreach (Polytopia.Data.ResourceData resourceData in gameState.GameLogicData.AllResourceData.Values)
+                    {
+                        Polytopia.Data.ResourceData.Type resourceType = resourceData.type;
+                        if(excludedResources.Contains(resourceType))
+                            continue;
+                        string resourceName = Localization.Get(resourceData.displayName);
+                        CreateResourceChoiceButton(selectViewmodePopup, gameState, resourceName, SpriteData.ResourceToString(resourceType), (int)resourceType, ref num);
+                    }
+                    return picker;
                 }
-                selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                };
-
-                void Exit(int id, BaseEventData eventData)
-                {
-                    selectViewmodePopup.Hide();
-                }
-                selectViewmodePopup.Show(resourceButton!.rectTransform.position);
+                return null;
             }
             // RESOURCE PICKER END
 
             // TERRAIN PICKER
-
-            void ShowTerrainPopup(int id, BaseEventData eventData)
+            terrainButton = CreatePicker(terrainButton, referenceButton, __instance.transform, CreateTerrainButtons, new Vector3(180, 0, 0), "mapmaker.choose.terrain");
+            UIRoundButton? CreateTerrainButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
             {
-                SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                selectViewmodePopup.Header = Localization.Get("mapmaker.choose.terrain", new Il2CppSystem.Object[] { });
-                GameState gameState = GameManager.GameState;
-                // Set Data
-                selectViewmodePopup.ClearButtons();
-                selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                foreach (Polytopia.Data.TerrainData terrainData in gameState.GameLogicData.AllTerrainData.Values)
+                if(picker != null)
                 {
-                    Polytopia.Data.TerrainData.Type terrainType = terrainData.type;
-                    if(excludedTerrains.Contains(terrainType))
-                        continue;
-                    string terrainName = Localization.Get(terrainType.GetDisplayName());
-                    CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
+                    foreach (Polytopia.Data.TerrainData terrainData in gameState.GameLogicData.AllTerrainData.Values)
+                    {
+                        Polytopia.Data.TerrainData.Type terrainType = terrainData.type;
+                        if(excludedTerrains.Contains(terrainType))
+                            continue;
+                        string terrainName = Localization.Get(terrainType.GetDisplayName());
+                        CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
+                    }
+                    return picker;
                 }
-                selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                };
-
-                void Exit(int id, BaseEventData eventData)
-                {
-                    selectViewmodePopup.Hide();
-                }
-                selectViewmodePopup.Show(terrainButton!.rectTransform.position);
+                return null;
             }
             // TERRAIN PICKER END
 
             // TILE EFFECT PICKER
-            void ShowTileEffectPopup(int id, BaseEventData eventData)
+            tileEffectButton = CreatePicker(tileEffectButton, referenceButton, __instance.transform, CreateTileEffectButtons, new Vector3(270, 0, 0), "mapmaker.choose.tileeffect");
+            UIRoundButton? CreateTileEffectButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
             {
-                SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-                // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
-                selectViewmodePopup.Header = Localization.Get("mapmaker.choose.tileeffect", new Il2CppSystem.Object[] { });
-                GameState gameState = GameManager.GameState;
-                // Set Data
-                selectViewmodePopup.ClearButtons();
-                selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
-                float num = 0f;
-                foreach (TileData.EffectType tileEffect in Enum.GetValues(typeof(TileData.EffectType)))
+                if(picker != null)
                 {
-                    if(excludedTileEffects.Contains(tileEffect))
-                        continue;
-                    EnumCache<TileData.EffectType>.GetName(tileEffect);
-                    string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
-                    CreateTileEffectChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
+                    foreach (TileData.EffectType tileEffect in System.Enum.GetValues(typeof(TileData.EffectType)))
+                    {
+                        if(excludedTileEffects.Contains(tileEffect))
+                            continue;
+                        EnumCache<TileData.EffectType>.GetName(tileEffect);
+                        string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
+                        CreateTileEffectChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
+                    }
+                    return picker;
                 }
-                selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-                selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-                selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
-
-
-                selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
-                };
-
-                void Exit(int id, BaseEventData eventData)
-                {
-                    selectViewmodePopup.Hide();
-                }
-                selectViewmodePopup.Show(tileEffectButton!.rectTransform.position);
+                return null;
             }
             // TILE EFFECT PICKER END
 
+            // IMPROVEMENT PICKER
+            improvementButton = CreatePicker(improvementButton, referenceButton, __instance.transform, CreateImprovementButtons, new Vector3(360, 0, 0), "mapmaker.choose.improvement");
+            UIRoundButton? CreateImprovementButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
+            {
+                if(picker != null)
+                {
+                    foreach (Polytopia.Data.ImprovementData improvementData in gameState.GameLogicData.AllImprovementData.Values)
+                    {
+                        Polytopia.Data.ImprovementData.Type improvementType = improvementData.type;
+                        if(!allowedImprovements.Contains(improvementType))
+                            continue;
+                        string improvementName = Localization.Get(improvementData.displayName);
+                        CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
+                    }
+                    return picker;
+                }
+                return null;
+            }
+            // IMPROVEMENT PICKER END
+
             UpdateClimateButton(climateButton!);
-            UpdateImprovementButton(improvementButton!);
+            UpdateMapChoiceButton(tileEffectButton!);
             UpdateResourceButton(resourceButton!);
             UpdateTerrainButton(terrainButton!);
             UpdateTileEffectButton(tileEffectButton!);
+            UpdateImprovementButton(improvementButton!);
         }
     }
 
