@@ -50,68 +50,6 @@ internal static class PickersManager
         }
     }
 
-    internal static void CreateClimateChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, int color, ref float num)
-    {
-        UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-        playerButton.id = (int)type;
-        playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-        playerButton.Outline.gameObject.SetActive(false);
-        playerButton.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(color), 1f);
-        playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-        playerButton.SetIconColor(Color.white);
-        playerButton.ButtonEnabled = true;
-        playerButton.OnClicked = (UIButtonBase.ButtonAction)OnClimateButtonClicked;
-        void OnClimateButtonClicked(int id, BaseEventData eventData)
-        {
-            int type = id;
-            Main.modLogger!.LogInfo("Clicked i guess");
-            Main.modLogger!.LogInfo(id);
-            if (type >= SKINS_NUM)
-            {
-                type -= SKINS_NUM;
-                SkinType skinType = (SkinType)type;
-                Brush.chosenClimate = MapLoader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
-                Brush.chosenSkinType = skinType;
-            }
-            else
-            {
-                if((TribeType)type != TribeType.None)
-                {
-                    Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)type, gameState.GameLogicData);
-                }
-                else
-                {
-                    Brush.chosenClimate = 0;
-                }
-                Brush.chosenSkinType = SkinType.Default;
-            }
-            UpdateClimateButton(climateButton!);
-            UpdateImprovementButton(improvementButton!);
-            UpdateResourceButton(resourceButton!);
-            UpdateTerrainButton(terrainButton!);
-            UpdateTileEffectButton(tileEffectButton!);
-            // viewmodePopup.Hide();
-        }
-        playerButton.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
-        void TribeSpriteHandle(SpriteHandle spriteHandleCallback)
-        {
-            playerButton.SetFaceIcon(spriteHandleCallback.sprite);
-        }
-        if((TribeType)type != TribeType.None)
-        {
-            playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
-        }
-        else
-        {
-            playerButton.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(SpriteData.SpecialFaceIcon.neutral));
-        }
-        if (playerButton.Label.PreferedValues.y > num)
-        {
-            num = playerButton.Label.PreferedValues.y;
-        }
-        viewmodePopup.buttons.Add(playerButton);
-    }
-
     #endregion
     #region IMPROVEMENT PICKER
 
@@ -135,33 +73,6 @@ internal static class PickersManager
         }
     }
 
-    internal static void CreateImprovementChoiceButton(SelectViewmodePopup viewmodePopup, GameLogicData gameLogicData, string header, string spriteName, int type, ref float num)
-    {
-        UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-        playerButton.id = type;
-        playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-        playerButton.Outline.gameObject.SetActive(false);
-        playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-        playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-        playerButton.SetIconColor(Color.white);
-        playerButton.ButtonEnabled = true;
-        playerButton.OnClicked = (UIButtonBase.ButtonAction)OnImprovementButtonClicked;
-        void OnImprovementButtonClicked(int id, BaseEventData eventData)
-        {
-            int type = id;
-            Main.modLogger!.LogInfo("Clicked i guess");
-            Main.modLogger!.LogInfo(id);
-            Brush.chosenBuilding = (Polytopia.Data.ImprovementData.Type)type;
-            UpdateImprovementButton(improvementButton!);
-        }
-        SetIcon(playerButton, GetSprite(type, spriteName, gameLogicData));
-        if (playerButton.Label.PreferedValues.y > num)
-        {
-            num = playerButton.Label.PreferedValues.y;
-        }
-        viewmodePopup.buttons.Add(playerButton);
-    }
-
     #endregion
     #region MAP PICKER
 
@@ -180,42 +91,8 @@ internal static class PickersManager
         }
     }
 
-    internal static void CreateMapChoiceButton(SelectViewmodePopup viewmodePopup, GameLogicData gameLogicData, string header, int idx, ref float num)
-    {
-        UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-        playerButton.id = idx;
-        playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-        playerButton.Outline.gameObject.SetActive(false);
-        playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-        playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-        playerButton.SetIconColor(Color.white);
-        playerButton.ButtonEnabled = true;
-        playerButton.OnClicked = (UIButtonBase.ButtonAction)OnmapChoiceButtonClicked;
-        void OnmapChoiceButtonClicked(int id, BaseEventData eventData)
-        {
-            int type = id;
-            Main.modLogger!.LogInfo("Clicked i guess");
-            Main.modLogger!.LogInfo(id);
-            GameState gameState = GameManager.GameState;
-            MapMaker.MapName = visualMaps[id];
-            MapLoader.chosenMap = MapLoader.LoadMapFile(MapMaker.MapName);
-            MapLoader.LoadMapInState(ref gameState);
-            GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-            MapLoader.RevealMap(GameManager.LocalPlayer.Id);
-            // Brush.chosenBuilding = (Polytopia.Data.MapData.Type)type;
-            UpdateMapChoiceButton(mapChoiceButton!);
-        }
-        // PickersHelper.SetIcon(playerButton, PickersHelper.GetSprite(idx, "", gameLogicData));
-        if (playerButton.Label.PreferedValues.y > num)
-        {
-            num = playerButton.Label.PreferedValues.y;
-        }
-        viewmodePopup.buttons.Add(playerButton);
-    }
-
     #endregion
-    #region RESOURCE PICKER¨
-
+    #region RESOURCE PICKER
 
     internal static List<Polytopia.Data.ResourceData.Type> excludedResources = new()
     {
@@ -234,36 +111,6 @@ internal static class PickersManager
             button.Outline.gameObject.SetActive(false);
             button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
         }
-    }
-
-    internal static void CreateResourceChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
-    {
-        UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-        playerButton.id = (int)type;
-        playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-        playerButton.Outline.gameObject.SetActive(false);
-        playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-        playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-        playerButton.SetIconColor(Color.white);
-        playerButton.ButtonEnabled = true;
-        playerButton.OnClicked = (UIButtonBase.ButtonAction)OnResourceButtonClicked;
-        void OnResourceButtonClicked(int id, BaseEventData eventData)
-        {
-            int type = id;
-            Main.modLogger!.LogInfo("Clicked i guess");
-            Main.modLogger!.LogInfo(id);
-            Brush.chosenResource = (Polytopia.Data.ResourceData.Type)type;
-            UpdateResourceButton(resourceButton!);
-            // viewmodePopup.Hide();
-        }
-
-        GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-        SetIcon(playerButton, GetSprite(type, spriteName, gameLogicData));
-        if (playerButton.Label.PreferedValues.y > num)
-        {
-            num = playerButton.Label.PreferedValues.y;
-        }
-        viewmodePopup.buttons.Add(playerButton);
     }
 
     #endregion
@@ -288,37 +135,6 @@ internal static class PickersManager
         }
     }
 
-    internal static void CreateTerrainChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
-    {
-        UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-        playerButton.id = (int)type;
-        playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-        playerButton.Outline.gameObject.SetActive(false);
-        playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-        playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-        playerButton.SetIconColor(Color.white);
-        playerButton.ButtonEnabled = true;
-        playerButton.OnClicked = (UIButtonBase.ButtonAction)OnTerrainButtonClicked;
-        void OnTerrainButtonClicked(int id, BaseEventData eventData)
-        {
-            int type = id;
-            Main.modLogger!.LogInfo("Clicked i guess");
-            Main.modLogger!.LogInfo(id);
-            Brush.chosenTerrain = (Polytopia.Data.TerrainData.Type)type;
-            UpdateTerrainButton(terrainButton!);
-            // viewmodePopup.Hide();
-        }
-
-        GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-        SetIcon(playerButton, GetSprite(type, spriteName, gameLogicData), 0.6f);
-
-        if (playerButton.Label.PreferedValues.y > num)
-        {
-            num = playerButton.Label.PreferedValues.y;
-        }
-        viewmodePopup.buttons.Add(playerButton);
-    }
-
     #endregion
     #region TILE EFFECT PICKER
 
@@ -340,36 +156,6 @@ internal static class PickersManager
             button.Outline.gameObject.SetActive(false);
             button.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
         }
-    }
-
-    internal static void CreateTileEffectChoiceButton(SelectViewmodePopup viewmodePopup, GameState gameState, string header, string spriteName, int type, ref float num)
-    {
-        UIRoundButton playerButton = GameObject.Instantiate<UIRoundButton>(viewmodePopup.buttonPrefab, viewmodePopup.gridLayout.transform);
-        playerButton.id = (int)type;
-        playerButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
-        playerButton.Outline.gameObject.SetActive(false);
-        playerButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-        playerButton.text = header[0].ToString().ToUpper() + header.Substring(1);
-        playerButton.SetIconColor(Color.white);
-        playerButton.ButtonEnabled = true;
-        playerButton.OnClicked = (UIButtonBase.ButtonAction)OnTileEffectButtonClicked;
-        void OnTileEffectButtonClicked(int id, BaseEventData eventData)
-        {
-            int type = id;
-            Main.modLogger!.LogInfo("Clicked i guess");
-            Main.modLogger!.LogInfo(id);
-            Brush.chosenTileEffect = (TileData.EffectType)type;
-            UpdateTileEffectButton(tileEffectButton!);
-            // viewmodePopup.Hide();
-        }
-
-        GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-        SetIcon(playerButton, GetSprite(type, spriteName, gameLogicData), 0.6f);
-        if (playerButton.Label.PreferedValues.y > num)
-        {
-            num = playerButton.Label.PreferedValues.y;
-        }
-        viewmodePopup.buttons.Add(playerButton);
     }
 
     internal static string TileEffectToString(TileData.EffectType tileEffect)
@@ -468,6 +254,49 @@ internal static class PickersManager
         return picker;
     }
 
+    internal static void CreateChoiceButton(
+        SelectViewmodePopup viewmodePopup,
+        string header,
+        int id,
+        ref float maxLabelHeight,
+        System.Action<int> onClick,
+        Color? backgroundColor = null,
+        System.Action<UIRoundButton, int>? setIcon = null
+    )
+    {
+        if(backgroundColor == null)
+            ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+
+        UIRoundButton button = GameObject.Instantiate(
+            viewmodePopup.buttonPrefab,
+            viewmodePopup.gridLayout.transform
+        );
+
+        button.id = id;
+        button.rectTransform.sizeDelta = new Vector2(56f, 56f);
+        button.Outline.gameObject.SetActive(false);
+        button.BG.color = (Color)backgroundColor!;
+
+        button.text = char.ToUpper(header[0]) + header.Substring(1);
+        button.SetIconColor(Color.white);
+        button.ButtonEnabled = true;
+
+        button.OnClicked = (UIButtonBase.ButtonAction)((btnId, eventData) =>
+        {
+            onClick(btnId);
+        });
+
+        if(setIcon != null)
+            setIcon(button, id);
+
+        if (button.Label.PreferedValues.y > maxLabelHeight)
+        {
+            maxLabelHeight = button.Label.PreferedValues.y;
+        }
+
+        viewmodePopup.buttons.Add(button);
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
     private static void HudScreen_OnMatchStart(HudScreen __instance)
@@ -475,25 +304,82 @@ internal static class PickersManager
         if (MapLoader.inMapMaker)
         {
             UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
-
             // CLIMATE PICKER
             climateButton = CreatePicker(climateButton, referenceButton, __instance.transform, CreateClimateButtons, headerKey: "mapmaker.choose.climate");
             UIRoundButton? CreateClimateButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
             {
                 if(picker != null)
                 {
-                    CreateClimateChoiceButton(selectViewmodePopup, gameState, "none", EnumCache<TribeType>.GetName(TribeType.None), (int)TribeType.None, 16777215, ref num);
+                    CreateChoiceButton(selectViewmodePopup, "none",
+                            (int)TribeType.None, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(16777215), 1f), SetHeadIcon);
+
+                    void OnClick(int id)
+                    {
+                        if (id >= SKINS_NUM)
+                        {
+                            id -= SKINS_NUM;
+                            SkinType skinType = (SkinType)id;
+                            Brush.chosenClimate = MapLoader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
+                            Brush.chosenSkinType = skinType;
+                        }
+                        else
+                        {
+                            if((TribeType)id != TribeType.None)
+                            {
+                                Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
+                            }
+                            else
+                            {
+                                Brush.chosenClimate = 0;
+                            }
+                            Brush.chosenSkinType = SkinType.Default;
+                        }
+                        UpdateClimateButton(climateButton!);
+                        UpdateImprovementButton(improvementButton!);
+                        UpdateResourceButton(resourceButton!);
+                        UpdateTerrainButton(terrainButton!);
+                        UpdateTileEffectButton(tileEffectButton!);
+                    }
+
+                    void SetHeadIcon(UIRoundButton button, int type)
+                    {
+                        string spriteName = EnumCache<TribeType>.GetName((TribeType)type);
+                        if(type >= SKINS_NUM)
+                        {
+                            type -= SKINS_NUM;
+                            spriteName = EnumCache<SkinType>.GetName((SkinType)type);
+                        }
+                        button.iconSpriteHandle.SetCompletion((SpriteHandleCallback)TribeSpriteHandle);
+                        void TribeSpriteHandle(SpriteHandle spriteHandleCallback)
+                        {
+                            button.SetFaceIcon(spriteHandleCallback.sprite);
+                        }
+                        if((TribeType)type != TribeType.None)
+                        {
+                            button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
+                        }
+                        else
+                        {
+                            button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(SpriteData.SpecialFaceIcon.neutral));
+                        }
+                    }
+
                     GameLogicData gameLogicData = gameState.GameLogicData;
                     List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
                     foreach (TribeData tribeData in tribes)
                     {
                         TribeType tribeType = tribeData.type;
                         string tribeName = Localization.Get(tribeData.displayName);
-                        CreateClimateChoiceButton(selectViewmodePopup, gameState, tribeName, EnumCache<TribeType>.GetName(tribeType), (int)tribeType, gameLogicData.GetTribeColor(tribeData.type, SkinType.Default), ref num);
+
+                        CreateChoiceButton(selectViewmodePopup, tribeName,
+                            (int)tribeType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, SkinType.Default)), 1f), SetHeadIcon);
+
                         foreach (SkinType skinType in tribeData.skins)
                         {
                             string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
-                            CreateClimateChoiceButton(selectViewmodePopup, gameState, skinHeader, EnumCache<SkinType>.GetName(skinType), (int)skinType + 1000, gameLogicData.GetTribeColor(tribeData.type, skinType), ref num);
+
+                            CreateChoiceButton(selectViewmodePopup, skinHeader,
+                                (int)skinType + SKINS_NUM, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, skinType)), 1f), SetHeadIcon);
                         }
                     }
                     return picker;
@@ -518,7 +404,19 @@ internal static class PickersManager
                     for (int index = 0; index < visualMaps.Count(); index++)
                     {
                         string name = visualMaps[index];
-                        CreateMapChoiceButton(selectViewmodePopup, gameState.GameLogicData, name, index, ref num);
+                        CreateChoiceButton(selectViewmodePopup, name,
+                                index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f));
+
+                        void OnClick(int id)
+                        {
+                            MapMaker.MapName = visualMaps[id];
+                            MapLoader.chosenMap = MapLoader.LoadMapFile(MapMaker.MapName);
+                            MapLoader.LoadMapInState(ref gameState);
+                            GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                            MapLoader.RevealMap(GameManager.LocalPlayer.Id);
+                            UpdateMapChoiceButton(mapChoiceButton!);
+                        }
+                        // CreateMapChoiceButton(selectViewmodePopup, gameState.GameLogicData, name, index, ref num);
                     }
                     return picker;
                 }
@@ -538,7 +436,19 @@ internal static class PickersManager
                         if(excludedResources.Contains(resourceType))
                             continue;
                         string resourceName = Localization.Get(resourceData.displayName);
-                        CreateResourceChoiceButton(selectViewmodePopup, gameState, resourceName, SpriteData.ResourceToString(resourceType), (int)resourceType, ref num);
+                        CreateChoiceButton(selectViewmodePopup, resourceName,
+                                (int)resourceType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
+
+                        void OnClick(int id)
+                        {
+                            Brush.chosenResource = (Polytopia.Data.ResourceData.Type)id;
+                            UpdateResourceButton(resourceButton!);
+                        }
+
+                        void SetResourceIcon(UIRoundButton button, int type)
+                        {
+                            SetIcon(button, GetSprite(type, SpriteData.ResourceToString((ResourceData.Type)type), gameState.GameLogicData), 0.6f);
+                        }
                     }
                     return picker;
                 }
@@ -558,7 +468,19 @@ internal static class PickersManager
                         if(excludedTerrains.Contains(terrainType))
                             continue;
                         string terrainName = Localization.Get(terrainType.GetDisplayName());
-                        CreateTerrainChoiceButton(selectViewmodePopup, gameState, terrainName, SpriteData.TerrainToString(terrainType), (int)terrainType, ref num);
+                        CreateChoiceButton(selectViewmodePopup, terrainName,
+                                (int)terrainType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTerrainIcon);
+
+                        void OnClick(int id)
+                        {
+                            Brush.chosenTerrain = (Polytopia.Data.TerrainData.Type)id;
+                            UpdateTerrainButton(terrainButton!);
+                        }
+
+                        void SetTerrainIcon(UIRoundButton button, int type)
+                        {
+                            SetIcon(button, GetSprite(type, SpriteData.TerrainToString((Polytopia.Data.TerrainData.Type)type), gameState.GameLogicData), 0.6f);
+                        }
                     }
                     return picker;
                 }
@@ -578,7 +500,20 @@ internal static class PickersManager
                             continue;
                         EnumCache<TileData.EffectType>.GetName(tileEffect);
                         string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
-                        CreateTileEffectChoiceButton(selectViewmodePopup, gameState, tileEffectName, TileEffectToString(tileEffect), (int)tileEffect, ref num);
+
+                        CreateChoiceButton(selectViewmodePopup, tileEffectName,
+                                (int)tileEffect, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
+
+                        void OnClick(int id)
+                        {
+                            Brush.chosenTileEffect = (TileData.EffectType)id;
+                            UpdateTileEffectButton(tileEffectButton!);
+                        }
+
+                        void SetTileEffectIcon(UIRoundButton button, int type)
+                        {
+                            SetIcon(button, GetSprite(type, TileEffectToString((TileData.EffectType)type), gameState.GameLogicData), 0.6f);
+                        }
                     }
                     return picker;
                 }
@@ -598,7 +533,19 @@ internal static class PickersManager
                         if(!allowedImprovements.Contains(improvementType))
                             continue;
                         string improvementName = Localization.Get(improvementData.displayName);
-                        CreateImprovementChoiceButton(selectViewmodePopup, gameState.GameLogicData, improvementName, SpriteData.ImprovementToString(improvementType), (int)improvementType, ref num);
+                        CreateChoiceButton(selectViewmodePopup, improvementName,
+                                (int)improvementType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
+
+                        void OnClick(int id)
+                        {
+                            Brush.chosenBuilding = (ImprovementData.Type)id;
+                            UpdateImprovementButton(improvementButton!);
+                        }
+
+                        void SetImprovementIcon(UIRoundButton button, int type)
+                        {
+                            SetIcon(button, GetSprite(type, SpriteData.ImprovementToString(improvementType), gameState.GameLogicData), 0.6f);
+                        }
                     }
                     return picker;
                 }
