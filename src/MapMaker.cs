@@ -348,5 +348,20 @@ public static class MapMaker
         }
     }
 
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(InteractionBar), nameof(InteractionBar.Show))]
+    public static void ShowCapitalStatus(InteractionBar __instance, bool instant, bool force)
+    {
+        if(!MapLoader.inMapMaker || __instance == null || __instance.description == null) return;
+        if(__instance.tile == null) return;
+        TileData tile = GameManager.GameState.Map.GetTile(__instance.tile.Coordinates);
+        if(tile == null || tile.improvement == null || tile.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
+        byte? ID = MapLoader.CapitalOfCoords(tile.coordinates);
+        if(ID != null)
+        {
+            __instance.description.text = "Capital City of Player "+ID;
+        }
+    }
+
     #endregion
 }

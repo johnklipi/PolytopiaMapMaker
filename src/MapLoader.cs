@@ -287,10 +287,6 @@ public static class MapLoader
         MapInfo? mapInfo = JsonSerializer.Deserialize<MapInfo>(json);
         
         if(mapInfo?.capitals != null) MapMaker.currCapitals = ConvertCapitalList(mapInfo.capitals);
-        foreach(var kvp in MapMaker.currCapitals)
-        {
-            Main.modLogger!.LogMessage(kvp.Key + " | "+ kvp.Value);
-        }
         return mapInfo;
     }
 
