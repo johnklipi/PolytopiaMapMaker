@@ -378,5 +378,14 @@ public static class MapLoader
         }
         return entries;
     }
+
+    public static byte? CapitalOfCoords(WorldCoordinates coords)
+    {
+        foreach(var kvp in MapMaker.currCapitals)
+        {
+            if(kvp.Value == coords) return kvp.Key;
+        }
+        return null;
+    }
     #endregion
 }

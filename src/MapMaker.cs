@@ -282,13 +282,15 @@ public static class MapMaker
         }
     }
 
+    #region Capitals
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(InteractionBar), nameof(InteractionBar.AddAbilityButtons))]
     public static void AddSetCapitalButton(InteractionBar __instance, Tile tile)
     {
-        if(!MapLoader.inMapMaker || tile == null) return;
+        if (!MapLoader.inMapMaker || tile == null) return;
         TileData tile1 = GameManager.GameState.Map.GetTile(tile.Coordinates);
-        if(tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
+        if (tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
 
         UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("setcapital"), false);
         //uiroundButton.sprite = PolyMod.Registry.GetSprite("anything");
@@ -297,7 +299,7 @@ public static class MapMaker
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
             popup.Header = "Whose capital should this be?";
-            popup.Description = "Input a number from 1 to 254! The associated player will spawn here.";
+            popup.Description = "Input a number from 1 to 254! The associated player will spawn here. Type in 0 to mark this tile as an ordinary (noncapital) city!";
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
                 new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
@@ -310,26 +312,11 @@ public static class MapMaker
             void Save(int id, BaseEventData eventData)
             {
                 var input = Popup.CustomInput.GetInputFromPopup(popup);
-                if(input != null)
+                if (input != null)
                 {
-                    if(byte.TryParse(input.text, out byte ID)){
-                        Main.modLogger.LogMessage("Inputted playerid: "+ ID);
-                        if(currCapitals.TryGetValue(ID, out WorldCoordinates whatever)) NotificationManager.Notify("Player already has their capital set!");
-                        else
-                        {
-                            bool flag = false;
-                            byte original = 0;
-                            foreach(var kvp in currCapitals)
-                            {
-                                if(kvp.Value == tile.Coordinates) {Main.modLogger.LogMessage("overwriting capital"); flag = true; original = kvp.Key; break;}
-                            }
-                            if (flag)
-                            {
-                                NotificationManager.Notify("Overwritten capital location!", "From "+original+" to "+ID);
-                                currCapitals.Remove(original);
-                            }
-                            currCapitals.Add(ID, tile.Coordinates);
-                        }
+                    if (byte.TryParse(input.text, out byte ID))
+                    {
+                        ChangeCapitalForTile(ID, tile.Coordinates);
                     }
                 }
                 Popup.CustomInput.RemoveInputFromPopup(popup);
@@ -337,4 +324,29 @@ public static class MapMaker
             Popup.CustomInput.AddInputToPopup(popup);
         }
     }
+
+    public static void ChangeCapitalForTile(byte ID, WorldCoordinates coords)
+    {
+        byte? originalOwner = MapLoader.CapitalOfCoords(coords);
+        if (ID == 0)
+        { 
+            if (originalOwner != null)
+            {
+                currCapitals.Remove((byte)originalOwner);
+                NotificationManager.Notify("City is no longer a capital!");
+            }
+        }
+        else if (currCapitals.TryGetValue(ID, out WorldCoordinates whatever)) NotificationManager.Notify("Player already has their capital set!");
+        else
+        {
+            if(originalOwner != null)
+            {
+                NotificationManager.Notify("From " + originalOwner + " to " + ID, "Overwritten capital location!");
+                currCapitals.Remove((byte)originalOwner);
+            }
+            currCapitals.Add(ID, coords);
+        }
+    }
+
+    #endregion
 }
