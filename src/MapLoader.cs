@@ -7,6 +7,7 @@ using PolytopiaBackendBase.Common;
 using PolyMod.Managers;
 using PolyMod;
 using Il2CppInterop.Runtime;
+using Unity.Collections;
 
 namespace PolytopiaMapManager;
 
@@ -39,6 +40,8 @@ public static class MapLoader
         public ushort size;
         [JsonInclude]
         public List<MapTile> map = new();
+        [JsonInclude]
+        public List<string> capitals = new(); // Format: "(1,1).ID"
     }
     internal const uint MAX_MAP_SIZE = 100;
     internal const uint MIN_MAP_SIZE = 3;
@@ -51,6 +54,7 @@ public static class MapLoader
     public static void Init()
     {
         inMapMaker = true;
+        MapMaker.currCapitals = new Dictionary<byte, WorldCoordinates>();
         MapMaker.MapName = Localization.Get(DEFAULT_MAP_NAME_KEY);
         MapMaker.MapSaved = false;
         GameSettings gameSettings = new GameSettings();
@@ -281,7 +285,12 @@ public static class MapLoader
         string json = File.ReadAllText(filePath);
 
         MapInfo? mapInfo = JsonSerializer.Deserialize<MapInfo>(json);
-
+        
+        if(mapInfo?.capitals != null) MapMaker.currCapitals = ConvertCapitalList(mapInfo.capitals);
+        foreach(var kvp in MapMaker.currCapitals)
+        {
+            Main.modLogger!.LogMessage(kvp.Key + " | "+ kvp.Value);
+        }
         return mapInfo;
     }
 
@@ -310,14 +319,64 @@ public static class MapLoader
             }
             mapTiles.Add(mapTile);
         }
+        List<string> Capitals = CapitalsToString(MapMaker.currCapitals);
         MapInfo mapInfo = new MapInfo
         {
             size = size,
-            map = mapTiles
+            map = mapTiles,
+            capitals = Capitals
         };
         File.WriteAllTextAsync(
             Path.Combine(MAPS_PATH, name),
             JsonSerializer.Serialize(mapInfo, new JsonSerializerOptions { WriteIndented = true })
         );
     }
+
+    #region CapitalUtils
+    ////
+    /// Capitals are saved into a string list in this exact format:
+    /// COORDS.PlayerByte
+    /// ex: (1,1).1
+    public static Dictionary<byte, WorldCoordinates> ConvertCapitalList(List<string> entries)
+    {
+        Dictionary<byte, WorldCoordinates> kvp = new Dictionary<byte, WorldCoordinates>();
+        foreach(string entry in entries)
+        {
+            string[] entrysplit = entry.Split('.');
+            if(entrysplit.Length != 2) continue;
+            WorldCoordinates coords = InverseToString(entrysplit[0]);
+            if(coords == WorldCoordinates.NULL_COORDINATES) continue;
+            if(byte.TryParse(entrysplit[1], out byte res))
+                kvp[res] = coords;
+            else {Main.modLogger!.LogError("Invalid player id found in capitals. Ignoring...");}
+        }
+        return kvp;
+    }
+
+    public static WorldCoordinates InverseToString(string coords)
+    {
+        var xyUnclean = coords.Split(',');
+        if(xyUnclean.Length != 2) return WorldCoordinates.NULL_COORDINATES;
+        var x = xyUnclean[0].Trim('(');
+        var y = xyUnclean[1].Trim(')');
+        if(int.TryParse(x, out int X) && int.TryParse(y, out int Y))
+        {
+            WorldCoordinates res;
+            res.x = X;
+            res.y = Y;
+            return res;
+        }
+        return WorldCoordinates.NULL_COORDINATES;
+    }
+
+    public static List<string> CapitalsToString(Dictionary<byte, WorldCoordinates> dict)
+    {
+        List<string> entries = new List<string>();
+        foreach(var kvp in dict)
+        {
+            entries.Add(kvp.Value.ToString() + "." + kvp.Key.ToString());
+        }
+        return entries;
+    }
+    #endregion
 }

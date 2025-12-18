@@ -10,7 +10,7 @@ namespace PolytopiaMapManager;
 public static class MapMaker
 {
     private static string mapName = "";
-    public static bool MapSaved = false; // Can also use this to indicate unsaved maps in UI?
+    public static bool MapSaved = false;
     public static string MapName
     {
         set
@@ -30,6 +30,8 @@ public static class MapMaker
         }
     }
     private static Transform? mapNameContainer;
+
+    public static Dictionary<byte, WorldCoordinates> currCapitals = new Dictionary<byte, WorldCoordinates>();
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
@@ -277,6 +279,62 @@ public static class MapMaker
             text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
             mapNameContainer = text.transform;
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(InteractionBar), nameof(InteractionBar.AddAbilityButtons))]
+    public static void AddSetCapitalButton(InteractionBar __instance, Tile tile)
+    {
+        if(!MapLoader.inMapMaker || tile == null) return;
+        TileData tile1 = GameManager.GameState.Map.GetTile(tile.Coordinates);
+        if(tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
+
+        UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("setcapital"), false);
+        //uiroundButton.sprite = PolyMod.Registry.GetSprite("anything");
+        uiroundButton.OnClicked += (UIButtonBase.ButtonAction)setcapitalmethod;
+        void setcapitalmethod(int id, BaseEventData baseEventData)
+        {
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Whose capital should this be?";
+            popup.Description = "Input a number from 1 to 254! The associated player will spawn here.";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Save, -1, true, null)
+            };
+            void Exit(int id, BaseEventData eventData)
+            {
+                Popup.CustomInput.RemoveInputFromPopup(popup);
+            }
+            void Save(int id, BaseEventData eventData)
+            {
+                var input = Popup.CustomInput.GetInputFromPopup(popup);
+                if(input != null)
+                {
+                    if(byte.TryParse(input.text, out byte ID)){
+                        Main.modLogger.LogMessage("Inputted playerid: "+ ID);
+                        if(currCapitals.TryGetValue(ID, out WorldCoordinates whatever)) NotificationManager.Notify("Player already has their capital set!");
+                        else
+                        {
+                            bool flag = false;
+                            byte original = 0;
+                            foreach(var kvp in currCapitals)
+                            {
+                                if(kvp.Value == tile.Coordinates) {Main.modLogger.LogMessage("overwriting capital"); flag = true; original = kvp.Key; break;}
+                            }
+                            if (flag)
+                            {
+                                NotificationManager.Notify("Overwritten capital location!", "From "+original+" to "+ID);
+                                currCapitals.Remove(original);
+                            }
+                            currCapitals.Add(ID, tile.Coordinates);
+                        }
+                    }
+                }
+                Popup.CustomInput.RemoveInputFromPopup(popup);
+            }
+            Popup.CustomInput.AddInputToPopup(popup);
         }
     }
 }
