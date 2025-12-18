@@ -264,8 +264,7 @@ internal static class PickersManager
         System.Action<UIRoundButton, int>? setIcon = null
     )
     {
-        if(backgroundColor == null)
-            ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+        Color bg = backgroundColor ?? ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
 
         UIRoundButton button = GameObject.Instantiate(
             viewmodePopup.buttonPrefab,
@@ -275,7 +274,7 @@ internal static class PickersManager
         button.id = id;
         button.rectTransform.sizeDelta = new Vector2(56f, 56f);
         button.Outline.gameObject.SetActive(false);
-        button.BG.color = (Color)backgroundColor!;
+        button.BG.color = bg;
 
         button.text = char.ToUpper(header[0]) + header.Substring(1);
         button.SetIconColor(Color.white);
@@ -498,7 +497,7 @@ internal static class PickersManager
                     {
                         if(excludedTileEffects.Contains(tileEffect))
                             continue;
-                        EnumCache<TileData.EffectType>.GetName(tileEffect);
+
                         string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
 
                         CreateChoiceButton(selectViewmodePopup, tileEffectName,
@@ -544,7 +543,7 @@ internal static class PickersManager
 
                         void SetImprovementIcon(UIRoundButton button, int type)
                         {
-                            SetIcon(button, GetSprite(type, SpriteData.ImprovementToString(improvementType), gameState.GameLogicData), 0.6f);
+                            SetIcon(button, GetSprite(type, SpriteData.ImprovementToString((ImprovementData.Type)type), gameState.GameLogicData), 0.6f);
                         }
                     }
                     return picker;
@@ -554,7 +553,7 @@ internal static class PickersManager
             // IMPROVEMENT PICKER END
 
             UpdateClimateButton(climateButton!);
-            UpdateMapChoiceButton(tileEffectButton!);
+            UpdateMapChoiceButton(mapChoiceButton!);
             UpdateResourceButton(resourceButton!);
             UpdateTerrainButton(terrainButton!);
             UpdateTileEffectButton(tileEffectButton!);
