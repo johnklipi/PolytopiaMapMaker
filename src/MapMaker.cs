@@ -327,7 +327,7 @@ public static class MapMaker
 
     public static void ChangeCapitalForTile(byte ID, WorldCoordinates coords)
     {
-        byte? originalOwner = MapLoader.CapitalOfCoords(coords);
+        byte? originalOwner = MapLoader.CapitalOfCoords(coords, currCapitals);
         if (ID == 0)
         { 
             if (originalOwner != null)
@@ -352,11 +352,10 @@ public static class MapMaker
     [HarmonyPatch(typeof(InteractionBar), nameof(InteractionBar.Show))]
     public static void ShowCapitalStatus(InteractionBar __instance, bool instant, bool force)
     {
-        if(!MapLoader.inMapMaker || __instance == null || __instance.description == null) return;
-        if(__instance.tile == null) return;
+        if(!MapLoader.inMapMaker || __instance == null || __instance.description == null || __instance.tile == null) return;
         TileData tile = GameManager.GameState.Map.GetTile(__instance.tile.Coordinates);
         if(tile == null || tile.improvement == null || tile.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
-        byte? ID = MapLoader.CapitalOfCoords(tile.coordinates);
+        byte? ID = MapLoader.CapitalOfCoords(tile.coordinates, currCapitals);
         if(ID != null)
         {
             __instance.description.text = "Capital City of Player "+ID;
