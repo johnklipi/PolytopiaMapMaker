@@ -13,7 +13,7 @@ internal class TerrainPicker : PickerBase
         Polytopia.Data.TerrainData.Type.Mangrove
     };
 
-    internal new void Create(UIRoundButton referenceButton, Transform parent)
+    internal override void Create(UIRoundButton referenceButton, Transform parent)
     {
         button = Pickers.CreatePicker(button, referenceButton, parent, CreateTerrainButtons, new Vector3(180, 0, 0), "mapmaker.choose.terrain");
         UIRoundButton? CreateTerrainButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -46,7 +46,7 @@ internal class TerrainPicker : PickerBase
         }
     }
 
-    internal new static Sprite GetIcon(GameLogicData gameLogicData)
+    internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
        return Pickers.GetSprite((int)Brush.chosenTerrain, SpriteData.TerrainToString(Brush.chosenTerrain), gameLogicData);
     }

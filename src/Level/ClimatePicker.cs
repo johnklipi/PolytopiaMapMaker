@@ -11,7 +11,7 @@ internal class ClimatePicker : PickerBase
 {
     internal const int SKINS_NUM = 1000;
 
-    internal new void Create(UIRoundButton referenceButton, Transform parent)
+    internal override void Create(UIRoundButton referenceButton, Transform parent)
     {
         button = Pickers.CreatePicker(button, referenceButton, parent, CreateClimateButtons, headerKey: "mapmaker.choose.climate");
         UIRoundButton? CreateClimateButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -96,7 +96,7 @@ internal class ClimatePicker : PickerBase
         }
     }
 
-    internal new void Update(GameLogicData gameLogicData)
+    internal override void Update(GameLogicData gameLogicData)
     {
         base.Update(gameLogicData);
         void TribeSpriteHandle(SpriteHandle spriteHandleCallback)

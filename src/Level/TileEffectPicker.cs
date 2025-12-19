@@ -11,7 +11,7 @@ internal class TileEffectPicker : PickerBase
         TileData.EffectType.Foam,
     };
 
-    internal new void Create(UIRoundButton referenceButton, Transform parent)
+    internal override void Create(UIRoundButton referenceButton, Transform parent)
     {
         button = Pickers.CreatePicker(button, referenceButton, parent, CreateTileEffectButtons, new Vector3(270, 0, 0), "mapmaker.choose.tileeffect");
         UIRoundButton? CreateTileEffectButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -45,7 +45,7 @@ internal class TileEffectPicker : PickerBase
         }
     }
 
-    internal new static Sprite GetIcon(GameLogicData gameLogicData)
+    internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
        return Pickers.GetSprite((int)Brush.chosenTileEffect, TileEffectToString(Brush.chosenTileEffect), gameLogicData);
     }

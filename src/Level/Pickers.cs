@@ -36,8 +36,6 @@ internal static class Pickers
 
     public static void SetIcon(UIRoundButton button, Sprite? icon, float iconSizeMultiplier = 0.8f)
     {
-        if(string.IsNullOrEmpty(icon.name))
-            iconSizeMultiplier = 0.8f;
         button.faceIconSizeMultiplier = iconSizeMultiplier;
         button.icon.sprite = icon;
         button.icon.useSpriteMesh = true;

@@ -14,7 +14,7 @@ internal class ImprovementPicker : PickerBase
         Polytopia.Data.ImprovementData.Type.Ruin
     };
 
-    internal new void Create(UIRoundButton referenceButton, Transform parent)
+    internal override void Create(UIRoundButton referenceButton, Transform parent)
     {
         button = Pickers.CreatePicker(button, referenceButton, parent, CreateImprovementButtons, new Vector3(360, 0, 0), "mapmaker.choose.improvement");
         UIRoundButton? CreateImprovementButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -47,7 +47,7 @@ internal class ImprovementPicker : PickerBase
         }
     }
 
-    internal new static Sprite GetIcon(GameLogicData gameLogicData)
+    internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
        return Pickers.GetSprite((int)Brush.chosenBuilding, SpriteData.ImprovementToString(Brush.chosenBuilding), gameLogicData);
     }

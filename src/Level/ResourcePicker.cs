@@ -12,7 +12,7 @@ internal class ResourcePicker  : PickerBase
         Polytopia.Data.ResourceData.Type.Whale,
     };
 
-    internal new void Create(UIRoundButton referenceButton, Transform parent)
+    internal override void Create(UIRoundButton referenceButton, Transform parent)
     {
         button = Pickers.CreatePicker(button, referenceButton, parent, CreateResourceButtons, new Vector3(90, 0, 0), "mapmaker.choose.resource");
         UIRoundButton? CreateResourceButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -45,7 +45,7 @@ internal class ResourcePicker  : PickerBase
         }
     }
 
-    internal static new Sprite GetIcon(GameLogicData gameLogicData)
+    internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
        return Pickers.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData);
     }

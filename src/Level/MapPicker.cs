@@ -7,8 +7,7 @@ using PolytopiaBackendBase.Common;
 namespace PolytopiaMapManager.Level;
 internal class MapPicker : PickerBase
 {
-
-    internal new void Create(UIRoundButton referenceButton, Transform parent)
+    internal override void Create(UIRoundButton referenceButton, Transform parent)
     {
         button = Pickers.CreatePicker(button, referenceButton, parent, CreateMapButtons, new Vector3(0, -90, 0), "mapmaker.choose.map");
         UIRoundButton? CreateMapButtons(UIRoundButton? picker, ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -35,7 +34,7 @@ internal class MapPicker : PickerBase
                         MapLoader.LoadMapInState(ref gameState);
                         GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                         MapLoader.RevealMap(GameManager.LocalPlayer.Id);
-                        Update(gameState.GameLogicData);
+                        base.Update(gameState.GameLogicData);
                     }
                     // CreateMapChoiceButton(selectViewmodePopup, gameState.GameLogicData, name, index, ref num);
                 }
