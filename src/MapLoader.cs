@@ -299,8 +299,8 @@ public static class MapLoader
         string json = File.ReadAllText(filePath);
 
         MapInfo? mapInfo = JsonSerializer.Deserialize<MapInfo>(json);
-        
-        if(mapInfo?.capitals != null) MapMaker.currCapitals = ConvertCapitalList(mapInfo.capitals);
+
+        if (mapInfo?.capitals != null) MapMaker.currCapitals = LoadCapitals(mapInfo.capitals);
         return mapInfo;
     }
 
