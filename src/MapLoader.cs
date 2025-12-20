@@ -9,6 +9,8 @@ using PolyMod;
 using Il2CppInterop.Runtime;
 using Unity.Collections;
 using PolytopiaMapManager.Menu;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace PolytopiaMapManager;
 
@@ -159,18 +161,11 @@ public static class MapLoader
     private static void MapGenerator_Generate_Postfix(ref GameState state, ref MapGeneratorSettings settings, MapGenerator __instance)
     {
         LoadMapInState(ref state);
-        
+
         if (!inMapMaker)
         {
             var capitals = LoadCapitals(chosenMap!.capitals);
-            foreach (var kvp in capitals)
-            {
-                TileData tile = state.Map.GetTile(kvp.Value);
-                state.TryGetPlayer(kvp.Key, out PlayerState player);
-                __instance.SetTileAsCapital(state, player, tile);
-                int idx = tile.coordinates.X + tile.coordinates.Y*state.Map.width;
-                tile.climate = chosenMap.map[idx].climate;
-            }
+            GenerateCapitals(state, __instance, capitals);
         }
         chosenMap = null;
     }
@@ -392,6 +387,77 @@ public static class MapLoader
             if (kvp.Value == coords) return kvp.Key;
         }
         return null;
+    }
+
+
+
+    /////
+    /// CAPITAL SPAWNING
+    /// ONLY ON VILLAGE TILES
+    static bool FailedGen = false;
+    public static void GenerateCapitals(GameState gameState, MapGenerator mapGenerator, Dictionary<byte, WorldCoordinates> dict)
+    {
+        FailedGen = false;
+        List<TileData> validTiles = new List<TileData>();
+        foreach (TileData tile in gameState.Map.Tiles)
+        {
+            if (CapitalOfCoords(tile.coordinates, dict) == null && tile.improvement != null && tile.improvement.type == ImprovementData.Type.City)
+            {
+                validTiles.Add(tile);
+            }
+        }
+        if (validTiles.Count < gameState.PlayerCount - dict.Count)
+        {
+            Main.modLogger!.LogError("More players than cities!");
+            FailedGen = true;
+            return;
+        }
+        foreach (PlayerState playerState in gameState.PlayerStates)
+        {
+            if (playerState == null || playerState.Id == 0 || playerState.Id == 255) continue;
+            if (dict.TryGetValue(playerState.Id, out WorldCoordinates coords))
+            {
+                SetTileAsCapital(mapGenerator, playerState, gameState, coords);
+            }
+            else
+            {
+                System.Random rng = new System.Random();
+                int num = rng.Next(0, validTiles.Count);
+                SetTileAsCapital(mapGenerator, playerState, gameState, validTiles[num].coordinates);
+                validTiles.Remove(validTiles[num]);
+            }
+        }
+    }
+
+    public static void SetTileAsCapital(MapGenerator mapGenerator, PlayerState playerState, GameState gameState, WorldCoordinates coordinates)
+    {
+        TileData tile = gameState.Map.GetTile(coordinates);
+        mapGenerator.SetTileAsCapital(gameState, playerState, tile);
+        int idx = tile.coordinates.X + tile.coordinates.Y * gameState.Map.width;
+        tile.climate = chosenMap!.map[idx].climate;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(StartMatchReaction), nameof(StartMatchReaction.DoWelcomeCinematic))]
+    public static bool FailedGenSkip(Il2CppSystem.Action onComplete)
+    {
+        if (FailedGen && !inMapMaker)
+        {
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Not enough cities!";
+            popup.Description = "You must have at least as many cities on the map as players!";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
+            };
+            void Exit(int id, BaseEventData eventData)
+            {
+                GameManager.ReturnToMenu();
+            }
+            popup.Show();
+            return false;
+        }
+        return true;
     }
     #endregion
 }
