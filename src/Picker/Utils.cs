@@ -4,15 +4,15 @@ using Polytopia.Data;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
 
-namespace PolytopiaMapManager.Level;
-internal static class Pickers
+namespace PolytopiaMapManager.Picker;
+internal static class Utils
 {
-    private static ClimatePicker climatePicker = new();
-    private static MapPicker mapPicker = new();
-    private static ResourcePicker resourcePicker = new();
-    private static TerrainPicker terrainPicker = new();
-    private static TileEffectPicker tileEffectPicker = new();
-    private static ImprovementPicker improvementPicker = new();
+    internal static ClimatePicker climatePicker = new();
+    internal static MapPicker mapPicker = new();
+    internal static ResourcePicker resourcePicker = new();
+    internal static TerrainPicker terrainPicker = new();
+    internal static TileEffectPicker tileEffectPicker = new();
+    internal static ImprovementPicker improvementPicker = new();
     private static SpriteAtlasManager manager = GameManager.GetSpriteAtlasManager();
     public static Sprite GetSprite(int type, string spriteName, GameLogicData gameLogicData)
     {
@@ -46,12 +46,12 @@ internal static class Pickers
         button.icon.gameObject.SetActive(true);
     }
 
-    internal delegate UIRoundButton PickerShowAction(UIRoundButton? picker, ref float num,
+    internal delegate void UtilshowAction(ref float num,
                                             SelectViewmodePopup selectViewmodePopup, GameState gameState);
 
-    internal static UIRoundButton CreatePicker(UIRoundButton? picker, UIRoundButton referenceButton, Transform parent, PickerShowAction showAction, Vector3? indent = null, string headerKey = "")
+    internal static UIRoundButton CreatePicker(UIRoundButton referenceButton, Transform parent, UtilshowAction showAction, Vector3? indent = null, string headerKey = "")
     {
-        picker = GameObject.Instantiate<UIRoundButton>(referenceButton, parent);
+        UIRoundButton picker = GameObject.Instantiate<UIRoundButton>(referenceButton, parent);
         if(indent != null)
         {
             picker.transform.position = picker.transform.position + (Vector3)indent;
@@ -70,7 +70,7 @@ internal static class Pickers
             selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();
             float num = 0f;
 
-            picker = showAction(picker, ref num, selectViewmodePopup, gameState);
+            showAction(ref num, selectViewmodePopup, gameState);
 
             selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
             selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
