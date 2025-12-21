@@ -5,7 +5,7 @@ using UnityEngine;
 using PolytopiaBackendBase.Common;
 
 namespace PolytopiaMapManager.Picker;
-internal static class Utils
+internal static class Manager
 {
     internal static ClimatePicker climatePicker = new();
     internal static MapPicker mapPicker = new();

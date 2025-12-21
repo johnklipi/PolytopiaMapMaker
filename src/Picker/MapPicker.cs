@@ -18,7 +18,7 @@ internal class MapPicker : PickerBase
         for (int index = 0; index < visualMaps.Count(); index++)
         {
             string name = visualMaps[index];
-            Utils.CreateChoiceButton(selectViewmodePopup, name,
+            Manager.CreateChoiceButton(selectViewmodePopup, name,
                     index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f));
 
             void OnClick(int id)

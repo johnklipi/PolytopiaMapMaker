@@ -14,7 +14,7 @@ internal class TerrainPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return Utils.GetSprite((int)Brush.chosenTerrain, SpriteData.TerrainToString(Brush.chosenTerrain), gameLogicData);
+       return Manager.GetSprite((int)Brush.chosenTerrain, SpriteData.TerrainToString(Brush.chosenTerrain), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -25,7 +25,7 @@ internal class TerrainPicker : PickerBase
             if(excludedTerrains.Contains(terrainType))
                 continue;
             string terrainName = Localization.Get(terrainType.GetDisplayName());
-            Utils.CreateChoiceButton(selectViewmodePopup, terrainName,
+            Manager.CreateChoiceButton(selectViewmodePopup, terrainName,
                     (int)terrainType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTerrainIcon);
 
             void OnClick(int id)
@@ -36,7 +36,7 @@ internal class TerrainPicker : PickerBase
 
             void SetTerrainIcon(UIRoundButton button, int type)
             {
-                Utils.SetIcon(button, Utils.GetSprite(type, SpriteData.TerrainToString((Polytopia.Data.TerrainData.Type)type), gameState.GameLogicData), 0.6f);
+                Manager.SetIcon(button, Manager.GetSprite(type, SpriteData.TerrainToString((Polytopia.Data.TerrainData.Type)type), gameState.GameLogicData), 0.6f);
             }
         }
     }

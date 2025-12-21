@@ -14,7 +14,7 @@ internal class PickerBase
 
     internal virtual void Create(UIRoundButton referenceButton, Transform parent)
     {
-        button = Utils.CreatePicker(referenceButton, parent, CreatePopupButtons, Indent, HeaderKey);
+        button = Manager.CreatePicker(referenceButton, parent, CreatePopupButtons, Indent, HeaderKey);
     }
 
     internal virtual void Update(GameLogicData gameLogicData)
@@ -25,11 +25,11 @@ internal class PickerBase
         button.rectTransform.sizeDelta = buttonSize;
         button.Outline.gameObject.SetActive(false);
         button.BG.color = baseColor;
-        Utils.SetIcon(button!, GetIcon(gameLogicData), iconSize);
+        Manager.SetIcon(button!, GetIcon(gameLogicData), iconSize);
     }
     internal virtual Sprite GetIcon(GameLogicData gameLogicData)
     {
-        return Utils.GetSprite(0, "none", gameLogicData);
+        return Manager.GetSprite(0, "none", gameLogicData);
     }
 
     internal virtual void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState) {}

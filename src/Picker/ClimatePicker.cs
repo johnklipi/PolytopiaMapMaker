@@ -38,7 +38,7 @@ internal class ClimatePicker : PickerBase
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
-        Utils.CreateChoiceButton(selectViewmodePopup, "none",
+        Manager.CreateChoiceButton(selectViewmodePopup, "none",
                 (int)TribeType.None, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(16777215), 1f), SetHeadIcon);
 
         void OnClick(int id)
@@ -63,10 +63,10 @@ internal class ClimatePicker : PickerBase
                 Brush.chosenSkinType = SkinType.Default;
             }
             this.Update(gameState.GameLogicData);
-            Utils.resourcePicker.Update(gameState.GameLogicData);
-            Utils.terrainPicker.Update(gameState.GameLogicData);
-            Utils.tileEffectPicker.Update(gameState.GameLogicData);
-            Utils.improvementPicker.Update(gameState.GameLogicData);
+            Manager.resourcePicker.Update(gameState.GameLogicData);
+            Manager.terrainPicker.Update(gameState.GameLogicData);
+            Manager.tileEffectPicker.Update(gameState.GameLogicData);
+            Manager.improvementPicker.Update(gameState.GameLogicData);
         }
 
         void SetHeadIcon(UIRoundButton button, int type)
@@ -99,14 +99,14 @@ internal class ClimatePicker : PickerBase
             TribeType tribeType = tribeData.type;
             string tribeName = Localization.Get(tribeData.displayName);
 
-            Utils.CreateChoiceButton(selectViewmodePopup, tribeName,
+            Manager.CreateChoiceButton(selectViewmodePopup, tribeName,
                 (int)tribeType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, SkinType.Default)), 1f), SetHeadIcon);
 
             foreach (SkinType skinType in tribeData.skins)
             {
                 string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
 
-                Utils.CreateChoiceButton(selectViewmodePopup, skinHeader,
+                Manager.CreateChoiceButton(selectViewmodePopup, skinHeader,
                     -(int)skinType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, skinType)), 1f), SetHeadIcon);
             }
         }
