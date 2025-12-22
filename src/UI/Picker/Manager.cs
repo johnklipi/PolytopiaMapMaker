@@ -4,7 +4,7 @@ using Polytopia.Data;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
 
-namespace PolytopiaMapManager.Picker;
+namespace PolytopiaMapManager.UI.Picker;
 internal static class Manager
 {
     internal static ClimatePicker climatePicker = new();
@@ -137,7 +137,7 @@ internal static class Manager
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
     private static void HudScreen_OnMatchStart(HudScreen __instance)
     {
-        if (MapLoader.inMapMaker)
+        if (Core.isActive)
         {
             UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
             climatePicker.Create(referenceButton, __instance.transform);

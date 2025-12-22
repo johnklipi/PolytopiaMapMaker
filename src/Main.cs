@@ -3,30 +3,29 @@ using HarmonyLib;
 using PolytopiaBackendBase.Game;
 using UnityEngine.EventSystems;
 
-namespace PolytopiaMapManager
+namespace PolytopiaMapManager;
+public static class Main
 {
-    public static class Main
+    internal static ManualLogSource? modLogger;
+    public static void Load(ManualLogSource logger)
     {
-        internal static ManualLogSource? modLogger;
-        public static void Load(ManualLogSource logger)
-        {
-            modLogger = logger;
-            Harmony.CreateAndPatchAll(typeof(MapMaker));
-            Harmony.CreateAndPatchAll(typeof(MapLoader));
-            Harmony.CreateAndPatchAll(typeof(Brush));
-            Harmony.CreateAndPatchAll(typeof(Menu.Start));
-            Harmony.CreateAndPatchAll(typeof(Menu.GameSetup));
-            Harmony.CreateAndPatchAll(typeof(Picker.Manager));
-            Harmony.CreateAndPatchAll(typeof(Popup.CustomInput));
-            PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
-            PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
-            PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
-            Directory.CreateDirectory(MapLoader.MAPS_PATH);
+        modLogger = logger;
+        Harmony.CreateAndPatchAll(typeof(Core));
+        Harmony.CreateAndPatchAll(typeof(Loader));
+        Harmony.CreateAndPatchAll(typeof(Brush));
+        Harmony.CreateAndPatchAll(typeof(UI.Editor));
+        Harmony.CreateAndPatchAll(typeof(UI.Menu.Start));
+        Harmony.CreateAndPatchAll(typeof(UI.Menu.GameSetup));
+        Harmony.CreateAndPatchAll(typeof(UI.Picker.Manager));
+        Harmony.CreateAndPatchAll(typeof(Popup.CustomInput));
+        PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
+        PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
+        PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
+        Directory.CreateDirectory(IO.MAPS_PATH);
 
-            static void OnMapMaker(int id, BaseEventData eventData)
-            {
-                MapLoader.Init();
-            }
+        static void OnMapMaker(int id, BaseEventData eventData)
+        {
+            Core.Init();
         }
     }
 }

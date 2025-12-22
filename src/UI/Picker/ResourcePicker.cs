@@ -1,8 +1,8 @@
 using Polytopia.Data;
 using UnityEngine;
 
-namespace PolytopiaMapManager.Picker;
-internal class ResourcePicker  : PickerBase
+namespace PolytopiaMapManager.UI.Picker;
+internal class ResourcePicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.resource";
     internal override Vector3? Indent => new Vector3(90, 0, 0);

@@ -2,7 +2,7 @@ using Polytopia.Data;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
 
-namespace PolytopiaMapManager.Picker;
+namespace PolytopiaMapManager.UI.Picker;
 internal class ClimatePicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.climate";
@@ -47,14 +47,14 @@ internal class ClimatePicker : PickerBase
             {
                 id *= -1;
                 SkinType skinType = (SkinType)id;
-                Brush.chosenClimate = MapLoader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
+                Brush.chosenClimate = Loader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
                 Brush.chosenSkinType = skinType;
             }
             else
             {
                 if((TribeType)id != TribeType.None)
                 {
-                    Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
+                    Brush.chosenClimate = Loader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
                 }
                 else
                 {

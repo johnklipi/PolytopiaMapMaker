@@ -3,7 +3,7 @@ using Polytopia.Data;
 using PolytopiaBackendBase.Game;
 using UnityEngine;
 
-namespace PolytopiaMapManager.Menu
+namespace PolytopiaMapManager.UI.Menu
 {
     public static class GameSetup
     {
@@ -55,7 +55,7 @@ namespace PolytopiaMapManager.Menu
             }
             if (num >= Enum.GetValues<MapSize>().Length && headerKey == "gamesettings.size")
             {
-                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ MapLoader.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
+                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
             }
             else if (mapSizeInputField != null)
             {
@@ -151,7 +151,7 @@ namespace PolytopiaMapManager.Menu
                 {
                     types.Add(value.ToString());
                 }
-                string[] maps = Directory.GetFiles(MapLoader.MAPS_PATH, "*.json");
+                string[] maps = IO.GetAllMaps();
                 visualMaps = new();
                 int num = 1;
                 if (maps.Length > 0)
@@ -196,7 +196,7 @@ namespace PolytopiaMapManager.Menu
                 GameManager.PreliminaryGameSettings.MapSize = 50;
                 __instance.UpdateOpponentList();
                 GameManager.PreliminaryGameSettings.SaveToDisk();
-                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ MapLoader.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
+                mapSizeInputField = CreateNameInputRowFix(__instance, Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE }), GameManager.PreliminaryGameSettings.MapSize.ToString(), null, new Action<string>(OnMapSizeChangedInput));
                 if (__instance.singlePlayerInfoRow != null)
                 {
                     __instance.rows.Remove(__instance.singlePlayerInfoRow.gameObject);
@@ -224,7 +224,7 @@ namespace PolytopiaMapManager.Menu
                 string numericalInput = new string(value.Where(char.IsDigit).ToArray());
                 if (int.TryParse(numericalInput, out int mapSize))
                 {
-                    if (mapSize > MapLoader.MAX_MAP_SIZE)
+                    if (mapSize > Loader.MAX_MAP_SIZE)
                     {
                         numericalInput = numericalInput.Remove(numericalInput.Length - 1);
                         NotificationManager.Notify("Your MapSize should not exceed 100x100.");
@@ -316,12 +316,11 @@ namespace PolytopiaMapManager.Menu
         private static void OnCustomMapChanged(int index)
         {
             Main.modLogger!.LogInfo("OnCustomMapChanged: " + index);
-            MapLoader.chosenMap = MapLoader.LoadMapFile(visualMaps[index]);
-            Console.Write(visualMaps[index]);
-            Console.Write(MapLoader.chosenMap != null);
-            if (MapLoader.chosenMap != null)
+            Loader.chosenMap = IO.LoadMap(visualMaps[index]);
+
+            if (Loader.chosenMap != null)
             {
-                GameManager.PreliminaryGameSettings.MapSize = MapLoader.chosenMap.size;
+                GameManager.PreliminaryGameSettings.MapSize = Loader.chosenMap.size;
                 GameManager.PreliminaryGameSettings.mapPreset = EnumCache<MapPreset>.GetType("custom");
                 GameSetupScreen gameSetupScreen = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen>();
                 gameSetupScreen.UpdateOpponentList(); // i dont understand though? why doesnt it adapt properly but instead changes map size
@@ -334,7 +333,7 @@ namespace PolytopiaMapManager.Menu
         [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
         internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
         {
-            if (!__result && MapLoader.inMapMaker)
+            if (!__result && Core.isActive)
                 __result = true;
         }
 

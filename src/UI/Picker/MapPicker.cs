@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PolytopiaMapManager.Picker;
+namespace PolytopiaMapManager.UI.Picker;
 internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
@@ -8,7 +8,7 @@ internal class MapPicker : PickerBase
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
-        string[] maps = Directory.GetFiles(MapLoader.MAPS_PATH, "*.json");
+        string[] maps = IO.GetAllMaps();
         List<string> visualMaps = new();
         if (maps.Length > 0)
         {
@@ -23,11 +23,11 @@ internal class MapPicker : PickerBase
 
             void OnClick(int id)
             {
-                MapMaker.MapName = visualMaps[id];
-                MapLoader.chosenMap = MapLoader.LoadMapFile(MapMaker.MapName);
-                MapLoader.LoadMapInState(ref gameState);
+                Core.MapName = visualMaps[id];
+                Loader.chosenMap = IO.LoadMap(Core.MapName);
+                Loader.LoadMapInState(ref gameState, Loader.chosenMap!);
                 GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-                MapLoader.RevealMap(GameManager.LocalPlayer.Id);
+                Loader.RevealMap(GameManager.LocalPlayer.Id);
                 base.Update(gameState.GameLogicData);
             }
         }
