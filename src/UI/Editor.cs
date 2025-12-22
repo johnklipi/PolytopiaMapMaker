@@ -15,21 +15,21 @@ public static class Editor
     [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
     internal static void HudButtonBar_Init(HudButtonBar __instance, HudScreen hudScreen)
     {
-        if (Core.isActive)
-        {
-            __instance.nextTurnButton.gameObject.SetActive(false);
-            __instance.techTreeButton.gameObject.SetActive(false);
-            __instance.statsButton.gameObject.SetActive(false);
-            __instance.Show();
-            __instance.Update();
-        }
+        if(!Main.isActive)
+            return;
+
+        __instance.nextTurnButton.gameObject.SetActive(false);
+        __instance.techTreeButton.gameObject.SetActive(false);
+        __instance.statsButton.gameObject.SetActive(false);
+        __instance.Show();
+        __instance.Update();
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
     private static void GameManager_Update()
     {
-        if(!Core.isActive)
+        if(!Main.isActive)
             return;
 
         if(Input.GetKey(KeyCode.LeftControl))
@@ -41,7 +41,7 @@ public static class Editor
             }
             if (Input.GetKeyDown(KeyCode.S))
             {
-                if(!Core.MapSaved && Core.MapName == "Untitled Map")
+                if(!Main.MapSaved && Main.MapName == "Untitled Map")
                 {
                     BasicPopup popup = PopupManager.GetBasicPopup();
                     popup.Header = "Rename Your Map!";
@@ -53,24 +53,24 @@ public static class Editor
                     };
                     void Exit(int id, BaseEventData eventData)
                     {
-                        Popup.CustomInput.RemoveInputFromPopup(popup);
+                        CustomInput.RemoveInputFromPopup(popup);
                     }
                     void Save(int id, BaseEventData eventData)
                     {
-                        var input = Popup.CustomInput.GetInputFromPopup(popup);
+                        var input = CustomInput.GetInputFromPopup(popup);
                         if(input != null)
                         {
-                            Core.MapName = input.text;
-                            Core.MapSaved = IO.SaveMap(Core.MapName, (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length),
+                            Main.MapName = input.text;
+                            Main.MapSaved = IO.SaveMap(Main.MapName, (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length),
                                                     GameManager.GameState.Map.Tiles.ToArray().ToList());
-                            Popup.CustomInput.RemoveInputFromPopup(popup);
+                            CustomInput.RemoveInputFromPopup(popup);
                         }
                     }
-                    Popup.CustomInput.AddInputToPopup(popup, Core.MapName);
+                    CustomInput.AddInputToPopup(popup, Main.MapName);
                 }
                 else
                 {
-                    Core.MapSaved = IO.SaveMap(Core.MapName, (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length),
+                    Main.MapSaved = IO.SaveMap(Main.MapName, (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length),
                                             GameManager.GameState.Map.Tiles.ToArray().ToList());
                 }
             }
@@ -86,19 +86,19 @@ public static class Editor
                 };
                 void Exit(int id, BaseEventData eventData)
                 {
-                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                    CustomInput.RemoveInputFromPopup(popup);
                 }
                 void SaveName(int id, BaseEventData eventData)
                 {
-                    var input = Popup.CustomInput.GetInputFromPopup(popup);
+                    var input = CustomInput.GetInputFromPopup(popup);
                     if(input != null)
                     {
-                        Core.MapName = input.text;
-                        NotificationManager.Notify($"New name is {Core.MapName}", "Map name set!");
+                        Main.MapName = input.text;
+                        NotificationManager.Notify($"New name is {Main.MapName}", "Map name set!");
                         CustomInput.RemoveInputFromPopup(popup);
                     }
                 }
-                Popup.CustomInput.AddInputToPopup(popup, Core.MapName);
+                CustomInput.AddInputToPopup(popup, Main.MapName);
             }
         }
     }
@@ -107,7 +107,7 @@ public static class Editor
     [HarmonyPatch(typeof(ResourceBar), nameof(ResourceBar.OnEnable))]
     internal static void ResourceBar_OnEnable(ResourceBar __instance)
     {
-        if(Core.isActive)
+        if(Main.isActive)
         {
             __instance.currencyContainer.gameObject.SetActive(false);
             __instance.scoreContainer.gameObject.SetActive(false);
@@ -125,7 +125,7 @@ public static class Editor
             text.fontSize = 35;
             text.alignment = TextAlignmentOptions.Center;
 
-            text.GetComponent<TMPLocalizer>().Text = Core.MapName;
+            text.GetComponent<TMPLocalizer>().Text = Main.MapName;
             text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
             mapNameContainer = text.transform;
@@ -136,7 +136,7 @@ public static class Editor
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
     private static void HudScreen_OnMatchStart(HudScreen __instance)
     {
-        if (Core.isActive)
+        if (Main.isActive)
         {
             UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
             mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 180, 0);
@@ -156,14 +156,14 @@ public static class Editor
                 };
                 void Exit(int id, BaseEventData eventData)
                 {
-                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                    CustomInput.RemoveInputFromPopup(popup);
                 }
                 void Resize(int id, BaseEventData eventData){
-                    var input = Popup.CustomInput.GetInputFromPopup(popup);
+                    var input = CustomInput.GetInputFromPopup(popup);
                     if(input != null && int.TryParse(input.text, out int size))
                     {
                         GameState gameState = GameManager.GameState;
-                        Core.ResizeMap(ref gameState, size);
+                        Main.ResizeMap(ref gameState, size);
                         GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                         Loader.RevealMap(GameManager.LocalPlayer.Id);
                         NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");
@@ -172,9 +172,9 @@ public static class Editor
                     {
                         NotificationManager.Notify("Only numbers are allowed", "Error");
                     }
-                    Popup.CustomInput.RemoveInputFromPopup(popup);
+                    CustomInput.RemoveInputFromPopup(popup);
                 }
-                Popup.CustomInput.AddInputToPopup(popup, GameManager.GameState.Map.Width.ToString(), onValueChanged: new Action<string>(value => MapResizeValueChanged(value, popup)));
+                CustomInput.AddInputToPopup(popup, GameManager.GameState.Map.Width.ToString(), onValueChanged: new Action<string>(value => MapResizeValueChanged(value, popup)));
             }
         }
     }
@@ -185,7 +185,7 @@ public static class Editor
         {
             bool couldntParse = !int.TryParse(value, out int result);
             bool isTooBig = result > Loader.MAX_MAP_SIZE;
-            // bool isTooSmall = result < Loader.MIN_MAP_SIZE;
+            bool isTooSmall = result < Loader.MIN_MAP_SIZE;
             if(couldntParse || isTooBig)
             {
                 string message = "";

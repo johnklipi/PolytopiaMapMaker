@@ -67,16 +67,6 @@ public static class Loader
         }
     }
 
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(MapDataExtensions), nameof(MapDataExtensions.GetMinimumMapSize))]
-    public static void MapDataExtensions_GetMinimumMapSize(ref ushort __result, int players)
-    {
-        int blocksNeeded = (int)Math.Ceiling(Math.Sqrt(players));
-        Console.Write("/////");
-        Console.Write(blocksNeeded * 3);
-        __result = (ushort)(blocksNeeded * 3);
-    }
-
     public static void LoadMapInState(ref GameState gameState, Data.MapInfo map)
     {
         List<TileData> tiles = new();

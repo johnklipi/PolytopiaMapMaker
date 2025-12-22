@@ -137,7 +137,7 @@ internal static class Manager
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
     private static void HudScreen_OnMatchStart(HudScreen __instance)
     {
-        if (Core.isActive)
+        if (Main.isActive)
         {
             UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
             climatePicker.Create(referenceButton, __instance.transform);

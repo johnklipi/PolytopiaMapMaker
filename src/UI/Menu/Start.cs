@@ -31,7 +31,7 @@ namespace PolytopiaMapManager.UI.Menu
 
             static void OnMapMaker(int id, BaseEventData eventData)
             {
-                Core.Init();
+                Main.Init();
             }
         }
     }

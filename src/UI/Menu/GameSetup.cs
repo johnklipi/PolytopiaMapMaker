@@ -333,7 +333,7 @@ namespace PolytopiaMapManager.UI.Menu
         [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
         internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
         {
-            if (!__result && Core.isActive)
+            if (!__result && Main.isActive)
                 __result = true;
         }
 
