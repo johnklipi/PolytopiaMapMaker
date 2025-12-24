@@ -33,6 +33,7 @@ public static class Main
     }
     internal static bool isActive = false;
     internal static ManualLogSource? modLogger;
+    internal const int MAP_NAME_MAX_LENGTH = 12;
     public static void Load(ManualLogSource logger)
     {
         modLogger = logger;
@@ -89,7 +90,7 @@ public static class Main
             }
             Loader.SetLighthouses(GameManager.GameState);
             Loader.RevealMap(GameManager.LocalPlayer.Id);
-            UIManager.Instance.BlockHints(); // Uhhhh shouldnt it block suggestions but it doesnt. Later...
+            UIManager.Instance.BlockHints(); // Uhhhh it should block suggestions but it doesnt. Later...
         }
     }
 
@@ -114,8 +115,8 @@ public static class Main
         }
     }
 
-    //[HarmonyPrefix]
-    //[HarmonyPatch(typeof(PlayerExtensions), nameof(PlayerExtensions.CountCapitals))]
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(PlayerExtensions), nameof(PlayerExtensions.CountCapitals))] // Game crashes otherwise.
 	public static bool PlayerExtensions_CountCapitals(ref int __result, PlayerState player, GameState gameState)
 	{
         if(isActive)
@@ -154,9 +155,9 @@ public static class Main
 
     public static void MapRenameValueChanged(string value, BasicPopup popup)
     {
-        if(!string.IsNullOrEmpty(value) && value.Length > 0)
+        if(!string.IsNullOrEmpty(value))
         {
-            bool isTooLong = value.Length > 12;
+            bool isTooLong = value.Length > MAP_NAME_MAX_LENGTH;
             if (isTooLong)
             {
                 value = value.Remove(value.Length - 1);
@@ -165,7 +166,8 @@ public static class Main
                 {
                     input.text = value;
                 }
-                NotificationManager.Notify($"Text is too long. Maximal length allowed is 12.", "Error");
+
+                NotificationManager.Notify(Localization.Get("mapmaker.text.long", new Il2CppSystem.Object[]{ MAP_NAME_MAX_LENGTH }), Localization.Get("gamemode.mapmaker"));
             }
         }
     }

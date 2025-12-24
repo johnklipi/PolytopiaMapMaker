@@ -5,46 +5,43 @@ using PolytopiaBackendBase.Common;
 namespace PolytopiaMapManager.Data;
 
 public class MapTile
-{ 
+{
     [JsonInclude]
-    public int climate = 0;
+    public int climate = DEFAULT_CLIMATE;
     [JsonInclude]
     [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<SkinType>))]
-    public SkinType skinType = SkinType.Default;
+    public SkinType skinType = DEFAULT_SKIN;
     [JsonInclude]
-    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<Polytopia.Data.TerrainData.Type>))]
-    public Polytopia.Data.TerrainData.Type terrain = Polytopia.Data.TerrainData.Type.Field;
+    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<TerrainData.Type>))]
+    public TerrainData.Type terrain = TerrainData.Type.Field;
     [JsonInclude]
-    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<Polytopia.Data.ResourceData.Type>))]
-    public Polytopia.Data.ResourceData.Type? resource;
+    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<ResourceData.Type>))]
+    public ResourceData.Type? resource;
     [JsonInclude]
-    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<Polytopia.Data.ImprovementData.Type>))]
-    public Polytopia.Data.ImprovementData.Type? improvement;
+    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<ImprovementData.Type>))]
+    public ImprovementData.Type? improvement;
     [JsonInclude]
     [JsonConverter(typeof(PolyMod.Json.EnumCacheListJson<TileData.EffectType>))]
     public List<TileData.EffectType> effects = new();
+    const int DEFAULT_CLIMATE = 2;
+    const SkinType DEFAULT_SKIN = SkinType.Default;
 
     internal TileData ToTileData()
     {
         TileData tile = new TileData();
-
-        tile.climate = (this.climate < 0 || this.climate > 16) ? 1 : this.climate;
-        tile.Skin = this.skinType;
-        tile.terrain = this.terrain;
-        tile.resource = this.resource == null ? null : new() { type = (Polytopia.Data.ResourceData.Type)this.resource };
+        tile.climate = IsClimateValid(climate) ? climate : DEFAULT_CLIMATE;
+        tile.Skin = IsSkinTypeValid(skinType) ? skinType : DEFAULT_SKIN;
+        tile.terrain = terrain;
+        tile.resource = resource == null ? null : new() { type = (Polytopia.Data.ResourceData.Type)resource };
         tile.effects = new Il2CppSystem.Collections.Generic.List<TileData.EffectType>();
-        foreach (TileData.EffectType effect in this.effects)
+        foreach (TileData.EffectType effect in effects)
         {
             tile.effects.Add(effect);
         }
-        switch(this.improvement)
+        switch(improvement)
         {
-            case null:
-            case ImprovementData.Type.LightHouse:
-                tile.improvement = null;
-                break;
             case ImprovementData.Type.City:
-                tile.improvement = new ImprovementState
+                tile.improvement = new()
                 {
                     type = ImprovementData.Type.City,
                     founded = 0,
@@ -53,11 +50,30 @@ public class MapTile
                     production = 1
                 };
                 break;
+            case ImprovementData.Type.Ruin:
+                tile.improvement = new()
+                {
+                    type = (ImprovementData.Type)improvement
+                };
+                break;
             default:
-                tile.improvement = new() { type = (Polytopia.Data.ImprovementData.Type)this.improvement };
+                tile.improvement = null;
                 break;
         }
 
         return tile;
+    }
+
+    public bool IsClimateValid(int climate)
+    {
+        var maxLength = Enum.GetValues(typeof(TribeType)).Length - 2;
+        return climate >= 0 && climate <= maxLength;
+    }
+
+    public bool IsSkinTypeValid(SkinType skin)
+    {
+        var maxLength = Enum.GetValues(typeof(SkinType)).Cast<SkinType>().ToList();
+        maxLength.Remove(SkinType.Test);
+        return maxLength.Contains(skin);
     }
 }

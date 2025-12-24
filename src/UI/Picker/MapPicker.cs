@@ -23,12 +23,16 @@ internal class MapPicker : PickerBase
 
             void OnClick(int id)
             {
-                Main.MapName = visualMaps[id];
-                Loader.chosenMap = IO.LoadMap(Main.MapName);
-                Loader.LoadMapInState(ref gameState, Loader.chosenMap!);
-                GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-                Loader.RevealMap(GameManager.LocalPlayer.Id);
-                base.Update(gameState.GameLogicData);
+                string mapName = visualMaps[id];
+                Loader.chosenMap = IO.LoadMap(mapName);
+                if(Loader.chosenMap != null)
+                {
+                    Main.MapName = mapName;
+                    Loader.LoadMapInState(ref gameState, Loader.chosenMap!);
+                    GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                    Loader.RevealMap(GameManager.LocalPlayer.Id);
+                    base.Update(gameState.GameLogicData);
+                }
             }
         }
     }

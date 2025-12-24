@@ -1,4 +1,6 @@
+using EnumsNET;
 using HarmonyLib;
+using PolyMod.Managers;
 using PolytopiaMapManager.Popup;
 using TMPro;
 using UnityEngine;
@@ -185,25 +187,29 @@ public static class Editor
         {
             bool couldntParse = !int.TryParse(value, out int result);
             bool isTooBig = result > Loader.MAX_MAP_SIZE;
-            bool isTooSmall = result < Loader.MIN_MAP_SIZE;
-            if(couldntParse || isTooBig)
+            // bool isTooSmall = result < Loader.MIN_MAP_SIZE;
+            if(couldntParse || isTooBig) // || isTooSmall
             {
                 string message = "";
                 if(couldntParse)
                 {
-                    message = "Only numbers are allowed";
+                    message = Localization.Get("mapmaker.numbers.only");
                 }
                 else if (isTooBig)
                 {
-                    message = $"Value is too big! Maximal size allowed is {Loader.MAX_MAP_SIZE}.";
+                    message = Localization.Get("mapmaker.size.big", new Il2CppSystem.Object[] { Loader.MAX_MAP_SIZE });
                 }
+                // else if (isTooSmall)
+                // {
+                //     message = Localization.Get("mapmaker.size.small", new Il2CppSystem.Object[] { Loader.MIN_MAP_SIZE });
+                // }
                 value = value.Remove(value.Length - 1);
                 var input = CustomInput.GetInputFromPopup(popup);
                 if(input != null)
                 {
                     input.text = value;
                 }
-                NotificationManager.Notify(message, "Error");
+                NotificationManager.Notify(message, Localization.Get("gamemode.mapmaker"));
             }
         }
     }

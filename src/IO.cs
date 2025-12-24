@@ -45,7 +45,7 @@ public static class IO
 
         Data.MapInfo mapInfo = BuildMap(size, tiles);
 
-        File.WriteAllTextAsync(
+        File.WriteAllText(
             filePath,
             JsonSerializer.Serialize(mapInfo, new JsonSerializerOptions { WriteIndented = true })
         );
@@ -63,10 +63,18 @@ public static class IO
         {
             return null;
         }
-
+        Data.MapInfo? mapInfo = null;
         string json = File.ReadAllText(filePath);
-
-        Data.MapInfo? mapInfo = JsonSerializer.Deserialize<Data.MapInfo>(json);
+        try
+        {
+            mapInfo = JsonSerializer.Deserialize<Data.MapInfo>(json);
+        }
+        catch (Exception ex)
+        {
+            string header = Localization.Get("mapmaker.failed.map", new Il2CppSystem.Object[] { name });
+            NotificationManager.Notify(ex.Message, header);
+            Main.modLogger!.LogInfo($"{header}\n{ex.Message}\n\n{ex.StackTrace}");
+        }
 
         return mapInfo;
     }

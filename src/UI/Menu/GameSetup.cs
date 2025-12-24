@@ -227,7 +227,8 @@ namespace PolytopiaMapManager.UI.Menu
                     if (mapSize > Loader.MAX_MAP_SIZE)
                     {
                         numericalInput = numericalInput.Remove(numericalInput.Length - 1);
-                        NotificationManager.Notify("Your MapSize should not exceed 100x100.");
+                        NotificationManager.Notify(Localization.Get("mapmaker.text.long",
+                                            new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE }), Localization.Get("gamemode.mapmaker"));
                     }
                     else
                     {
