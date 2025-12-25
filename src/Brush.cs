@@ -42,13 +42,13 @@ public static class Brush
                     }
                     else if(Time.time >= nextAllowedTimeForPopup)
                     {
-                        NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                        NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
                         nextAllowedTimeForPopup = Time.time + 1f;
                     }
                 }
                 else if(Time.time >= nextAllowedTimeForPopup)
                 {
-                    NotificationManager.Notify(Localization.Get("gamelogicdata.retrieve.failed", new Il2CppSystem.Object[] { __instance.data.resource}));
+                    NotificationManager.Notify(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { __instance.data.resource}));
                     nextAllowedTimeForPopup = Time.time + 1f;
                 }
                 // if(!__instance.data.HasEffect(chosenTileEffect))
@@ -74,7 +74,7 @@ public static class Brush
                             }
                             else if(Time.time >= nextAllowedTimeForPopup)
                             {
-                                NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                                NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
                                 nextAllowedTimeForPopup = Time.time + 1f;
                             }
                         }
@@ -88,7 +88,7 @@ public static class Brush
                             }
                             else if(Time.time >= nextAllowedTimeForPopup)
                             {
-                                NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                                NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
                                 nextAllowedTimeForPopup = Time.time + 1f;
                             }
                         }
@@ -110,7 +110,7 @@ public static class Brush
                         bool succeded = GameManager.Client.ActionManager.ExecuteCommand(new BuildCommand(GameManager.LocalPlayer.Id, chosenBuilding, __instance.data.coordinates), out string error);
                         // if(!succeded && Time.time >= nextAllowedTimeForPopup)
                         // {
-                        //     NotificationManager.Notify(Localization.Get("mapmaker.creation.failed", new Il2CppSystem.Object[] { Localization.Get(chosenBuilding.GetDisplayName()), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                        //     NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get(chosenBuilding.GetDisplayName()), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
                         // }
                     }
                 }

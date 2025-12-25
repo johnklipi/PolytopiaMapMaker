@@ -2,7 +2,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace PolytopiaMapManager.Menu
+namespace PolytopiaMapManager.UI.Menu
 {
     public static class Start
     {
@@ -31,7 +31,7 @@ namespace PolytopiaMapManager.Menu
 
             static void OnMapMaker(int id, BaseEventData eventData)
             {
-                MapLoader.Init();
+                Main.Init();
             }
         }
     }

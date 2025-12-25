@@ -2,10 +2,20 @@ using Polytopia.Data;
 using UnityEngine;
 using PolytopiaBackendBase.Common;
 
-namespace PolytopiaMapManager.Picker;
+namespace PolytopiaMapManager.UI.Picker;
 internal class ClimatePicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.climate";
+    internal static List<TribeType> excludedTribes = new()
+    {
+        TribeType.Polaris,
+    };
+
+    internal static List<SkinType> excludedSkins = new()
+    {
+        SkinType.DarkElf,
+        SkinType.Magma,
+    };
 
     internal override void Update(GameLogicData gameLogicData)
     {
@@ -47,14 +57,14 @@ internal class ClimatePicker : PickerBase
             {
                 id *= -1;
                 SkinType skinType = (SkinType)id;
-                Brush.chosenClimate = MapLoader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
+                Brush.chosenClimate = Loader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
                 Brush.chosenSkinType = skinType;
             }
             else
             {
                 if((TribeType)id != TribeType.None)
                 {
-                    Brush.chosenClimate = MapLoader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
+                    Brush.chosenClimate = Loader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
                 }
                 else
                 {
@@ -93,10 +103,15 @@ internal class ClimatePicker : PickerBase
         }
 
         GameLogicData gameLogicData = gameState.GameLogicData;
-        List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
+        List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray()
+            .Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray()).ToList();
+
         foreach (TribeData tribeData in tribes)
         {
             TribeType tribeType = tribeData.type;
+            if(excludedTribes.Contains(tribeType))
+                continue;
+
             string tribeName = Localization.Get(tribeData.displayName);
 
             Manager.CreateChoiceButton(selectViewmodePopup, tribeName,
@@ -104,6 +119,8 @@ internal class ClimatePicker : PickerBase
 
             foreach (SkinType skinType in tribeData.skins)
             {
+                if(excludedSkins.Contains(skinType))
+                    continue;
                 string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
 
                 Manager.CreateChoiceButton(selectViewmodePopup, skinHeader,

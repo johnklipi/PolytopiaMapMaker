@@ -1,7 +1,7 @@
 using Polytopia.Data;
 using UnityEngine;
 
-namespace PolytopiaMapManager.Picker;
+namespace PolytopiaMapManager.UI.Picker;
 internal class TerrainPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.terrain";

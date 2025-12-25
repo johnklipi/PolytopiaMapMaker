@@ -1,7 +1,7 @@
 using Polytopia.Data;
 using UnityEngine;
 
-namespace PolytopiaMapManager.Picker;
+namespace PolytopiaMapManager.UI.Picker;
 internal class ImprovementPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.improvement";

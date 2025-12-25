@@ -11,33 +11,6 @@
         "English": "Map Maker",
         "Russian": "Редактор Карт"
     },
-    "mapmaker_choose_climate":
-    {
-        "English": "Choose tribe climate"
-    },
-    "mapmaker_choose_skin":
-    {
-        "English": "Choose skin climate"
-    },
-    "mapmaker_choose_terrain":
-    {
-        "English": "Choose terrain"
-    },
-    "mapmaker_choose_resource":
-    {
-        "English": "Choose resource"
-    },
-    "mapmaker_choose_tileeffect":
-    {
-        "English": "Choose tile effect"
-    },
-    "mapmaker_choose_improvement":
-    {
-        "English": "Choose improvement"
-    },
-    "mapmaker_creation_failed":{
-        "English": "{0} cannot be created on {1}"
-    },
     "gamesettings_generationtype":
     {
         "English": "Generation Type"
@@ -65,9 +38,6 @@
     "buttons_set":{
         "English": "SET"
     },
-    "gamelogicdata_retrieve_failed":{
-        "English": "Failed to get data for {0}"
-    },
     "resource_names_none":{
         "English": "None"
     },
@@ -80,8 +50,57 @@
     "building_names_none":{
         "English": "None"
     },
+    "tribes_mapmaker":{
+        "English": "Map creator",
+        "Russian": "Создатель карты"
+    },
+    "mapmaker_choose_climate":
+    {
+        "English": "Choose tribe climate"
+    },
+    "mapmaker_choose_skin":
+    {
+        "English": "Choose skin climate"
+    },
+    "mapmaker_choose_terrain":
+    {
+        "English": "Choose terrain"
+    },
+    "mapmaker_choose_resource":
+    {
+        "English": "Choose resource"
+    },
+    "mapmaker_choose_tileeffect":
+    {
+        "English": "Choose tile effect"
+    },
+    "mapmaker_choose_improvement":
+    {
+        "English": "Choose improvement"
+    },
     "mapmaker_map_untitled":{
         "English": "Untitled Map",
         "Russian": "Безымянная Карта"
+    },
+    "mapmaker_failed_creation":{
+        "English": "{0} cannot be created on {1}."
+    },
+    "mapmaker_failed_retrieve":{
+        "English": "Failed to get data for {0}."
+    },
+    "mapmaker_failed_map":{
+        "English": "Failed to load map {0}."
+    },
+    "mapmaker_text_long":{
+        "English": "Text is too long. Maximal length allowed is {0}."
+    },
+    "mapmaker_size_big":{
+        "English": "Your map width should not exceed {0}."
+    },
+    "mapmaker_size_small":{
+        "English": "Your map width should exceed or be equal to {0}."
+    },
+    "mapmaker_numbers_only":{
+        "English": "Only numbers are allowed."
     }
 }
