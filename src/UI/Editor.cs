@@ -35,11 +35,6 @@ public static class Editor
 
         if(Input.GetKey(KeyCode.LeftControl))
         {
-            if (Input.GetKeyDown(KeyCode.Tab))
-            {
-                Loader.RevealMap(GameManager.LocalPlayer.Id);
-                NotificationManager.Notify("Map has been revealed.");
-            }
             if (Input.GetKeyDown(KeyCode.S))
             {
                 if(!Main.MapSaved && Main.MapName == "Untitled Map")
