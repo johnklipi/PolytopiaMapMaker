@@ -13,20 +13,12 @@ namespace PolytopiaMapManager.UI.Menu
             Custom
         }
 
-        // This code is fucking stupid. Half of it is due to me not being able to move hl's.
+        // This code is fucking stupid. Half of it is due to me not being able to move horizontal lists.
         // Like, even if i change the position in the rows array, it gets placed in the end and i tbh do not get it.
         // Im too lazy to manually change ts but i have to when i will refactor this shitcode
-        internal const float CAMERA_MAXZOOM_CONSTANT = 1000;
         private static GameSetupNameRow? mapSizeInputField = null;
         private static Action<string>? dynamicValueChangedAction;
         private static List<string> visualMaps = new();
-
-		[HarmonyPostfix]
-		[HarmonyPatch(typeof(CameraController), nameof(CameraController.Awake))]
-		private static void CameraController_Awake()
-		{
-			CameraController.Instance.maxZoom = CAMERA_MAXZOOM_CONSTANT;
-		}
 
         #region Horizontal Lists
 
@@ -279,7 +271,6 @@ namespace PolytopiaMapManager.UI.Menu
             {
                 if (index != 0)
                 {
-                    DestroyHorizontalList(gameSetupScreen, "gamesettings.difficulty");
                     DestroyHorizontalList(gameSetupScreen, "gamesettings.map");
                     DestroyHorizontalList(gameSetupScreen, "gamesettings.size");
                     gameSetupScreen.CreateHorizontalList("gamesettings.maps", visualMaps.ToArray(), new Action<int>(OnCustomMapChanged));
@@ -294,7 +285,6 @@ namespace PolytopiaMapManager.UI.Menu
                 }
                 else
                 {
-                    gameSetupScreen.CreateDifficultyList();
                     gameSetupScreen.CreateMapPresetList();
                     gameSetupScreen.CreateMapSizeList();
                     DestroyHorizontalList(gameSetupScreen, "gamesettings.maps");

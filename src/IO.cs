@@ -6,7 +6,7 @@ public static class IO
 {
     internal static readonly string MAPS_PATH = Path.Combine(PolyMod.Plugin.BASE_PATH, "Maps");
 
-    internal static Data.MapInfo BuildMap(ushort size, List<TileData> tiles)
+    internal static Data.MapInfo BuildMap(ushort size, List<TileData> tiles, List<Data.Capital> capitals)
     {
         List<Data.MapTile> mapTiles = new();
         foreach (TileData tileData in tiles)
@@ -34,20 +34,29 @@ public static class IO
         Data.MapInfo mapInfo = new Data.MapInfo
         {
             size = size,
-            map = mapTiles
+            map = mapTiles,
+            capitals = capitals
         };
         return mapInfo;
     }
 
-    public static bool SaveMap(string name, ushort size, List<TileData> tiles)
+    public static bool SaveMap(string name, ushort size, List<TileData> tiles, List<Data.Capital> capitals)
     {
         string filePath = Path.Combine(MAPS_PATH, $"{name}.json");
 
-        Data.MapInfo mapInfo = BuildMap(size, tiles);
+        Data.MapInfo mapInfo = BuildMap(size, tiles, capitals);
 
         File.WriteAllText(
             filePath,
-            JsonSerializer.Serialize(mapInfo, new JsonSerializerOptions { WriteIndented = true })
+            JsonSerializer.Serialize
+            (
+                mapInfo,
+                new JsonSerializerOptions 
+                {
+                    WriteIndented = true,
+                    Converters = { new Data.WorldCoordinates2Json() }
+                }
+            )
         );
 
         NotificationManager.Notify($"{name} has been saved.");
@@ -67,7 +76,13 @@ public static class IO
         string json = File.ReadAllText(filePath);
         try
         {
-            mapInfo = JsonSerializer.Deserialize<Data.MapInfo>(json);
+            mapInfo = JsonSerializer.Deserialize<Data.MapInfo>
+            (
+                json, new JsonSerializerOptions()
+				{
+					Converters = { new Data.WorldCoordinates2Json() },
+				}
+            );
         }
         catch (Exception ex)
         {

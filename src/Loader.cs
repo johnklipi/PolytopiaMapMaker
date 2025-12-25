@@ -2,6 +2,9 @@ using System.Text.Json;
 using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
+using PolytopiaMapManager.Data;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace PolytopiaMapManager;
 
@@ -58,14 +61,115 @@ public static class Loader
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
-    private static void MapGenerator_Generate_Postfix(ref GameState state, ref MapGeneratorSettings settings)
+    private static void MapGenerator_Generate_Postfix(MapGenerator __instance, ref GameState state, ref MapGeneratorSettings settings)
     {
         if(chosenMap != null)
         {
             LoadMapInState(ref state, chosenMap);
+            if (!Main.isActive)
+            {
+                var capitals = chosenMap.capitals;
+                GenerateCapitals(state, __instance, capitals);
+            }
             chosenMap = null;
         }
     }
+
+    # region CAPITAL SPAWNING
+    /// ONLY ON VILLAGE TILES
+    static bool FailedGen = false;
+
+    public static Capital? GetCapital(WorldCoordinates coordinates, List<Data.Capital> capitals)
+    {
+        foreach (var capital in capitals)
+        {
+            if (capital.coordinates == coordinates) return capital;
+        }
+        return null;
+    }
+
+    public static Capital? GetCapital(byte player, List<Data.Capital> capitals)
+    {
+        foreach (var capital in capitals)
+        {
+            if (capital.player == player) return capital;
+        }
+        return null;
+    }
+
+    public static void GenerateCapitals(GameState gameState, MapGenerator mapGenerator, List<Data.Capital> capitals)
+    {
+        FailedGen = false;
+        List<TileData> validTiles = new List<TileData>();
+        foreach (TileData tile in gameState.Map.Tiles)
+        {
+            if (GetCapital(tile.coordinates, capitals) == null && tile.improvement != null && tile.improvement.type == ImprovementData.Type.City)
+            {
+                validTiles.Add(tile);
+            }
+        }
+        Console.Write("//////////////////////////////");
+        Console.Write("//////////////////////////////");
+        Console.Write(validTiles.Count);
+        Console.Write(gameState.PlayerCount);
+        Console.Write(capitals.Count);
+        Console.Write("//////////////////////////////");
+        Console.Write("//////////////////////////////");
+        if (validTiles.Count < gameState.PlayerCount - capitals.Count)
+        {
+            Main.modLogger!.LogError("More players than cities!");
+            FailedGen = true;
+            return;
+        }
+        foreach (PlayerState playerState in gameState.PlayerStates)
+        {
+            if (playerState == null || playerState.Id == 0 || playerState.Id == 255) continue;
+            Capital? capital = GetCapital(playerState.Id, capitals);
+            if (capital != null)
+            {
+                SetTileAsCapital(mapGenerator, playerState, gameState, capital.coordinates);
+            }
+            else
+            {
+                System.Random rng = new System.Random(gameState.Seed);
+                int num = rng.Next(0, validTiles.Count);
+                SetTileAsCapital(mapGenerator, playerState, gameState, validTiles[num].coordinates);
+                validTiles.Remove(validTiles[num]);
+            }
+        }
+    }
+
+    public static void SetTileAsCapital(MapGenerator mapGenerator, PlayerState playerState, GameState gameState, WorldCoordinates coordinates)
+    {
+        TileData tile = gameState.Map.GetTile(coordinates);
+        mapGenerator.SetTileAsCapital(gameState, playerState, tile);
+        int idx = tile.coordinates.X + tile.coordinates.Y * gameState.Map.width;
+        tile.climate = chosenMap!.map[idx].climate;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(StartMatchReaction), nameof(StartMatchReaction.DoWelcomeCinematic))]
+    public static bool FailedGenSkip(Il2CppSystem.Action onComplete)
+    {
+        if (FailedGen && !Main.isActive)
+        {
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Not enough cities!";
+            popup.Description = "You must have at least as many cities on the map as players!";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
+            };
+            void Exit(int id, BaseEventData eventData)
+            {
+                GameManager.ReturnToMenu();
+            }
+            popup.Show();
+            return false;
+        }
+        return true;
+    }
+    #endregion
 
     public static void LoadMapInState(ref GameState gameState, Data.MapInfo map)
     {

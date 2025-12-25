@@ -6,6 +6,8 @@ using PolytopiaMapManager.Popup;
 using PolytopiaBackendBase.Common;
 using Il2CppInterop.Runtime;
 using DG.Tweening;
+using Polytopia.Data;
+using PolytopiaBackendBase;
 
 
 namespace PolytopiaMapManager;
@@ -34,6 +36,9 @@ public static class Main
     internal static bool isActive = false;
     internal static ManualLogSource? modLogger;
     internal const int MAP_NAME_MAX_LENGTH = 12;
+    internal const int BASE_MAP_WIDTH = 16;
+    internal const float CAMERA_MAXZOOM_CONSTANT = 1000;
+    public static List<Data.Capital> currCapitals = new List<Data.Capital>();
     public static void Load(ManualLogSource logger)
     {
         modLogger = logger;
@@ -65,7 +70,7 @@ public static class Main
         gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
         gameSettings.SetUnlockedTribes(GameManager.GetPurchaseManager().GetUnlockedTribes(false));
         gameSettings.mapPreset = MapPreset.Dryland;
-        gameSettings.MapSize = 16;
+        gameSettings.MapSize = BASE_MAP_WIDTH;
         GameManager.StartingTribe = EnumCache<TribeType>.GetType("mapmaker");
         GameManager.StartingTribeMix = TribeType.None;
         GameManager.StartingSkin = SkinType.Default;
@@ -95,13 +100,10 @@ public static class Main
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(MapDataExtensions), nameof(MapDataExtensions.GetMinimumMapSize))]
-    public static void MapDataExtensions_GetMinimumMapSize(ref ushort __result, int players)
+    [HarmonyPatch(typeof(CameraController), nameof(CameraController.Awake))]
+    private static void CameraController_Awake()
     {
-        int blocksNeeded = (int)Math.Ceiling(Math.Sqrt(players));
-        Console.Write("/////");
-        Console.Write(blocksNeeded * 3);
-        __result = (ushort)(blocksNeeded * 3);
+        CameraController.Instance.maxZoom = CAMERA_MAXZOOM_CONSTANT;
     }
 
     [HarmonyPostfix]
@@ -116,6 +118,27 @@ public static class Main
     }
 
     [HarmonyPrefix]
+    [HarmonyPatch(typeof(ClientBase), nameof(ClientBase.SaveSession))]
+    private static bool ClientBase_SaveSession(ClientBase __instance, string gameId, bool showSaveErrorPopup = false)
+    {
+        return __instance.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteAllSaveFilesOfType))]
+	private static bool LocalSaveFileUtils_DeleteAllSaveFilesOfType(GameType gameType, bool localOnly)
+	{
+		return GameManager.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+	}
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteSaveFile))]
+	private static bool LocalSaveFileUtils_DeleteSaveFile(GameType gameType, string gameId, bool localOnly)
+	{
+		return GameManager.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+	}
+
+    [HarmonyPrefix]
     [HarmonyPatch(typeof(PlayerExtensions), nameof(PlayerExtensions.CountCapitals))] // Game crashes otherwise.
 	public static bool PlayerExtensions_CountCapitals(ref int __result, PlayerState player, GameState gameState)
 	{
@@ -125,6 +148,28 @@ public static class Main
         }
 		return !isActive;
 	}
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.GetAllTribes))]
+    private static void GameLogicData_GetAllTribes(ref Il2CppSystem.Collections.Generic.List<TribeData> __result)
+    {
+        for (int i = 0; i < __result.Count; i++)
+        {
+            TribeData data = __result[i];
+            if(data.type == EnumCache<TribeType>.GetType("mapmaker"))
+            {
+                __result.Remove(data);
+                break;
+            }
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.GetAllTribeTypes))]
+    private static void GameLogicData_GetAllTribeTypes(ref Il2CppSystem.Collections.Generic.List<TribeType> __result)
+    {
+        __result.Remove(EnumCache<TribeType>.GetType("mapmaker"));
+    }
 
     internal static void ResizeMap(ref GameState gameState, int size)
     {

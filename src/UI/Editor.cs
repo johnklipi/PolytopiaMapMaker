@@ -1,6 +1,5 @@
-using EnumsNET;
 using HarmonyLib;
-using PolyMod.Managers;
+using PolytopiaMapManager.Data;
 using PolytopiaMapManager.Popup;
 using TMPro;
 using UnityEngine;
@@ -31,8 +30,8 @@ public static class Editor
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
     private static void GameManager_Update()
     {
-        if(!Main.isActive)
-            return;
+        // if(!Main.isActive)
+        //     return;
 
         if(Input.GetKey(KeyCode.LeftControl))
         {
@@ -64,7 +63,7 @@ public static class Editor
                         {
                             Main.MapName = input.text;
                             Main.MapSaved = IO.SaveMap(Main.MapName, (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length),
-                                                    GameManager.GameState.Map.Tiles.ToArray().ToList());
+                                                    GameManager.GameState.Map.Tiles.ToArray().ToList(), Main.currCapitals);
                             CustomInput.RemoveInputFromPopup(popup);
                         }
                     }
@@ -73,7 +72,7 @@ public static class Editor
                 else
                 {
                     Main.MapSaved = IO.SaveMap(Main.MapName, (ushort)Math.Sqrt(GameManager.GameState.Map.Tiles.Length),
-                                            GameManager.GameState.Map.Tiles.ToArray().ToList());
+                                            GameManager.GameState.Map.Tiles.ToArray().ToList(), Main.currCapitals);
                 }
             }
             if(Input.GetKeyDown(KeyCode.W))
@@ -211,6 +210,89 @@ public static class Editor
                 }
                 NotificationManager.Notify(message, Localization.Get("gamemode.mapmaker"));
             }
+        }
+    }
+
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(InteractionBar), nameof(InteractionBar.AddAbilityButtons))]
+    public static void AddSetCapitalButton(InteractionBar __instance, Tile tile)
+    {
+        if (!Main.isActive || tile == null) return;
+        TileData tile1 = GameManager.GameState.Map.GetTile(tile.Coordinates);
+        if (tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
+
+        UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("setcapital"), false);
+        //uiroundButton.sprite = PolyMod.Registry.GetSprite("anything");
+        uiroundButton.OnClicked += (UIButtonBase.ButtonAction)setcapitalmethod;
+        void setcapitalmethod(int id, BaseEventData baseEventData)
+        {
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Whose capital should this be?";
+            popup.Description = "Input a number from 1 to 254! The associated player will spawn here. Type in 0 to mark this tile as an ordinary (noncapital) city!";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Save, -1, true, null)
+            };
+            void Exit(int id, BaseEventData eventData)
+            {
+                Popup.CustomInput.RemoveInputFromPopup(popup);
+            }
+            void Save(int id, BaseEventData eventData)
+            {
+                var input = Popup.CustomInput.GetInputFromPopup(popup);
+                if (input != null)
+                {
+                    if (byte.TryParse(input.text, out byte ID))
+                    {
+                        ChangeCapitalForTile(ID, tile.Coordinates);
+                    }
+                }
+                Popup.CustomInput.RemoveInputFromPopup(popup);
+            }
+            Popup.CustomInput.AddInputToPopup(popup);
+        }
+    }
+
+    public static void ChangeCapitalForTile(byte ID, WorldCoordinates coords)
+    {
+        Capital? capitalByCoords = Loader.GetCapital(coords, Main.currCapitals);
+        Capital? capitalById = Loader.GetCapital(coords, Main.currCapitals);
+        if (ID == 0)
+        { 
+            if (capitalByCoords != null)
+            {
+                Main.currCapitals.Remove(capitalByCoords);
+                NotificationManager.Notify("City is no longer a capital!");
+            }
+        }
+        else if (capitalById != null) NotificationManager.Notify("Player already has their capital set!");
+        else
+        {
+            if(capitalByCoords != null)
+            {
+                NotificationManager.Notify("From " + capitalByCoords.player + " to " + ID, "Overwritten capital location!");
+                Main.currCapitals.Remove(capitalByCoords);
+            }
+            Capital newCapital = new();
+            newCapital.player = ID;
+            newCapital.coordinates = coords;
+            Main.currCapitals.Add(newCapital);
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(InteractionBar), nameof(InteractionBar.Show))]
+    public static void ShowCapitalStatus(InteractionBar __instance, bool instant, bool force)
+    {
+        if(!Main.isActive || __instance == null || __instance.description == null || __instance.tile == null) return;
+        TileData tile = GameManager.GameState.Map.GetTile(__instance.tile.Coordinates);
+        if(tile == null || tile.improvement == null || tile.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
+        Capital? capital = Loader.GetCapital(tile.coordinates, Main.currCapitals);
+        if(capital != null)
+        {
+            __instance.description.text = "Capital City of Player "+ capital.player;
         }
     }
 }
