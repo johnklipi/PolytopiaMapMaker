@@ -78,6 +78,7 @@ public static class Loader
     # region CAPITAL SPAWNING
     /// ONLY ON VILLAGE TILES
     static bool FailedGen = false;
+    static bool inCustomGen = false;
 
     public static Capital? GetCapital(WorldCoordinates coordinates, List<Data.Capital> capitals)
     {
@@ -100,6 +101,7 @@ public static class Loader
     public static void GenerateCapitals(GameState gameState, MapGenerator mapGenerator, List<Data.Capital> capitals)
     {
         FailedGen = false;
+        inCustomGen = true;
         List<TileData> validTiles = new List<TileData>();
         foreach (TileData tile in gameState.Map.Tiles)
         {
@@ -119,6 +121,7 @@ public static class Loader
         {
             Main.modLogger!.LogError("More players than cities!");
             FailedGen = true;
+            inCustomGen = false;
             return;
         }
         foreach (PlayerState playerState in gameState.PlayerStates)
@@ -137,6 +140,7 @@ public static class Loader
                 validTiles.Remove(validTiles[num]);
             }
         }
+        inCustomGen = false;
     }
 
     public static void SetTileAsCapital(MapGenerator mapGenerator, PlayerState playerState, GameState gameState, WorldCoordinates coordinates)
@@ -169,6 +173,15 @@ public static class Loader
         }
         return true;
     }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(PlayerExtensions), nameof(PlayerExtensions.GetScore), typeof(PlayerState), typeof(GameState))]
+    public static void ScoreFix(this PlayerState player, GameState state, ref ScoreDetails __result)
+    {
+        if(chosenMap != null && !inCustomGen) __result.totalScore = 0;
+    }
+
+
     #endregion
 
     public static void LoadMapInState(ref GameState gameState, Data.MapInfo map)
