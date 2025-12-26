@@ -110,13 +110,6 @@ public static class Loader
                 validTiles.Add(tile);
             }
         }
-        Console.Write("//////////////////////////////");
-        Console.Write("//////////////////////////////");
-        Console.Write(validTiles.Count);
-        Console.Write(gameState.PlayerCount);
-        Console.Write(capitals.Count);
-        Console.Write("//////////////////////////////");
-        Console.Write("//////////////////////////////");
         if (validTiles.Count < gameState.PlayerCount - capitals.Count)
         {
             Main.modLogger!.LogError("More players than cities!");
