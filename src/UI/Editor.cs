@@ -1,4 +1,5 @@
 using HarmonyLib;
+using PolytopiaMapManager;
 using PolytopiaMapManager.Data;
 using PolytopiaMapManager.Popup;
 using TMPro;
@@ -139,6 +140,45 @@ public static class Editor
             mapSizeButton.gameObject.SetActive(true);
             mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
             mapSizeButton.text = string.Empty;
+
+            UIRoundButton brushSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
+            brushSizeButton.transform.position = mapSizeButton.transform.position + new Vector3(60, 0, 0);
+            brushSizeButton.gameObject.SetActive(true);
+            brushSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowBrushPopup;
+            brushSizeButton.text = string.Empty;
+
+            void ShowBrushPopup(int id, BaseEventData eventData)
+            {
+                BasicPopup popup = PopupManager.GetBasicPopup();
+                popup.Header = "Brush Size";
+                popup.Description = "Set brush radius (0 = single tile, 1 = 3x3, etc).";
+                popup.buttonData = new PopupBase.PopupButtonData[]
+                {
+                    new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                    new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)SetBrush, -1, true, null)
+                };
+                void Exit(int id, BaseEventData eventData)
+                {
+                    CustomInput.RemoveInputFromPopup(popup);
+                }
+                void SetBrush(int id, BaseEventData eventData)
+                {
+                    var input = CustomInput.GetInputFromPopup(popup);
+                    if(input != null && int.TryParse(input.text, out int size))
+                    {
+                        if(size < 0) size = 0;
+                        if(size > Loader.MAX_BRUSH_SIZE) size = (int)Loader.MAX_BRUSH_SIZE;
+                        Brush.brushSize = size;
+                        NotificationManager.Notify($"Brush radius set to {2*size+1}x{2*size+1}", "Brush");
+                    }
+                    else
+                    {
+                        NotificationManager.Notify("Only numbers are allowed", "Error");
+                    }
+                    CustomInput.RemoveInputFromPopup(popup);
+                }
+                CustomInput.AddInputToPopup(popup, Brush.brushSize.ToString());
+            }
 
             void ShowMapPopup(int id, BaseEventData eventData)
             {
