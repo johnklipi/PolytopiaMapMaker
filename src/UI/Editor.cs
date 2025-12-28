@@ -290,4 +290,11 @@ public static class Editor
             __instance.description.text = "Capital City of Player "+ capital.player;
         }
     }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnNextTurn))]
+    internal static bool HudScreen_OnNextTurn(bool forceConfirmation)
+    {
+        return !Main.isActive;
+    }
 }
