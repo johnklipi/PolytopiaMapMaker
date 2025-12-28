@@ -2,8 +2,10 @@ using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
 using PolytopiaMapManager.UI;
+using PolytopiaMapManager.UI.Picker;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PolytopiaMapManager;
 
@@ -26,6 +28,30 @@ public static class Brush
         {
             if (GameManager.Instance.isLevelLoaded)
             {
+                // Shift + right-click = pick tile under cursor into the brush (only once per mouse-down)
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    if (Input.GetKeyDown(KeyCode.Mouse1))
+                    {
+                        var start = __instance.data;
+                        chosenTerrain = start.terrain;
+                        chosenResource = start.resource != null ? start.resource.type : Polytopia.Data.ResourceData.Type.None;
+                        chosenTileEffect = start.effects.Count > 0 ? start.effects.ToArray().ToList().LastOrDefault(TileData.EffectType.None) : TileData.EffectType.None;
+                        chosenBuilding = start.improvement != null ? start.improvement.type : ImprovementData.Type.None;
+                        chosenClimate = start.climate;
+                        chosenSkinType = start.Skin;
+                        var gld = GameManager.GameState.GameLogicData;
+                        Manager.climatePicker.Update(gld);
+                        Manager.mapPicker.Update(gld);
+                        Manager.resourcePicker.Update(gld);
+                        Manager.terrainPicker.Update(gld);
+                        Manager.tileEffectPicker.Update(gld);
+                        Manager.improvementPicker.Update(gld);
+                        NotificationManager.Notify(Localization.Get("mapmaker.tile.picked"));
+                    }
+                    return;
+                }
+
                 bool excludeDiagonals = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl); // Hold Ctrl to EXCLUDE diagonals
                 foreach (var tileData in GameManager.GameState.Map.GetArea(__instance.Coordinates, brushSize, !excludeDiagonals))
                 {

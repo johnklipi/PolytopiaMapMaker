@@ -102,5 +102,9 @@
     },
     "mapmaker_numbers_only":{
         "English": "Only numbers are allowed."
+    },
+    "mapmaker_tile_picked":{
+        "English": "Tile picked into brush.",
+        "Russian": "Клетка взята в кисть."
     }
 }
