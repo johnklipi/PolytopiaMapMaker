@@ -26,7 +26,8 @@ public static class Brush
         {
             if (GameManager.Instance.isLevelLoaded)
             {
-                foreach (var tileData in GameManager.GameState.Map.GetArea(__instance.Coordinates, brushSize, true))
+                bool excludeDiagonals = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl); // Hold Ctrl to EXCLUDE diagonals
+                foreach (var tileData in GameManager.GameState.Map.GetArea(__instance.Coordinates, brushSize, !excludeDiagonals))
                 {
                     var tile = tileData.GetInstance();
 
