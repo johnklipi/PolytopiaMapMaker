@@ -12,6 +12,7 @@ public static class Loader
 {
     internal const uint MAX_MAP_SIZE = 100;
     internal const uint MIN_MAP_SIZE = 3;
+    internal const uint MAX_BRUSH_SIZE = MAX_MAP_SIZE / 2;
     internal static List<Data.MapInfo> maps = new();
     internal static Data.MapInfo? chosenMap;
     internal const string DEFAULT_MAP_NAME_KEY = "mapmaker.map.untitled";
