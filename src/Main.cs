@@ -99,11 +99,29 @@ public static class Main
         }
     }
 
+    // [HarmonyPrefix]
+    // [HarmonyPatch(typeof(ExploreLightHouseTask), nameof(ExploreLightHouseTask.ShouldUseLighthouseTasks))]
+	public static bool ShouldUseLighthouseTasks(ref bool __result, GameState gameState)
+	{
+        __result = !isActive;
+		return __result;
+	}
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CameraController), nameof(CameraController.Awake))]
     private static void CameraController_Awake()
     {
         CameraController.Instance.maxZoom = CAMERA_MAXZOOM_CONSTANT;
+        CameraController.Instance.techViewBounds = new(
+            new(CAMERA_MAXZOOM_CONSTANT, CAMERA_MAXZOOM_CONSTANT), CameraController.Instance.techViewBounds.size
+        );
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(TechView), nameof(TechView.OnEnable))]
+    private static void TechView_OnEnable(TechView __instance)
+    {
+        __instance.techTreeContainer.parent.transform.position = new(CAMERA_MAXZOOM_CONSTANT, CAMERA_MAXZOOM_CONSTANT);
     }
 
     [HarmonyPostfix]
@@ -169,6 +187,14 @@ public static class Main
     private static void GameLogicData_GetAllTribeTypes(ref Il2CppSystem.Collections.Generic.List<TribeType> __result)
     {
         __result.Remove(EnumCache<TribeType>.GetType("mapmaker"));
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
+    internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
+    {
+        if (!__result && isActive)
+            __result = true;
     }
 
     internal static void ResizeMap(ref GameState gameState, int size)

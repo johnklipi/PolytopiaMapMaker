@@ -135,7 +135,7 @@ public static class Editor
         if (Main.isActive)
         {
             UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 180, 0);
+            mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 220, 0);
             mapSizeButton.gameObject.SetActive(true);
             mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
             mapSizeButton.text = string.Empty;

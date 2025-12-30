@@ -319,39 +319,5 @@ namespace PolytopiaMapManager.UI.Menu
                 Console.Write((int)Math.Pow((double)(GameManager.PreliminaryGameSettings.MapSize / 3), 2.0) - 1);
             }
         }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
-        internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
-        {
-            if (!__result && Main.isActive)
-                __result = true;
-        }
-
-        internal static void AddUiButtonToArray(UIRoundButton prefabButton, HudScreen hudScreen, UIButtonBase.ButtonAction action, UIRoundButton[] buttonArray, string? description = null)
-        {
-            UIRoundButton button = UnityEngine.GameObject.Instantiate(prefabButton, prefabButton.transform);
-            button.transform.parent = hudScreen.buttonBar.transform;
-            button.OnClicked += action;
-            List<UIRoundButton> list = buttonArray.ToList();
-            list.Add(button);
-            list.ToArray();
-
-            if (description != null)
-            {
-                Transform child = button.gameObject.transform.Find("DescriptionText");
-
-                if (child != null)
-                {
-                    Main.modLogger!.LogInfo("Found child: " + child.name);
-                    TMPLocalizer localizer = child.gameObject.GetComponent<TMPLocalizer>();
-                    localizer.Text = description;
-                }
-                else
-                {
-                    Main.modLogger!.LogInfo("Child not found.");
-                }
-            }
-        }
     }
 }

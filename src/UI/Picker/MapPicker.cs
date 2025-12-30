@@ -4,7 +4,7 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
-    internal override Vector3? Indent => new Vector3(0, -90, 0);
+    internal override Vector3? Indent => new Vector3(0, -110, 0);
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {

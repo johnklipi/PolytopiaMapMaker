@@ -25,6 +25,9 @@ internal class PickerBase
         button.rectTransform.sizeDelta = buttonSize;
         button.Outline.gameObject.SetActive(false);
         button.BG.color = baseColor;
+        Console.Write("////////////////////////");
+        Console.Write(button.rectTransform.sizeDelta.y);
+        Console.Write("////////////////////////");
         Manager.SetIcon(button!, GetIcon(gameLogicData), iconSize);
     }
     internal virtual Sprite GetIcon(GameLogicData gameLogicData)
