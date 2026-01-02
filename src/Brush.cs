@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
+using PolytopiaMapManager.UI.Picker;
 using UnityEngine;
 
 namespace PolytopiaMapManager;
@@ -30,7 +31,7 @@ public static class Brush
 
         if(chosenResource != ResourceData.Type.None)
         {
-            if(chosenResource == (ResourceData.Type)1000)
+            if(chosenResource == (ResourceData.Type)PickerBase.DESTROY_OPTION_ID)
             {
                 __instance.data.resource = null;
                 ActionUtils.CheckSurroundingArea(gameState, localPlayer, __instance.data);
@@ -94,7 +95,7 @@ public static class Brush
         }
         if(chosenBuilding != ImprovementData.Type.None && !__instance.data.HasImprovement(ImprovementData.Type.LightHouse))
         {
-            if(chosenBuilding == (ImprovementData.Type)1000)
+            if(chosenBuilding == (ImprovementData.Type)PickerBase.DESTROY_OPTION_ID)
             {
                 __instance.data.improvement = null;
                 Data.Capital? capital = Loader.GetCapital(__instance.data.coordinates, Main.currCapitals);

@@ -32,7 +32,7 @@ internal class TileEffectPicker : PickerBase
 
             if(tileEffect == TileData.EffectType.None)
                 base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
-                    1000, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
+                    PickerBase.DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
 
             void OnClick(int id)
             {

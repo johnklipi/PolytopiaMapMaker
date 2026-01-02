@@ -31,7 +31,7 @@ internal class ImprovementPicker : PickerBase
 
             if(improvementType == ImprovementData.Type.None)
                 base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
-                    1000, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
+                    PickerBase.DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
 
             void OnClick(int id)
             {

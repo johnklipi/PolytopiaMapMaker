@@ -8,6 +8,7 @@ internal class PickerBase
 {
     internal UIRoundButton? button;
 
+    internal const int DESTROY_OPTION_ID = 1000;
     internal Vector2 buttonSize = new Vector2(75f, 75f);
     internal Color baseColor = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
     internal float iconSize = 0.6f;
@@ -45,7 +46,7 @@ internal class PickerBase
     public Sprite GetSprite(int type, string spriteName, GameLogicData gameLogicData)
     {
         Sprite? sprite = null;
-        if(type >= 1000)
+        if(type >= PickerBase.DESTROY_OPTION_ID)
             return PolyMod.Registry.GetSprite("remove_icon")!;
 
         if(type != 0)

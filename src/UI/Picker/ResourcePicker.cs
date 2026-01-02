@@ -29,7 +29,7 @@ internal class ResourcePicker : PickerBase
 
             if(resourceType == ResourceData.Type.None)
                 base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
-                    1000, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
+                    PickerBase.DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
 
             void OnClick(int id)
             {
