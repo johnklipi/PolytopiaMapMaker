@@ -59,7 +59,7 @@ namespace PolytopiaMapManager.UI.Menu
 
         internal static bool ContainsHorizontalList(GameSetupScreen __instance, string headerKey)
         {
-            Main.modLogger!.LogInfo("DestroyHorizontalList: " + headerKey);
+            Main.modLogger!.LogInfo("ContainsHorizontalList: " + headerKey);
             foreach (GameObject item in __instance.rows)
             {
                 if (item.TryGetComponent<UIHorizontalList>(out UIHorizontalList list))
@@ -132,11 +132,12 @@ namespace PolytopiaMapManager.UI.Menu
             }
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateDifficultyList))]
-        private static bool GameSetupScreen_CreateDifficultyList(GameSetupScreen __instance)
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateGameModeList))]
+        [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateCustomGameModeList))]
+        private static void GameSetupScreen_CreateGameModeList(GameSetupScreen __instance)
         {
-            if (!ContainsHorizontalList(__instance, "gamesettings.generationtype") && GameManager.PreliminaryGameSettings.BaseGameMode == GameMode.Custom)
+            if (!ContainsHorizontalList(__instance, "gamesettings.generationtype"))
             {
                 List<string> types = new();
                 foreach (MapGenerationType value in Enum.GetValues(typeof(MapGenerationType)))
@@ -153,7 +154,6 @@ namespace PolytopiaMapManager.UI.Menu
                 }
                 __instance.CreateHorizontalList("gamesettings.generationtype", types.ToArray(), new Action<int>(OnMapGenTypeChanged), 0, null, maps.Length + 1, (Il2CppSystem.Action)OnTriedSelectDisabledMapGenType);
             }
-            return true;
         }
 
         private static void OnTriedSelectDisabledMapGenType()
@@ -198,7 +198,14 @@ namespace PolytopiaMapManager.UI.Menu
                 ClearSpacers(__instance);
                 __instance.CreateSpacer(20f, null);
                 DestroyStartGameButton(__instance);
-                __instance.CreateStartGameButton();
+                if(GameManager.PreliminaryGameSettings.GameType == GameType.SinglePlayer)
+                {
+                    __instance.CreateStartGameButton();
+                }
+                else
+                {
+                    __instance.CreateContinueButton(); 
+                }
                 __instance.RefreshInfo();
             }
             else if (mapSizeInputField != null)
@@ -298,7 +305,14 @@ namespace PolytopiaMapManager.UI.Menu
             gameSetupScreen.singlePlayerInfoRow = gameSetupScreen.CreateInfoRow(null);
             gameSetupScreen.CreateSpacer(20f, null);
             DestroyStartGameButton(gameSetupScreen);
-            gameSetupScreen.CreateStartGameButton();
+            if(GameManager.PreliminaryGameSettings.GameType == GameType.SinglePlayer)
+            {
+                gameSetupScreen.CreateStartGameButton();
+            }
+            else
+            {
+                gameSetupScreen.CreateContinueButton(); 
+            }
             Main.modLogger!.LogInfo("shouldBlockStart: " + shouldBlockStart);
             gameSetupScreen.continueButtonRow.buttonComp.ButtonEnabled = !shouldBlockStart; // I do not know why this fucking shit doesnt work
             gameSetupScreen.RefreshInfo();
@@ -316,41 +330,6 @@ namespace PolytopiaMapManager.UI.Menu
                 GameSetupScreen gameSetupScreen = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen>();
                 gameSetupScreen.UpdateOpponentList(); // i dont understand though? why doesnt it adapt properly but instead changes map size
                 gameSetupScreen.RefreshInfo();
-                Console.Write((int)Math.Pow((double)(GameManager.PreliminaryGameSettings.MapSize / 3), 2.0) - 1);
-            }
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
-        internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
-        {
-            if (!__result && Main.isActive)
-                __result = true;
-        }
-
-        internal static void AddUiButtonToArray(UIRoundButton prefabButton, HudScreen hudScreen, UIButtonBase.ButtonAction action, UIRoundButton[] buttonArray, string? description = null)
-        {
-            UIRoundButton button = UnityEngine.GameObject.Instantiate(prefabButton, prefabButton.transform);
-            button.transform.parent = hudScreen.buttonBar.transform;
-            button.OnClicked += action;
-            List<UIRoundButton> list = buttonArray.ToList();
-            list.Add(button);
-            list.ToArray();
-
-            if (description != null)
-            {
-                Transform child = button.gameObject.transform.Find("DescriptionText");
-
-                if (child != null)
-                {
-                    Main.modLogger!.LogInfo("Found child: " + child.name);
-                    TMPLocalizer localizer = child.gameObject.GetComponent<TMPLocalizer>();
-                    localizer.Text = description;
-                }
-                else
-                {
-                    Main.modLogger!.LogInfo("Child not found.");
-                }
             }
         }
     }

@@ -3,50 +3,12 @@
 		"mapmaker": {
 			"color": 13816530,
 			"language": "",
-			"startingTech": [
-				"basicmapbuilder"
-			],
+			"startingTech": [],
 			"category": 0,
 			"priceTier": 0,
 			"bonus": 0,
 			"startingUnit": "none",
 			"idx": -1
-		}
-	},
-	"techData": {
-		"basic": {
-			"improvementUnlocks": [
-				"-city",
-				"-ruin"
-			]
-		},
-		"basicmapbuilder": {
-			"improvementUnlocks": [
-				"city",
-				"ruin"
-			],
-			"cost": 0,
-			"idx": -1
-		}
-	},
-	"improvementData": {
-		"city": {
-			"hidden": false,
-			"cost": 0,
-			"work": 1,
-			"borderSize": 1,
-			"terrainRequirements": [],
-			"improvementAbilities": [
-				"freelance"
-			],
-			"maxLevel": 100
-		},
-		"ruin": {
-			"hidden": false,
-			"improvementAbilities": [
-				"freelance"
-			],
-			"maxLevel": 0
 		}
 	},
 	"mapPreset": {

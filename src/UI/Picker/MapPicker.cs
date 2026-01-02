@@ -4,7 +4,7 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
-    internal override Vector3? Indent => new Vector3(0, -90, 0);
+    internal override Vector3? Indent => new Vector3(0, -110, 0);
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
@@ -18,21 +18,21 @@ internal class MapPicker : PickerBase
         for (int index = 0; index < visualMaps.Count(); index++)
         {
             string name = visualMaps[index];
-            Manager.CreateChoiceButton(selectViewmodePopup, name,
+            base.CreateChoiceButton(selectViewmodePopup, name,
                     index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f));
 
             void OnClick(int id)
             {
                 string mapName = visualMaps[id];
                 Loader.chosenMap = IO.LoadMap(mapName);
-                if(Loader.chosenMap != null)
-                {
-                    Main.MapName = mapName;
-                    Loader.LoadMapInState(ref gameState, Loader.chosenMap!);
-                    GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-                    Loader.RevealMap(GameManager.LocalPlayer.Id);
-                    base.Update(gameState.GameLogicData);
-                }
+                if(Loader.chosenMap == null)
+                    return;
+
+                Main.MapName = mapName;
+                Loader.LoadMapInState(ref gameState, Loader.chosenMap);
+                Main.currCapitals = Loader.chosenMap.capitals;
+                GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                base.Update(gameState.GameLogicData);
             }
         }
     }

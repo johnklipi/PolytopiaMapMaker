@@ -48,7 +48,6 @@ public static class Main
         Harmony.CreateAndPatchAll(typeof(UI.Editor));
         Harmony.CreateAndPatchAll(typeof(UI.Menu.Start));
         Harmony.CreateAndPatchAll(typeof(UI.Menu.GameSetup));
-        Harmony.CreateAndPatchAll(typeof(UI.Picker.Manager));
         Harmony.CreateAndPatchAll(typeof(CustomInput));
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
@@ -94,9 +93,32 @@ public static class Main
                 }
             }
             Loader.SetLighthouses(GameManager.GameState);
-            Loader.RevealMap(GameManager.LocalPlayer.Id);
             UIManager.Instance.BlockHints(); // Uhhhh it should block suggestions but it doesnt. Later...
         }
+    }
+
+    // [HarmonyPrefix]
+    // [HarmonyPatch(typeof(ExploreLightHouseTask), nameof(ExploreLightHouseTask.ShouldUseLighthouseTasks))]
+	public static bool ShouldUseLighthouseTasks(ref bool __result, GameState gameState)
+	{
+        __result = !isActive;
+		return __result;
+	}
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Tile), nameof(Tile.TileIsHidden))]
+    private static void Tile_TileIsHidden(ref bool __result, Tile __instance, MapRenderContext ctx)
+    {
+        if(__result && Main.isActive)
+            __result = false;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Tile), nameof(Tile.IsHidden), MethodType.Getter)]
+    private static void Tile_IsHidden_Getter(ref bool __result, Tile __instance)
+    {
+        if(__result && Main.isActive)
+            __result = false;
     }
 
     [HarmonyPostfix]
@@ -104,17 +126,28 @@ public static class Main
     private static void CameraController_Awake()
     {
         CameraController.Instance.maxZoom = CAMERA_MAXZOOM_CONSTANT;
+        CameraController.Instance.techViewBounds = new(
+            new(CAMERA_MAXZOOM_CONSTANT, CAMERA_MAXZOOM_CONSTANT), CameraController.Instance.techViewBounds.size
+        );
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(TechView), nameof(TechView.OnEnable))]
+    private static void TechView_OnEnable(TechView __instance)
+    {
+        __instance.techTreeContainer.parent.transform.position = new(CAMERA_MAXZOOM_CONSTANT, CAMERA_MAXZOOM_CONSTANT);
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
     private static void GameManager_ReturnToMenu()
     {
-        if(isActive)
-        {
-            isActive = false;
-            UIManager.Instance.UnblockHints();
-        }
+        if(!isActive)
+            return;
+
+        isActive = false;
+        Loader.chosenMap = null;
+        UIManager.Instance.UnblockHints();
     }
 
     [HarmonyPrefix]
@@ -169,6 +202,14 @@ public static class Main
     private static void GameLogicData_GetAllTribeTypes(ref Il2CppSystem.Collections.Generic.List<TribeType> __result)
     {
         __result.Remove(EnumCache<TribeType>.GetType("mapmaker"));
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameLogicData), nameof(GameLogicData.IsResourceVisibleToPlayer))]
+    internal static void GameLogicData_IsResourceVisibleToPlayer(ref bool __result, ResourceData.Type resourceType, PlayerState player)
+    {
+        if (!__result && isActive)
+            __result = true;
     }
 
     internal static void ResizeMap(ref GameState gameState, int size)
