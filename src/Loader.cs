@@ -16,16 +16,6 @@ public static class Loader
     internal static Data.MapInfo? chosenMap;
     internal const string DEFAULT_MAP_NAME_KEY = "mapmaker.map.untitled";
 
-    public static void RevealMap(byte playerId)
-    {
-        for (int i = 0; i < GameManager.GameState.Map.Tiles.Length; i++)
-        {
-            GameManager.GameState.Map.Tiles[i].SetExplored(playerId, true);
-        }
-        GameManager.GameState.Map.GenerateShoreLines();
-        MapRenderer.Current.Refresh(false);
-    }
-
     public static TileData GetBasicTile(int x, int y)
     {
         return new TileData

@@ -3,7 +3,7 @@ using UnityEngine;
 using PolytopiaBackendBase.Common;
 
 namespace PolytopiaMapManager.UI.Picker;
-internal class ClimatePicker : PickerBase
+internal class BiomePicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.climate";
     internal static List<TribeType> excludedTribes = new()
@@ -48,7 +48,7 @@ internal class ClimatePicker : PickerBase
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
-        Manager.CreateChoiceButton(selectViewmodePopup, "none",
+        base.CreateChoiceButton(selectViewmodePopup, "none",
                 (int)TribeType.None, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(16777215), 1f), SetHeadIcon);
 
         void OnClick(int id)
@@ -73,10 +73,10 @@ internal class ClimatePicker : PickerBase
                 Brush.chosenSkinType = SkinType.Default;
             }
             this.Update(gameState.GameLogicData);
-            Manager.resourcePicker.Update(gameState.GameLogicData);
-            Manager.terrainPicker.Update(gameState.GameLogicData);
-            Manager.tileEffectPicker.Update(gameState.GameLogicData);
-            Manager.improvementPicker.Update(gameState.GameLogicData);
+            Editor.resourcePicker.Update(gameState.GameLogicData);
+            Editor.terrainPicker.Update(gameState.GameLogicData);
+            Editor.tileEffectPicker.Update(gameState.GameLogicData);
+            Editor.improvementPicker.Update(gameState.GameLogicData);
         }
 
         void SetHeadIcon(UIRoundButton button, int type)
@@ -114,7 +114,7 @@ internal class ClimatePicker : PickerBase
 
             string tribeName = Localization.Get(tribeData.displayName);
 
-            Manager.CreateChoiceButton(selectViewmodePopup, tribeName,
+            base.CreateChoiceButton(selectViewmodePopup, tribeName,
                 (int)tribeType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, SkinType.Default)), 1f), SetHeadIcon);
 
             foreach (SkinType skinType in tribeData.skins)
@@ -123,7 +123,7 @@ internal class ClimatePicker : PickerBase
                     continue;
                 string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
 
-                Manager.CreateChoiceButton(selectViewmodePopup, skinHeader,
+                base.CreateChoiceButton(selectViewmodePopup, skinHeader,
                     -(int)skinType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, skinType)), 1f), SetHeadIcon);
             }
         }

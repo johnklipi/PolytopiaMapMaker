@@ -15,7 +15,7 @@ internal class TileEffectPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return Manager.GetSprite((int)Brush.chosenTileEffect, TileEffectToString(Brush.chosenTileEffect), gameLogicData);
+       return base.GetSprite((int)Brush.chosenTileEffect, TileEffectToString(Brush.chosenTileEffect), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -27,7 +27,7 @@ internal class TileEffectPicker : PickerBase
 
             string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
 
-            Manager.CreateChoiceButton(selectViewmodePopup, tileEffectName,
+            base.CreateChoiceButton(selectViewmodePopup, tileEffectName,
                     (int)tileEffect, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
 
             void OnClick(int id)
@@ -38,7 +38,7 @@ internal class TileEffectPicker : PickerBase
 
             void SetTileEffectIcon(UIRoundButton button, int type)
             {
-                Manager.SetIcon(button, Manager.GetSprite(type, TileEffectToString((TileData.EffectType)type), gameState.GameLogicData), 0.6f);
+                base.SetIcon(button, base.GetSprite(type, TileEffectToString((TileData.EffectType)type), gameState.GameLogicData), 0.6f);
             }
         }
     }

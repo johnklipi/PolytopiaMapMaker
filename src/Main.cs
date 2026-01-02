@@ -48,7 +48,6 @@ public static class Main
         Harmony.CreateAndPatchAll(typeof(UI.Editor));
         Harmony.CreateAndPatchAll(typeof(UI.Menu.Start));
         Harmony.CreateAndPatchAll(typeof(UI.Menu.GameSetup));
-        Harmony.CreateAndPatchAll(typeof(UI.Picker.Manager));
         Harmony.CreateAndPatchAll(typeof(CustomInput));
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
@@ -94,7 +93,6 @@ public static class Main
                 }
             }
             Loader.SetLighthouses(GameManager.GameState);
-            Loader.RevealMap(GameManager.LocalPlayer.Id);
             UIManager.Instance.BlockHints(); // Uhhhh it should block suggestions but it doesnt. Later...
         }
     }
@@ -106,6 +104,22 @@ public static class Main
         __result = !isActive;
 		return __result;
 	}
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Tile), nameof(Tile.TileIsHidden))]
+    private static void Tile_TileIsHidden(ref bool __result, Tile __instance, MapRenderContext ctx)
+    {
+        if(__result && Main.isActive)
+            __result = false;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Tile), nameof(Tile.IsHidden), MethodType.Getter)]
+    private static void Tile_IsHidden_Getter(ref bool __result, Tile __instance)
+    {
+        if(__result && Main.isActive)
+            __result = false;
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CameraController), nameof(CameraController.Awake))]
@@ -128,11 +142,12 @@ public static class Main
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
     private static void GameManager_ReturnToMenu()
     {
-        if(isActive)
-        {
-            isActive = false;
-            UIManager.Instance.UnblockHints();
-        }
+        if(!isActive)
+            return;
+
+        isActive = false;
+        Loader.chosenMap = null;
+        UIManager.Instance.UnblockHints();
     }
 
     [HarmonyPrefix]

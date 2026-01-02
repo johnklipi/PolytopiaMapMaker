@@ -137,7 +137,6 @@ namespace PolytopiaMapManager.UI.Menu
         [HarmonyPatch(typeof(GameSetupScreen), nameof(GameSetupScreen.CreateCustomGameModeList))]
         private static void GameSetupScreen_CreateGameModeList(GameSetupScreen __instance)
         {
-            Console.Write("Creating");
             if (!ContainsHorizontalList(__instance, "gamesettings.generationtype"))
             {
                 List<string> types = new();
@@ -331,7 +330,6 @@ namespace PolytopiaMapManager.UI.Menu
                 GameSetupScreen gameSetupScreen = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen>();
                 gameSetupScreen.UpdateOpponentList(); // i dont understand though? why doesnt it adapt properly but instead changes map size
                 gameSetupScreen.RefreshInfo();
-                Console.Write((int)Math.Pow((double)(GameManager.PreliminaryGameSettings.MapSize / 3), 2.0) - 1);
             }
         }
     }

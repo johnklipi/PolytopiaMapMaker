@@ -13,7 +13,7 @@ internal class ResourcePicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return Manager.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData);
+       return base.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -24,7 +24,7 @@ internal class ResourcePicker : PickerBase
             if(excludedResources.Contains(resourceType))
                 continue;
             string resourceName = Localization.Get(resourceData.displayName);
-            Manager.CreateChoiceButton(selectViewmodePopup, resourceName,
+            base.CreateChoiceButton(selectViewmodePopup, resourceName,
                     (int)resourceType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
 
             void OnClick(int id)
@@ -35,7 +35,7 @@ internal class ResourcePicker : PickerBase
 
             void SetResourceIcon(UIRoundButton button, int type)
             {
-                Manager.SetIcon(button, Manager.GetSprite(type, SpriteData.ResourceToString((ResourceData.Type)type), gameState.GameLogicData), 0.6f);
+                base.SetIcon(button, base.GetSprite(type, SpriteData.ResourceToString((ResourceData.Type)type), gameState.GameLogicData), 0.6f);
             }
         }
     }

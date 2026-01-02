@@ -1,6 +1,8 @@
 using HarmonyLib;
+using Polytopia.Data;
 using PolytopiaMapManager.Data;
 using PolytopiaMapManager.Popup;
+using PolytopiaMapManager.UI.Picker;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,6 +13,13 @@ namespace PolytopiaMapManager.UI;
 public static class Editor
 {
     internal static Transform? mapNameContainer;
+    internal static BiomePicker biomePicker = new();
+    internal static MapPicker mapPicker = new();
+    internal static ResourcePicker resourcePicker = new();
+    internal static TerrainPicker terrainPicker = new();
+    internal static TileEffectPicker tileEffectPicker = new();
+    internal static ImprovementPicker improvementPicker = new();
+    internal static SpriteAtlasManager spriteAtlasManager = GameManager.GetSpriteAtlasManager();
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]
@@ -24,6 +33,68 @@ public static class Editor
         __instance.statsButton.gameObject.SetActive(false);
         __instance.Show();
         __instance.Update();
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
+    private static void HudScreen_OnMatchStart(HudScreen __instance)
+    {
+        if (!Main.isActive)
+            return;
+
+        UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
+        biomePicker.Create(referenceButton, __instance.transform);
+        mapPicker.Create(referenceButton, __instance.transform);
+        resourcePicker.Create(referenceButton, __instance.transform);
+        terrainPicker.Create(referenceButton, __instance.transform);
+        tileEffectPicker.Create(referenceButton, __instance.transform);
+        improvementPicker.Create(referenceButton, __instance.transform);
+
+        GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
+        biomePicker.Update(gameLogicData);
+        mapPicker.Update(gameLogicData);
+        resourcePicker.Update(gameLogicData);
+        terrainPicker.Update(gameLogicData);
+        tileEffectPicker.Update(gameLogicData);
+        improvementPicker.Update(gameLogicData);
+
+        UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
+        mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 220, 0);
+        mapSizeButton.gameObject.SetActive(true);
+        mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
+        mapSizeButton.text = string.Empty;
+
+        void ShowMapPopup(int id, BaseEventData eventData)
+        {
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = "Resize Map";
+            popup.Description = "";
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Resize, -1, true, null)
+            };
+            void Exit(int id, BaseEventData eventData)
+            {
+                CustomInput.RemoveInputFromPopup(popup);
+            }
+            void Resize(int id, BaseEventData eventData){
+                var input = CustomInput.GetInputFromPopup(popup);
+                if(input != null && int.TryParse(input.text, out int size))
+                {
+                    GameState gameState = GameManager.GameState;
+                    Main.ResizeMap(ref gameState, size);
+                    GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                    NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");
+                }
+                else
+                {
+                    NotificationManager.Notify("Only numbers are allowed", "Error");
+                }
+                CustomInput.RemoveInputFromPopup(popup);
+            }
+            CustomInput.AddInputToPopup(popup, GameManager.GameState.Map.Width.ToString(), onValueChanged: new Action<string>(value => MapResizeValueChanged(value, popup)));
+        }
     }
 
     [HarmonyPostfix]
@@ -103,76 +174,29 @@ public static class Editor
     [HarmonyPatch(typeof(ResourceBar), nameof(ResourceBar.OnEnable))]
     internal static void ResourceBar_OnEnable(ResourceBar __instance)
     {
-        if(Main.isActive)
-        {
-            __instance.currencyContainer.gameObject.SetActive(false);
-            __instance.scoreContainer.gameObject.SetActive(false);
-            __instance.turnsContainer.gameObject.SetActive(false);
+        if(!Main.isActive)
+            return;
 
-            TextMeshProUGUI text = GameObject.Instantiate(__instance.currencyContainer.headerLabel, __instance.turnsContainer.transform.parent);
-            text.name = "MapName";
+        __instance.currencyContainer.gameObject.SetActive(false);
+        __instance.scoreContainer.gameObject.SetActive(false);
+        __instance.turnsContainer.gameObject.SetActive(false);
 
-            RectTransform rect = text.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
-            rect.anchoredPosition = new Vector2((Screen.width / 2) - (500 / 8), 40);
-            rect.anchorMax = Vector2.zero;
-            rect.anchorMin = Vector2.zero;
+        TextMeshProUGUI text = GameObject.Instantiate(__instance.currencyContainer.headerLabel, __instance.turnsContainer.transform.parent);
+        text.name = "MapName";
 
-            text.fontSize = 35;
-            text.alignment = TextAlignmentOptions.Center;
+        RectTransform rect = text.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
+        rect.anchoredPosition = new Vector2((Screen.width / 2) - (500 / 8), 40);
+        rect.anchorMax = Vector2.zero;
+        rect.anchorMin = Vector2.zero;
 
-            text.GetComponent<TMPLocalizer>().Text = Main.MapName;
-            text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        text.fontSize = 35;
+        text.alignment = TextAlignmentOptions.Center;
 
-            mapNameContainer = text.transform;
-        }
-    }
+        text.GetComponent<TMPLocalizer>().Text = Main.MapName;
+        text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-    private static void HudScreen_OnMatchStart(HudScreen __instance)
-    {
-        if (Main.isActive)
-        {
-            UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
-            mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 220, 0);
-            mapSizeButton.gameObject.SetActive(true);
-            mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
-            mapSizeButton.text = string.Empty;
-
-            void ShowMapPopup(int id, BaseEventData eventData)
-            {
-                BasicPopup popup = PopupManager.GetBasicPopup();
-                popup.Header = "Resize Map";
-                popup.Description = "";
-                popup.buttonData = new PopupBase.PopupButtonData[]
-                {
-                    new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
-                    new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Resize, -1, true, null)
-                };
-                void Exit(int id, BaseEventData eventData)
-                {
-                    CustomInput.RemoveInputFromPopup(popup);
-                }
-                void Resize(int id, BaseEventData eventData){
-                    var input = CustomInput.GetInputFromPopup(popup);
-                    if(input != null && int.TryParse(input.text, out int size))
-                    {
-                        GameState gameState = GameManager.GameState;
-                        Main.ResizeMap(ref gameState, size);
-                        GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-                        Loader.RevealMap(GameManager.LocalPlayer.Id);
-                        NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");
-                    }
-                    else
-                    {
-                        NotificationManager.Notify("Only numbers are allowed", "Error");
-                    }
-                    CustomInput.RemoveInputFromPopup(popup);
-                }
-                CustomInput.AddInputToPopup(popup, GameManager.GameState.Map.Width.ToString(), onValueChanged: new Action<string>(value => MapResizeValueChanged(value, popup)));
-            }
-        }
+        mapNameContainer = text.transform;
     }
 
     public static void MapResizeValueChanged(string value, BasicPopup popup)
