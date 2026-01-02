@@ -29,6 +29,12 @@ internal class PickerBase
         button.BG.color = baseColor;
         SetIcon(button!, GetIcon(gameLogicData), iconSize);
     }
+
+    internal virtual Sprite GetIcon()
+    {
+        return PolyMod.Registry.GetSprite("none")!;
+    }
+
     internal virtual Sprite GetIcon(GameLogicData gameLogicData)
     {
         return GetSprite(0, "none", gameLogicData);
@@ -39,6 +45,9 @@ internal class PickerBase
     public Sprite GetSprite(int type, string spriteName, GameLogicData gameLogicData)
     {
         Sprite? sprite = null;
+        if(type >= 1000)
+            return PolyMod.Registry.GetSprite("remove_icon")!;
+
         if(type != 0)
         {
             TribeType tribeType = TribeType.Xinxi;
@@ -51,7 +60,7 @@ internal class PickerBase
         }
         if(sprite == null)
         {
-            sprite = PolyMod.Registry.GetSprite("none")!;
+            sprite = GetIcon();
         }
         return sprite;
     }

@@ -7,8 +7,6 @@ using PolytopiaBackendBase.Common;
 using Il2CppInterop.Runtime;
 using DG.Tweening;
 using Polytopia.Data;
-using PolytopiaBackendBase;
-
 
 namespace PolytopiaMapManager;
 public static class Main
@@ -52,6 +50,7 @@ public static class Main
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
+        PolyMod.Loader.AddPatchDataType("tileEffect", typeof(TileData.EffectType));
         Directory.CreateDirectory(IO.MAPS_PATH);
 
         static void OnMapMaker(int id, BaseEventData eventData)
@@ -93,8 +92,16 @@ public static class Main
                 }
             }
             Loader.SetLighthouses(GameManager.GameState);
-            UIManager.Instance.BlockHints(); // Uhhhh it should block suggestions but it doesnt. Later...
         }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+    private static void GameManager_Update()
+    {
+        if(isActive && GameManager.Instance.isLevelLoaded
+            && !UIManager.Instance.advisorManager.areHintsBlocked)
+            UIManager.Instance.BlockHints();
     }
 
     // [HarmonyPrefix]
@@ -107,15 +114,8 @@ public static class Main
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(Tile), nameof(Tile.TileIsHidden))]
-    private static void Tile_TileIsHidden(ref bool __result, Tile __instance, MapRenderContext ctx)
-    {
-        if(__result && Main.isActive)
-            __result = false;
-    }
-
-    [HarmonyPostfix]
     [HarmonyPatch(typeof(Tile), nameof(Tile.IsHidden), MethodType.Getter)]
-    private static void Tile_IsHidden_Getter(ref bool __result, Tile __instance)
+    private static void Tile_TileIsHidden__IsHidden_Getter(ref bool __result)
     {
         if(__result && Main.isActive)
             __result = false;

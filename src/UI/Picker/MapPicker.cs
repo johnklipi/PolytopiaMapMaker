@@ -1,3 +1,4 @@
+using Polytopia.Data;
 using UnityEngine;
 
 namespace PolytopiaMapManager.UI.Picker;
@@ -5,6 +6,11 @@ internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
     internal override Vector3? Indent => new Vector3(0, -110, 0);
+
+    internal override Sprite GetIcon()
+    {
+       return PolyMod.Registry.GetSprite("map_icon")!;
+    }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
@@ -19,7 +25,7 @@ internal class MapPicker : PickerBase
         {
             string name = visualMaps[index];
             base.CreateChoiceButton(selectViewmodePopup, name,
-                    index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f));
+                    index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetMapIcon);
 
             void OnClick(int id)
             {
@@ -33,6 +39,11 @@ internal class MapPicker : PickerBase
                 Main.currCapitals = Loader.chosenMap.capitals;
                 GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                 base.Update(gameState.GameLogicData);
+            }
+
+            void SetMapIcon(UIRoundButton button, int type) 
+            {
+                base.SetIcon(button, GetIcon(), 0.6f);
             }
         }
     }

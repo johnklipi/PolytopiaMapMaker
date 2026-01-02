@@ -64,6 +64,19 @@ public static class Editor
         mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
         mapSizeButton.text = string.Empty;
 
+        mapSizeButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
+        mapSizeButton.Outline.gameObject.SetActive(false);
+        mapSizeButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+
+        mapSizeButton.faceIconSizeMultiplier = 0.8f;
+        mapSizeButton.icon.sprite = PolyMod.Registry.GetSprite("resize_icon");
+        mapSizeButton.icon.useSpriteMesh = true;
+        mapSizeButton.icon.SetNativeSize();
+        Vector2 sizeDelta = mapSizeButton.icon.rectTransform.sizeDelta;
+        mapSizeButton.icon.rectTransform.sizeDelta = sizeDelta * mapSizeButton.faceIconSizeMultiplier;
+        mapSizeButton.icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        mapSizeButton.icon.gameObject.SetActive(true);
+
         void ShowMapPopup(int id, BaseEventData eventData)
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
@@ -101,8 +114,8 @@ public static class Editor
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
     private static void GameManager_Update()
     {
-        // if(!Main.isActive)
-        //     return;
+         if(!Main.isActive)
+             return;
 
         if(Input.GetKey(KeyCode.LeftControl))
         {
@@ -241,14 +254,14 @@ public static class Editor
         TileData tile1 = GameManager.GameState.Map.GetTile(tile.Coordinates);
         if (tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
 
-        UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("setcapital"), false);
-        //uiroundButton.sprite = PolyMod.Registry.GetSprite("anything");
+        UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("mapmaker.capitals.set"), false);
+        uiroundButton.sprite = PolyMod.Registry.GetSprite("capital");
         uiroundButton.OnClicked += (UIButtonBase.ButtonAction)setcapitalmethod;
         void setcapitalmethod(int id, BaseEventData baseEventData)
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = "Whose capital should this be?";
-            popup.Description = "Input a number from 1 to 254! The associated player will spawn here. Type in 0 to mark this tile as an ordinary (noncapital) city!";
+            popup.Header = Localization.Get("mapmaker.capitals.header");
+            popup.Description = Localization.Get("mapmaker.capitals.desc", new Il2CppSystem.Object[]{1, 254, 0});
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
                 new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),

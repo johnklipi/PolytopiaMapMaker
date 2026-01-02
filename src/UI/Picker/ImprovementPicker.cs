@@ -29,6 +29,10 @@ internal class ImprovementPicker : PickerBase
             base.CreateChoiceButton(selectViewmodePopup, improvementName,
                     (int)improvementType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
 
+            if(improvementType == ImprovementData.Type.None)
+                base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
+                    1000, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
+
             void OnClick(int id)
             {
                 Brush.chosenBuilding = (ImprovementData.Type)id;

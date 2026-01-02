@@ -1,5 +1,11 @@
 {
     "none__": {
         "pixelsPerUnit": 264
+    },
+    "remove_icon__": {
+        "pixelsPerUnit": 1056
+    },
+    "map_icon__": {
+        "pixelsPerUnit": 4224
     }
 }

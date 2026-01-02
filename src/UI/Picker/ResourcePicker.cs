@@ -5,7 +5,7 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class ResourcePicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.resource";
-    internal override Vector3? Indent => new Vector3(110, 0, 0);
+    internal override Vector3? Indent => new Vector3(220, 0, 0);
     internal static List<ResourceData.Type> excludedResources = new()
     {
         ResourceData.Type.Whale,
@@ -26,6 +26,10 @@ internal class ResourcePicker : PickerBase
             string resourceName = Localization.Get(resourceData.displayName);
             base.CreateChoiceButton(selectViewmodePopup, resourceName,
                     (int)resourceType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
+
+            if(resourceType == ResourceData.Type.None)
+                base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
+                    1000, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
 
             void OnClick(int id)
             {

@@ -27,82 +27,80 @@ public static class Brush
 
         if(chosenTerrain != Polytopia.Data.TerrainData.Type.None)
             __instance.data.terrain = chosenTerrain;
-        if(chosenResource == ResourceData.Type.None)
+
+        if(chosenResource != ResourceData.Type.None)
         {
-            __instance.data.resource = null;
-            ActionUtils.CheckSurroundingArea(gameState, localPlayer, __instance.data);
-        }
-        else if(gameState.GameLogicData.TryGetData(chosenResource, out ResourceData data))
-        {
-            if(data.resourceTerrainRequirements.Contains(__instance.data.terrain))
+            if(chosenResource == (ResourceData.Type)1000)
             {
-                __instance.data.resource = new ResourceState
-                {
-                    type = chosenResource
-                };
+                __instance.data.resource = null;
                 ActionUtils.CheckSurroundingArea(gameState, localPlayer, __instance.data);
+            }
+            else if(gameState.GameLogicData.TryGetData(chosenResource, out ResourceData data))
+            {
+                if(data.resourceTerrainRequirements.Contains(__instance.data.terrain))
+                {
+                    __instance.data.resource = new ResourceState
+                    {
+                        type = chosenResource
+                    };
+                    ActionUtils.CheckSurroundingArea(gameState, localPlayer, __instance.data);
+                }
+                else if(Time.time >= nextAllowedTimeForPopup)
+                {
+                    NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                    nextAllowedTimeForPopup = Time.time + 1f;
+                }
             }
             else if(Time.time >= nextAllowedTimeForPopup)
             {
-                NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                NotificationManager.Notify(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { __instance.data.resource}));
                 nextAllowedTimeForPopup = Time.time + 1f;
             }
         }
-        else if(Time.time >= nextAllowedTimeForPopup)
+        if(chosenTileEffect != TileData.EffectType.None)
         {
-            NotificationManager.Notify(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { __instance.data.resource}));
-            nextAllowedTimeForPopup = Time.time + 1f;
-        }
-        // if(!__instance.data.HasEffect(chosenTileEffect))
-        // {
-        //     if(chosenTileEffect != TileData.EffectType.None)
-        //         __instance.data.AddEffect(chosenTileEffect);
-        // }
-        // else
-        // {
-        //     __instance.data.RemoveEffect(chosenTileEffect);
-        // }
-        if(chosenTileEffect != TileData.EffectType.None && !__instance.data.HasEffect(chosenTileEffect))
-        {
-            if(chosenTileEffect == TileData.EffectType.Flooded)
+            __instance.data.effects.Clear();
+            if(!__instance.data.HasEffect(chosenTileEffect))
             {
-                if(__instance.data.isFloodable())
+                if(chosenTileEffect == TileData.EffectType.Flooded)
                 {
-                    __instance.data.AddEffect(chosenTileEffect);
-                    if(chosenSkinType == SkinType.Swamp)
-                        __instance.data.AddEffect(TileData.EffectType.Swamped);
+                    if(__instance.data.isFloodable())
+                    {
+                        __instance.data.AddEffect(chosenTileEffect);
+                        if(chosenSkinType == SkinType.Swamp)
+                            __instance.data.AddEffect(TileData.EffectType.Swamped);
+                    }
+                    else if(Time.time >= nextAllowedTimeForPopup)
+                    {
+                        NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                        nextAllowedTimeForPopup = Time.time + 1f;
+                    }
                 }
-                else if(Time.time >= nextAllowedTimeForPopup)
+                else if(chosenTileEffect == TileData.EffectType.Algae)
                 {
-                    NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
-                    nextAllowedTimeForPopup = Time.time + 1f;
-                }
-            }
-            else if(chosenTileEffect == TileData.EffectType.Algae)
-            {
-                if(__instance.data.IsWater)
-                {
-                    __instance.data.AddEffect(chosenTileEffect);
-                    if(chosenSkinType == SkinType.Cute)
-                        __instance.data.AddEffect(TileData.EffectType.Foam);
-                }
-                else if(Time.time >= nextAllowedTimeForPopup)
-                {
-                    NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
-                    nextAllowedTimeForPopup = Time.time + 1f;
+                    if(__instance.data.IsWater)
+                    {
+                        __instance.data.AddEffect(chosenTileEffect);
+                        if(chosenSkinType == SkinType.Cute)
+                            __instance.data.AddEffect(TileData.EffectType.Foam);
+                    }
+                    else if(Time.time >= nextAllowedTimeForPopup)
+                    {
+                        NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
+                        nextAllowedTimeForPopup = Time.time + 1f;
+                    }
                 }
             }
         }
-        else
+        if(chosenBuilding != ImprovementData.Type.None && !__instance.data.HasImprovement(ImprovementData.Type.LightHouse))
         {
-            TileData.EffectType lastEffect = __instance.data.effects.ToArray().ToList().LastOrDefault(TileData.EffectType.None);
-            __instance.data.RemoveEffect(lastEffect);
-        }
-        if(!__instance.data.HasImprovement(ImprovementData.Type.LightHouse))
-        {
-            if(chosenBuilding == ImprovementData.Type.None)
+            if(chosenBuilding == (ImprovementData.Type)1000)
             {
                 __instance.data.improvement = null;
+                Data.Capital? capital = Loader.GetCapital(__instance.data.coordinates, Main.currCapitals);
+
+                if(capital != null)
+                    Main.currCapitals.Remove(capital);  
             }
             else if (gameState.GameLogicData.TryGetData(chosenBuilding, out ImprovementData improvementData))
             {

@@ -30,6 +30,10 @@ internal class TileEffectPicker : PickerBase
             base.CreateChoiceButton(selectViewmodePopup, tileEffectName,
                     (int)tileEffect, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
 
+            if(tileEffect == TileData.EffectType.None)
+                base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
+                    1000, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
+
             void OnClick(int id)
             {
                 Brush.chosenTileEffect = (TileData.EffectType)id;
