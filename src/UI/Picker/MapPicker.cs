@@ -1,3 +1,4 @@
+using PolytopiaMapManager.Data;
 using UnityEngine;
 
 namespace PolytopiaMapManager.UI.Picker;
@@ -23,8 +24,9 @@ internal class MapPicker : PickerBase
         for (int index = 0; index < visualMaps.Count(); index++)
         {
             string name = visualMaps[index];
+
             base.CreateChoiceButton(selectViewmodePopup, name,
-                    index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetMapIcon);
+                    index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.black, 0.6f), SetMapIcon);
 
             void OnClick(int id)
             {
@@ -42,7 +44,23 @@ internal class MapPicker : PickerBase
 
             void SetMapIcon(UIRoundButton button, int type) 
             {
-                base.SetIcon(button, GetIcon(), 0.6f);
+                MapInfo? mapInfo = IO.LoadMap(name);
+                if(mapInfo == null)
+                    return;
+
+                Sprite icon = GetIcon();
+                if(mapInfo.icon.Count > 0)
+                {
+                    Texture2D texture = new Texture2D(2, 2, TextureFormat.RGB24, false);
+                    texture.LoadImage(mapInfo.icon.ToArray());
+                    icon = Sprite.Create(
+                        texture,
+                        new(0, 0, texture.width, texture.height),
+                        new(0.5f, 0.5f),
+                        2112f
+                    );
+                }
+                base.SetIcon(button, icon, 0.6f);
             }
         }
     }
