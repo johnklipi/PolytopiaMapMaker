@@ -255,7 +255,7 @@ public static class Editor
         if (tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
 
         UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("mapmaker.capitals.set"), false);
-        uiroundButton.sprite = PolyMod.Registry.GetSprite("capital");
+        uiroundButton.sprite = PolyMod.Registry.GetSprite("capital_icon");
         uiroundButton.OnClicked += (UIButtonBase.ButtonAction)setcapitalmethod;
         void setcapitalmethod(int id, BaseEventData baseEventData)
         {

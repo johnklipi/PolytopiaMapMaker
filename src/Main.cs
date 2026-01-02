@@ -50,7 +50,6 @@ public static class Main
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
-        PolyMod.Loader.AddPatchDataType("tileEffect", typeof(TileData.EffectType));
         Directory.CreateDirectory(IO.MAPS_PATH);
 
         static void OnMapMaker(int id, BaseEventData eventData)
@@ -104,14 +103,6 @@ public static class Main
             UIManager.Instance.BlockHints();
     }
 
-    // [HarmonyPrefix]
-    // [HarmonyPatch(typeof(ExploreLightHouseTask), nameof(ExploreLightHouseTask.ShouldUseLighthouseTasks))]
-	public static bool ShouldUseLighthouseTasks(ref bool __result, GameState gameState)
-	{
-        __result = !isActive;
-		return __result;
-	}
-
     [HarmonyPostfix]
     [HarmonyPatch(typeof(Tile), nameof(Tile.TileIsHidden))]
     [HarmonyPatch(typeof(Tile), nameof(Tile.IsHidden), MethodType.Getter)]
@@ -147,6 +138,7 @@ public static class Main
 
         isActive = false;
         Loader.chosenMap = null;
+        currCapitals.Clear();
         UIManager.Instance.UnblockHints();
     }
 

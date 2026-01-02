@@ -1,4 +1,3 @@
-using Polytopia.Data;
 using UnityEngine;
 
 namespace PolytopiaMapManager.UI.Picker;

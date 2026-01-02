@@ -1,9 +1,10 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
 using PolytopiaMapManager.Data;
-using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace PolytopiaMapManager;
@@ -49,20 +50,37 @@ public static class Loader
         return 1;
     }
 
-    [HarmonyPostfix]
+    [HarmonyPrefix]
     [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.Generate))]
-    private static void MapGenerator_Generate_Postfix(MapGenerator __instance, ref GameState state, ref MapGeneratorSettings settings)
+    private static bool MapGenerator_Generate_Prefix(MapGenerator __instance, GameState state, MapGeneratorSettings settings)
     {
-        if(chosenMap != null)
+        if(chosenMap == null)
+            return true;
+
+        state.Seed = CreateSeed(chosenMap);
+
+        LoadMapInState(ref state, chosenMap);
+        GenerateCapitals(state, __instance, chosenMap.capitals);
+
+        chosenMap = null;
+
+        return false;
+    }
+
+    public static int CreateSeed(MapInfo mapInfo)
+    {
+        var options = new JsonSerializerOptions
         {
-            LoadMapInState(ref state, chosenMap);
-            if (!Main.isActive)
-            {
-                var capitals = chosenMap.capitals;
-                GenerateCapitals(state, __instance, capitals);
-            }
-            chosenMap = null;
-        }
+            IncludeFields = true,
+            WriteIndented = false
+        };
+
+        string json = JsonSerializer.Serialize(mapInfo, options);
+
+        using var sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(json));
+
+        return BitConverter.ToInt32(hash, 0);
     }
 
     # region CAPITAL SPAWNING
