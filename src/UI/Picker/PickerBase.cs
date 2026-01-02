@@ -9,11 +9,13 @@ internal class PickerBase
     internal UIRoundButton? button;
 
     internal const int DESTROY_OPTION_ID = 1000;
+    internal float gridSpacing = 30f;
     internal Vector2 buttonSize = new Vector2(75f, 75f);
     internal Color baseColor = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
     internal float iconSize = 0.6f;
     internal virtual string HeaderKey => "";
     internal virtual Vector3? Indent => null;
+    internal virtual Vector2 ChoiceButtonSize => new Vector2(56f, 56f);
 
     internal virtual void Create(UIRoundButton referenceButton, Transform parent)
     {
@@ -90,7 +92,7 @@ internal class PickerBase
         }
         picker.gameObject.SetActive(true);
         picker.OnClicked = (UIButtonBase.ButtonAction)ShowPopup;
-        picker.text = string.Empty;
+        picker.text = Localization.Get(headerKey, new Il2CppSystem.Object[] { });
 
         void ShowPopup(int id, BaseEventData eventData)
         {
@@ -104,9 +106,9 @@ internal class PickerBase
 
             showAction(ref num, selectViewmodePopup, gameState);
 
-            selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + 10f);
-            selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + 10f);
-            selectViewmodePopup.gridBottomSpacer.minHeight = num + 10f;
+            selectViewmodePopup.gridLayout.spacing = new Vector2(selectViewmodePopup.gridLayout.spacing.x, num + gridSpacing);
+            selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + gridSpacing);
+            selectViewmodePopup.gridBottomSpacer.minHeight = num + gridSpacing;
 
 
             selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
@@ -141,7 +143,7 @@ internal class PickerBase
         );
 
         button.id = id;
-        button.rectTransform.sizeDelta = new Vector2(56f, 56f);
+        button.rectTransform.sizeDelta = ChoiceButtonSize;
         button.Outline.gameObject.SetActive(false);
         button.BG.color = bg;
 

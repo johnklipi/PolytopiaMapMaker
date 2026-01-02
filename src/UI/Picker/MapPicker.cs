@@ -60,7 +60,7 @@ internal class MapPicker : PickerBase
                         2112f
                     );
                 }
-                base.SetIcon(button, icon, 0.6f);
+                base.SetIcon(button, icon);
             }
         }
     }

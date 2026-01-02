@@ -118,5 +118,8 @@
     },
     "mapmaker_remove":{
         "English": "Remove"
+    },
+    "mapmaker_resize":{
+        "English": "Resize Map"
     }
 }

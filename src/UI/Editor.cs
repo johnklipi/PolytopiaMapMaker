@@ -64,11 +64,11 @@ public static class Editor
         mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
         mapSizeButton.text = string.Empty;
 
-        mapSizeButton.rectTransform.sizeDelta = new Vector2(56f, 56f);
+        mapSizeButton.rectTransform.sizeDelta = new Vector2(75f, 75f);
         mapSizeButton.Outline.gameObject.SetActive(false);
         mapSizeButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
 
-        mapSizeButton.faceIconSizeMultiplier = 0.8f;
+        mapSizeButton.faceIconSizeMultiplier = 0.6f;
         mapSizeButton.icon.sprite = PolyMod.Registry.GetSprite("resize_icon");
         mapSizeButton.icon.useSpriteMesh = true;
         mapSizeButton.icon.SetNativeSize();
@@ -76,12 +76,13 @@ public static class Editor
         mapSizeButton.icon.rectTransform.sizeDelta = sizeDelta * mapSizeButton.faceIconSizeMultiplier;
         mapSizeButton.icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
         mapSizeButton.icon.gameObject.SetActive(true);
+        mapSizeButton.text = Localization.Get("mapmaker.resize");
 
         void ShowMapPopup(int id, BaseEventData eventData)
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = "Resize Map";
-            popup.Description = "";
+            popup.Header = Localization.Get("mapmaker.resize");
+            popup.Description = string.Empty;
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
                 new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
