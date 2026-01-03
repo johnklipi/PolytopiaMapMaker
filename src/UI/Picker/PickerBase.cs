@@ -16,6 +16,7 @@ internal class PickerBase
     internal virtual string HeaderKey => "";
     internal virtual Vector3? Indent => null;
     internal virtual Vector2 ChoiceButtonSize => new Vector2(56f, 56f);
+    internal int chosenValue = 0;
 
     internal virtual void Create(UIRoundButton referenceButton, Transform parent)
     {
@@ -54,11 +55,11 @@ internal class PickerBase
         if(type != 0)
         {
             TribeType tribeType = TribeType.Xinxi;
-            if(Brush.chosenClimate != 0)
+            if(Editor.biomePicker.chosenValue != 0)
             {
-                tribeType = gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate);
+                tribeType = gameLogicData.GetTribeTypeFromStyle(Editor.biomePicker.chosenValue);
             }
-            SpriteAtlasManager.SpriteLookupResult lookupResult = Editor.spriteAtlasManager.DoSpriteLookup(spriteName, tribeType, Brush.chosenSkinType, false);
+            SpriteAtlasManager.SpriteLookupResult lookupResult = Editor.spriteAtlasManager.DoSpriteLookup(spriteName, tribeType, Editor.biomePicker.chosenSkinType, false);
             sprite = lookupResult.sprite;
         }
         if(sprite == null)

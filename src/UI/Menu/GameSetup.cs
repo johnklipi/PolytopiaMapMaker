@@ -143,15 +143,8 @@ namespace PolytopiaMapManager.UI.Menu
                 {
                     types.Add(value.ToString());
                 }
-                string[] maps = IO.GetAllMaps();
-                visualMaps = new();
-                int num = 1;
-                if (maps.Length > 0)
-                {
-                    visualMaps = maps.Select(map => Path.GetFileNameWithoutExtension(map)).ToList();
-                    num++;
-                }
-                __instance.CreateHorizontalList("gamesettings.generationtype", types.ToArray(), new Action<int>(OnMapGenTypeChanged), 0, null, maps.Length + 1, (Il2CppSystem.Action)OnTriedSelectDisabledMapGenType);
+                visualMaps = IO.GetAllMaps();
+                __instance.CreateHorizontalList("gamesettings.generationtype", types.ToArray(), new Action<int>(OnMapGenTypeChanged), 0, null, visualMaps.Count + 1, (Il2CppSystem.Action)OnTriedSelectDisabledMapGenType);
             }
         }
 

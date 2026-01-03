@@ -6,6 +6,7 @@ internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
     internal override Vector3? Indent => new Vector3(0, -110, 0);
+    private Dictionary<string, Sprite> cachedMaps = new();
 
     internal override Sprite GetIcon()
     {
@@ -14,28 +15,39 @@ internal class MapPicker : PickerBase
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
-        string[] maps = IO.GetAllMaps();
-        List<string> visualMaps = new();
-        if (maps.Length > 0)
+        List<string> maps = IO.GetAllMaps();
+        if(maps.Count > cachedMaps.Count)
         {
-            visualMaps = maps.Select(map => Path.GetFileNameWithoutExtension(map)).ToList();
-            num++;
+            foreach (string mapName in maps)
+            {
+                if(!cachedMaps.ContainsKey(mapName))
+                    CacheMap(mapName);
+            }
         }
-        for (int index = 0; index < visualMaps.Count(); index++)
+        else if(maps.Count < cachedMaps.Count)
         {
-            string name = visualMaps[index];
-
+            foreach (var map in cachedMaps)
+            {
+                if(!maps.Contains(map.Key))
+                    cachedMaps.Remove(map.Key);
+            }
+        }
+        for (int index = 0; index < cachedMaps.Count; index++)
+        {
+            string name = cachedMaps.Keys.ToArray()[index];
             base.CreateChoiceButton(selectViewmodePopup, name,
                     index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.black, 0.6f), SetMapIcon);
 
             void OnClick(int id)
             {
-                string mapName = visualMaps[id];
-                Loader.chosenMap = IO.LoadMap(mapName);
-                if(Loader.chosenMap == null)
+                string name = cachedMaps.Keys.ToArray()[id];
+                MapInfo? mapInfo = IO.LoadMap(name);
+
+                if(mapInfo == null)
                     return;
 
-                Main.MapName = mapName;
+                Loader.chosenMap = mapInfo;
+                Main.MapName = name;
                 Loader.LoadMapInState(ref gameState, Loader.chosenMap);
                 Main.currCapitals = Loader.chosenMap.capitals;
                 GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
@@ -44,24 +56,36 @@ internal class MapPicker : PickerBase
 
             void SetMapIcon(UIRoundButton button, int type) 
             {
-                MapInfo? mapInfo = IO.LoadMap(name);
-                if(mapInfo == null)
-                    return;
+                string name = cachedMaps.Keys.ToArray()[type];
 
-                Sprite icon = GetIcon();
-                if(mapInfo.icon.Count > 0)
-                {
-                    Texture2D texture = new Texture2D(2, 2, TextureFormat.RGB24, false);
-                    texture.LoadImage(mapInfo.icon.ToArray());
-                    icon = Sprite.Create(
-                        texture,
-                        new(0, 0, texture.width, texture.height),
-                        new(0.5f, 0.5f),
-                        2112f
-                    );
-                }
-                base.SetIcon(button, icon);
+                base.SetIcon(button, cachedMaps[name]);
             }
         }
+    }
+
+    private void CacheMap(string mapName)
+    {
+        MapInfo? mapInfo = IO.LoadMap(mapName);
+        if(mapInfo == null)
+            return;
+
+        Sprite icon = GetIcon();
+        if(mapInfo.icon.Count > 0)
+        {
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGB24, false);
+            texture.LoadImage(mapInfo.icon.ToArray());
+            icon = Sprite.Create(
+                texture,
+                new(0, 0, texture.width, texture.height),
+                new(0.5f, 0.5f),
+                2112f
+            );
+            if(!Editor.spriteAtlasManager.cachedSprites["Heads"].ContainsKey(mapName))
+            {
+                Editor.spriteAtlasManager.cachedSprites.TryAdd("Heads", new());
+                Editor.spriteAtlasManager.cachedSprites["Heads"].Add(mapName, icon);
+            }
+        }
+        cachedMaps[mapName] = icon;
     }
 }

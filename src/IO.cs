@@ -147,8 +147,13 @@ public static class IO
         return mapInfo;
     }
 
-    internal static string[] GetAllMaps()
+    internal static List<string> GetAllMaps()
     {
-        return Directory.GetFiles(MAPS_PATH, "*.json");
+        List<string> names = new();
+        foreach (var rawName in Directory.GetFiles(MAPS_PATH, "*.json"))
+        {
+            names.Add(Path.GetFileNameWithoutExtension(rawName));
+        }
+        return names;
     }
 }

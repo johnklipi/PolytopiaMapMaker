@@ -14,7 +14,7 @@ internal class TerrainPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite((int)Brush.chosenTerrain, SpriteData.TerrainToString(Brush.chosenTerrain), gameLogicData);
+       return base.GetSprite(chosenValue, SpriteData.TerrainToString((Polytopia.Data.TerrainData.Type)chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -30,7 +30,7 @@ internal class TerrainPicker : PickerBase
 
             void OnClick(int id)
             {
-                Brush.chosenTerrain = (Polytopia.Data.TerrainData.Type)id;
+                chosenValue = id;
                 Update(gameState.GameLogicData);
             }
 
