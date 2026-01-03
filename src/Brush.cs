@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
+using PolytopiaMapManager.UI;
 using PolytopiaMapManager.UI.Picker;
 using UnityEngine;
 
@@ -8,12 +9,6 @@ namespace PolytopiaMapManager;
 
 public static class Brush
 {
-    internal static int chosenClimate = 0;
-    internal static SkinType chosenSkinType = SkinType.Default;
-    internal static Polytopia.Data.TerrainData.Type chosenTerrain = Polytopia.Data.TerrainData.Type.None;
-    internal static Polytopia.Data.ResourceData.Type chosenResource = Polytopia.Data.ResourceData.Type.None;
-    internal static TileData.EffectType chosenTileEffect = TileData.EffectType.None;
-    internal static ImprovementData.Type chosenBuilding = ImprovementData.Type.None;
     private static float nextAllowedTimeForPopup = 0f;
 
     [HarmonyPostfix]
@@ -24,106 +19,155 @@ public static class Brush
             return;
 
         GameState gameState = GameManager.GameState;
-        byte localPlayer = GameManager.LocalPlayer.Id;
 
-        if(chosenTerrain != Polytopia.Data.TerrainData.Type.None)
-            __instance.data.terrain = chosenTerrain;
+        HandleTerrain(__instance.data, (Polytopia.Data.TerrainData.Type)Editor.terrainPicker.chosenValue);
+        HandleResource(gameState, __instance.data, (ResourceData.Type)Editor.resourcePicker.chosenValue);
+        HandleTileEffect(__instance.data, (TileData.EffectType)Editor.tileEffectPicker.chosenValue);
+        HandleImprovement(gameState, __instance.data, (ImprovementData.Type)Editor.improvementPicker.chosenValue);
+        HandleBiome(__instance.data, Editor.biomePicker.chosenValue, Editor.biomePicker.chosenSkinType);
 
-        if(chosenResource != ResourceData.Type.None)
+        __instance.Render();
+    }
+
+    internal static void HandleTerrain(TileData tileData, Polytopia.Data.TerrainData.Type terrain)
+    {
+        if(terrain != Polytopia.Data.TerrainData.Type.None)
+            tileData.terrain = terrain;
+    }
+
+    internal static void HandleResource(GameState gameState, TileData tileData, ResourceData.Type resource)
+    {
+        if(resource == ResourceData.Type.None)
+            return;
+
+        if(resource == (ResourceData.Type)PickerBase.DESTROY_OPTION_ID)
         {
-            if(chosenResource == (ResourceData.Type)PickerBase.DESTROY_OPTION_ID)
-            {
-                __instance.data.resource = null;
-                ActionUtils.CheckSurroundingArea(gameState, localPlayer, __instance.data);
-            }
-            else if(gameState.GameLogicData.TryGetData(chosenResource, out ResourceData data))
-            {
-                if(data.resourceTerrainRequirements.Contains(__instance.data.terrain))
-                {
-                    __instance.data.resource = new ResourceState
+            tileData.resource = null;
+            return;
+        }
+
+        if(!gameState.GameLogicData.TryGetData(resource, out ResourceData data) && Time.time >= nextAllowedTimeForPopup)
+        {
+            NotificationManager.Notify(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { tileData.resource}));
+            nextAllowedTimeForPopup = Time.time + 1f;
+            return;
+        }
+
+        if(!data.resourceTerrainRequirements.Contains(tileData.terrain) && Time.time >= nextAllowedTimeForPopup)
+        {
+            NotificationManager.Notify(
+                Localization.Get(
+                    "mapmaker.failed.creation",
+                    new Il2CppSystem.Object[]
                     {
-                        type = chosenResource
-                    };
-                    ActionUtils.CheckSurroundingArea(gameState, localPlayer, __instance.data);
-                }
-                else if(Time.time >= nextAllowedTimeForPopup)
-                {
-                    NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
-                    nextAllowedTimeForPopup = Time.time + 1f;
-                }
+                        Localization.Get(data.displayName, new Il2CppSystem.Object[] {} ),
+                        Localization.Get(tileData.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )
+                    }
+                )
+            );
+            nextAllowedTimeForPopup = Time.time + 1f;
+            return;
+        }
+
+        tileData.resource = new ResourceState
+        {
+            type = resource
+        };
+    }
+
+    internal static void HandleTileEffect(TileData tileData, TileData.EffectType effectType)
+    {
+        if(effectType == TileData.EffectType.None)
+            return;
+
+        tileData.effects.Clear();
+
+        if(effectType == TileData.EffectType.Flooded)
+        {
+            if(tileData.isFloodable())
+            {
+                tileData.AddEffect(effectType);
+                if(Editor.biomePicker.chosenSkinType == SkinType.Swamp)
+                    tileData.AddEffect(TileData.EffectType.Swamped);
             }
             else if(Time.time >= nextAllowedTimeForPopup)
             {
-                NotificationManager.Notify(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { __instance.data.resource}));
+                NotificationManager.Notify(
+                    Localization.Get(
+                        "mapmaker.failed.creation",
+                        new Il2CppSystem.Object[]
+                        {
+                            Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(effectType)}"),
+                            Localization.Get(tileData.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )
+                        }
+                    )
+                );
                 nextAllowedTimeForPopup = Time.time + 1f;
             }
         }
-        if(chosenTileEffect != TileData.EffectType.None)
+        else if(effectType == TileData.EffectType.Algae)
         {
-            __instance.data.effects.Clear();
-            if(!__instance.data.HasEffect(chosenTileEffect))
+            if(tileData.IsWater)
             {
-                if(chosenTileEffect == TileData.EffectType.Flooded)
-                {
-                    if(__instance.data.isFloodable())
-                    {
-                        __instance.data.AddEffect(chosenTileEffect);
-                        if(chosenSkinType == SkinType.Swamp)
-                            __instance.data.AddEffect(TileData.EffectType.Swamped);
-                    }
-                    else if(Time.time >= nextAllowedTimeForPopup)
-                    {
-                        NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
-                        nextAllowedTimeForPopup = Time.time + 1f;
-                    }
-                }
-                else if(chosenTileEffect == TileData.EffectType.Algae)
-                {
-                    if(__instance.data.IsWater)
-                    {
-                        __instance.data.AddEffect(chosenTileEffect);
-                        if(chosenSkinType == SkinType.Cute)
-                            __instance.data.AddEffect(TileData.EffectType.Foam);
-                    }
-                    else if(Time.time >= nextAllowedTimeForPopup)
-                    {
-                        NotificationManager.Notify(Localization.Get("mapmaker.failed.creation", new Il2CppSystem.Object[] { Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(chosenTileEffect)}"), Localization.Get(__instance.data.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )}));
-                        nextAllowedTimeForPopup = Time.time + 1f;
-                    }
-                }
+                tileData.AddEffect(effectType);
+                if(Editor.biomePicker.chosenSkinType == SkinType.Cute)
+                    tileData.AddEffect(TileData.EffectType.Foam);
+            }
+            else if(Time.time >= nextAllowedTimeForPopup)
+            {
+                NotificationManager.Notify(
+                    Localization.Get(
+                        "mapmaker.failed.creation",
+                        new Il2CppSystem.Object[]
+                        {
+                            Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(effectType)}"),
+                            Localization.Get(tileData.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )
+                        }
+                    )
+                );
+                nextAllowedTimeForPopup = Time.time + 1f;
             }
         }
-        if(chosenBuilding != ImprovementData.Type.None && !__instance.data.HasImprovement(ImprovementData.Type.LightHouse))
-        {
-            if(chosenBuilding == (ImprovementData.Type)PickerBase.DESTROY_OPTION_ID)
-            {
-                __instance.data.improvement = null;
-                Data.Capital? capital = Loader.GetCapital(__instance.data.coordinates, Main.currCapitals);
+    }
 
-                if(capital != null)
-                    Main.currCapitals.Remove(capital);  
-            }
-            else if (gameState.GameLogicData.TryGetData(chosenBuilding, out ImprovementData improvementData))
-            {
-                ImprovementState improvementState = new ImprovementState
-                {
-                    type = chosenBuilding,
-                    borderSize = (ushort)improvementData.borderSize,
-                    level = 0,
-                    xp = 0,
-                    production = 1,
-                    founded = 0,
-                    baseScore = 0,
-                    founder = localPlayer
-                };
-                __instance.data.improvement = improvementState;
-            }
-        }
-        if(chosenClimate != 0)
+    internal static void HandleImprovement(GameState gameState, TileData tileData, ImprovementData.Type improvement)
+    {
+        if(improvement == ImprovementData.Type.None || tileData.HasImprovement(ImprovementData.Type.LightHouse))
+            return;
+
+        if(improvement == (ImprovementData.Type)PickerBase.DESTROY_OPTION_ID)
         {
-            __instance.data.climate = chosenClimate;
-            __instance.data.Skin = chosenSkinType;
+            tileData.improvement = null;
+            Data.Capital? capital = Loader.GetCapital(tileData.coordinates, Main.currCapitals);
+
+            if(capital != null)
+                Main.currCapitals.Remove(capital);  
+            return;
         }
-        __instance.Render();
+
+        if (!gameState.GameLogicData.TryGetData(improvement, out ImprovementData improvementData))
+            return;
+
+        ImprovementState improvementState = new ImprovementState
+        {
+            type = improvement,
+            borderSize = (ushort)improvementData.borderSize,
+            level = 0,
+            xp = 0,
+            production = 1,
+            founded = 0,
+            baseScore = 0,
+            founder = gameState.CurrentPlayer
+        };
+        tileData.improvement = improvementState;
+    }
+
+    internal static void HandleBiome(TileData tileData, int climate, SkinType skinType)
+    {
+        if(Editor.biomePicker.chosenValue == 0)
+            return;
+
+        tileData.climate = climate;
+        tileData.Skin = skinType;
     }
 }

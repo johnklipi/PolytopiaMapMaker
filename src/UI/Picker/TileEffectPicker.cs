@@ -15,7 +15,7 @@ internal class TileEffectPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite((int)Brush.chosenTileEffect, TileEffectToString(Brush.chosenTileEffect), gameLogicData);
+       return base.GetSprite(chosenValue, TileEffectToString(chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -36,19 +36,20 @@ internal class TileEffectPicker : PickerBase
 
             void OnClick(int id)
             {
-                Brush.chosenTileEffect = (TileData.EffectType)id;
+                chosenValue = id;
                 Update(gameState.GameLogicData);
             }
 
             void SetTileEffectIcon(UIRoundButton button, int type)
             {
-                base.SetIcon(button, base.GetSprite(type, TileEffectToString((TileData.EffectType)type), gameState.GameLogicData), 0.6f);
+                base.SetIcon(button, base.GetSprite(type, TileEffectToString(type), gameState.GameLogicData), 0.6f);
             }
         }
     }
 
-    internal static string TileEffectToString(TileData.EffectType tileEffect)
+    internal static string TileEffectToString(int effectIdx)
     {
+        TileData.EffectType tileEffect = (TileData.EffectType)effectIdx;
         if(tileEffect == TileData.EffectType.Flooded)
         {
             return SpriteData.TILE_WETLAND;

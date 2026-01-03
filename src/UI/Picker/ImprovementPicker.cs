@@ -15,7 +15,7 @@ internal class ImprovementPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite((int)Brush.chosenBuilding, SpriteData.ImprovementToString(Brush.chosenBuilding), gameLogicData);
+       return base.GetSprite(chosenValue, SpriteData.ImprovementToString((ImprovementData.Type)chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -35,7 +35,7 @@ internal class ImprovementPicker : PickerBase
 
             void OnClick(int id)
             {
-                Brush.chosenBuilding = (ImprovementData.Type)id;
+                chosenValue = id;
                 Update(gameState.GameLogicData);
             }
 

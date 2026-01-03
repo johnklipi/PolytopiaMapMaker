@@ -5,6 +5,7 @@ using PolytopiaBackendBase.Common;
 namespace PolytopiaMapManager.UI.Picker;
 internal class BiomePicker : PickerBase
 {
+    internal SkinType chosenSkinType = SkinType.Default;
     internal override string HeaderKey => "mapmaker.choose.climate";
     internal static List<TribeType> excludedTribes = new()
     {
@@ -24,20 +25,20 @@ internal class BiomePicker : PickerBase
         if(button == null)
             return;
 
-        if(Brush.chosenClimate != 0)
+        if(chosenValue != 0)
         {
-            TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(Brush.chosenClimate);
+            TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(chosenValue);
             string spriteName;
-            if (Brush.chosenSkinType == SkinType.Default)
+            if (chosenSkinType == SkinType.Default)
             {
                 spriteName = EnumCache<TribeType>.GetName(tribeType);
             }
             else
             {
-                spriteName = EnumCache<SkinType>.GetName(Brush.chosenSkinType);
+                spriteName = EnumCache<SkinType>.GetName(chosenSkinType);
             }
             button.iconSpriteHandle.Request(SpriteData.GetHeadSpriteAddress(spriteName));
-            button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, Brush.chosenSkinType)), 1f);
+            button.BG.color = ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeType, chosenSkinType)), 1f);
         }
         else
         {
@@ -57,20 +58,20 @@ internal class BiomePicker : PickerBase
             {
                 id *= -1;
                 SkinType skinType = (SkinType)id;
-                Brush.chosenClimate = Loader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
-                Brush.chosenSkinType = skinType;
+                chosenValue = Loader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
+                chosenSkinType = skinType;
             }
             else
             {
                 if((TribeType)id != TribeType.None)
                 {
-                    Brush.chosenClimate = Loader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
+                    chosenValue = Loader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
                 }
                 else
                 {
-                    Brush.chosenClimate = 0;
+                    chosenValue = 0;
                 }
-                Brush.chosenSkinType = SkinType.Default;
+                chosenSkinType = SkinType.Default;
             }
             this.Update(gameState.GameLogicData);
             Editor.resourcePicker.Update(gameState.GameLogicData);

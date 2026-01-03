@@ -6,6 +6,8 @@ internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
     internal override Vector3? Indent => new Vector3(0, -110, 0);
+    internal record CachedMap(string name, MapInfo map, Sprite icon);
+    private List<CachedMap> cachedMaps = new();
 
     internal override Sprite GetIcon()
     {
@@ -14,39 +16,15 @@ internal class MapPicker : PickerBase
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
-        string[] maps = IO.GetAllMaps();
-        List<string> visualMaps = new();
-        if (maps.Length > 0)
+        if(cachedMaps.Count == 0)
         {
-            visualMaps = maps.Select(map => Path.GetFileNameWithoutExtension(map)).ToList();
-            num++;
-        }
-        for (int index = 0; index < visualMaps.Count(); index++)
-        {
-            string name = visualMaps[index];
-
-            base.CreateChoiceButton(selectViewmodePopup, name,
-                    index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.black, 0.6f), SetMapIcon);
-
-            void OnClick(int id)
+            string[] maps = IO.GetAllMaps();
+            foreach (string mapName in maps)
             {
-                string mapName = visualMaps[id];
-                Loader.chosenMap = IO.LoadMap(mapName);
-                if(Loader.chosenMap == null)
-                    return;
-
-                Main.MapName = mapName;
-                Loader.LoadMapInState(ref gameState, Loader.chosenMap);
-                Main.currCapitals = Loader.chosenMap.capitals;
-                GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
-                base.Update(gameState.GameLogicData);
-            }
-
-            void SetMapIcon(UIRoundButton button, int type) 
-            {
-                MapInfo? mapInfo = IO.LoadMap(name);
+                string cleanMapName = Path.GetFileNameWithoutExtension(mapName);
+                MapInfo? mapInfo = IO.LoadMap(cleanMapName);
                 if(mapInfo == null)
-                    return;
+                    continue;
 
                 Sprite icon = GetIcon();
                 if(mapInfo.icon.Count > 0)
@@ -60,7 +38,35 @@ internal class MapPicker : PickerBase
                         2112f
                     );
                 }
-                base.SetIcon(button, icon);
+
+                CachedMap cachedMap = new(cleanMapName, mapInfo, icon);
+                cachedMaps.Add(cachedMap);
+            }
+        }
+        for (int index = 0; index < cachedMaps.Count; index++)
+        {
+            CachedMap cachedMap = cachedMaps[index];
+            string name = cachedMap.name;
+            base.CreateChoiceButton(selectViewmodePopup, name,
+                    index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.black, 0.6f), SetMapIcon);
+
+            void OnClick(int id)
+            {
+                CachedMap cachedMap = cachedMaps[id];
+
+                Loader.chosenMap = cachedMap.map;
+                Main.MapName = cachedMap.name;
+                Loader.LoadMapInState(ref gameState, Loader.chosenMap);
+                Main.currCapitals = Loader.chosenMap.capitals;
+                GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+                base.Update(gameState.GameLogicData);
+            }
+
+            void SetMapIcon(UIRoundButton button, int type) 
+            {
+                CachedMap cachedMap = cachedMaps[type];
+
+                base.SetIcon(button, cachedMap.icon);
             }
         }
     }

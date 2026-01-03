@@ -13,7 +13,7 @@ internal class ResourcePicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite((int)Brush.chosenResource, SpriteData.ResourceToString(Brush.chosenResource), gameLogicData);
+       return base.GetSprite(chosenValue, SpriteData.ResourceToString((ResourceData.Type)chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -33,7 +33,7 @@ internal class ResourcePicker : PickerBase
 
             void OnClick(int id)
             {
-                Brush.chosenResource = (ResourceData.Type)id;
+                chosenValue = id;
                 Update(gameState.GameLogicData!);
             }
 
