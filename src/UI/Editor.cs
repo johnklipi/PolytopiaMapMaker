@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Il2CppInterop.Runtime;
 using Polytopia.Data;
 using PolytopiaMapManager.Data;
 using PolytopiaMapManager.Popup;
@@ -19,6 +20,10 @@ public static class Editor
     internal static TerrainPicker terrainPicker = new();
     internal static TileEffectPicker tileEffectPicker = new();
     internal static ImprovementPicker improvementPicker = new();
+    internal static List<PickerBase> pickers = new();
+    internal static RectTransform? editorUi;
+    internal static RectTransform? horizontalLayout;
+    internal static RectTransform? verticalLayout;
     internal static SpriteAtlasManager spriteAtlasManager = GameManager.GetSpriteAtlasManager();
 
     [HarmonyPostfix]
@@ -35,6 +40,97 @@ public static class Editor
         __instance.Update();
     }
 
+    internal static void CreateEditorUI(Transform hudScreen)
+    {
+        GameObject editorGO = new GameObject(
+            "EditorUI",
+            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
+        );
+
+        editorUi = editorGO.GetComponent<RectTransform>();
+        editorGO.transform.SetParent(hudScreen, false);
+
+        editorUi.anchorMin = new Vector2(0f, 0.95f);
+        editorUi.anchorMax = new Vector2(0f, 0.95f);
+        editorUi.pivot     = new Vector2(0f, 0.95f);
+        editorUi.anchoredPosition = new Vector2(20f, 0f);
+        editorUi.sizeDelta = Vector2.zero;
+
+        GameObject horizontalLayoutGO = new GameObject(
+            "HorizontalLayout",
+            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
+        );
+        horizontalLayoutGO.transform.SetParent(editorUi, false);
+        horizontalLayout = horizontalLayoutGO.GetComponent<RectTransform>();
+
+        horizontalLayout.anchorMin = new Vector2(0f, 1f);
+        horizontalLayout.anchorMax = new Vector2(0f, 1f);
+        horizontalLayout.pivot     = new Vector2(0f, 1f);
+        horizontalLayout.anchoredPosition = Vector2.zero;
+        horizontalLayout.sizeDelta = Vector2.zero;
+
+        GameObject verticalLayouttGO = new GameObject(
+            "verticalLayout",
+            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
+        );
+        verticalLayouttGO.transform.SetParent(editorUi, false);
+        verticalLayout = verticalLayouttGO.GetComponent<RectTransform>();
+
+        verticalLayout.anchorMin = new Vector2(0f, 0.8f);
+        verticalLayout.anchorMax = new Vector2(0f, 0.8f);
+        verticalLayout.pivot     = new Vector2(0f, 0.8f);
+        verticalLayout.anchoredPosition = Vector2.zero;
+        verticalLayout.sizeDelta = Vector2.zero;
+    }
+
+    internal static HorizontalLayoutGroup EnsureHorizontalLayout(
+        RectTransform parent,
+        float spacing = 20f)
+    {
+        HorizontalLayoutGroup layout =
+            parent.GetComponent<HorizontalLayoutGroup>();
+
+        if (layout == null)
+        {
+            layout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
+        }
+
+        layout.spacing = spacing;
+        layout.childAlignment = TextAnchor.MiddleLeft;
+
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+
+        return layout;
+    }
+
+    internal static VerticalLayoutGroup EnsureVerticalLayout(
+        RectTransform parent,
+        float spacing = 20f)
+    {
+        VerticalLayoutGroup layout =
+            parent.GetComponent<VerticalLayoutGroup>();
+
+        if (layout == null)
+        {
+            layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
+        }
+
+        layout.spacing = spacing;
+        layout.childAlignment = TextAnchor.MiddleLeft;
+
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+
+        return layout;
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
     private static void HudScreen_OnMatchStart(HudScreen __instance)
@@ -42,22 +138,34 @@ public static class Editor
         if (!Main.isActive)
             return;
 
+        CreateEditorUI(__instance.transform);
+        if(editorUi == null || horizontalLayout == null || verticalLayout == null)
+            return;
+        EnsureHorizontalLayout(horizontalLayout);
+        EnsureVerticalLayout(verticalLayout);
+        pickers.Add(biomePicker);
+        pickers.Add(mapPicker);
+        pickers.Add(resourcePicker);
+        pickers.Add(terrainPicker);
+        pickers.Add(tileEffectPicker);
+        pickers.Add(improvementPicker);
+
         UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
-        biomePicker.Create(referenceButton, __instance.transform);
-        mapPicker.Create(referenceButton, __instance.transform);
-        resourcePicker.Create(referenceButton, __instance.transform);
-        terrainPicker.Create(referenceButton, __instance.transform);
-        tileEffectPicker.Create(referenceButton, __instance.transform);
-        improvementPicker.Create(referenceButton, __instance.transform);
-
         GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-        biomePicker.Update(gameLogicData);
-        mapPicker.Update(gameLogicData);
-        resourcePicker.Update(gameLogicData);
-        terrainPicker.Update(gameLogicData);
-        tileEffectPicker.Update(gameLogicData);
-        improvementPicker.Update(gameLogicData);
+        foreach (var picker in pickers)
+        {
+            if(picker.GetType().ToString() == "PolytopiaMapManager.UI.Picker.MapPicker")
+            {
+                picker.Create(referenceButton, verticalLayout);
+            }
+            else
+            {
+                picker.Create(referenceButton, horizontalLayout);
+            }
+            picker.Update(gameLogicData);
+        }
 
+        LayoutRebuilder.ForceRebuildLayoutImmediate(horizontalLayout);
         UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
         mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 220, 0);
         mapSizeButton.gameObject.SetActive(true);

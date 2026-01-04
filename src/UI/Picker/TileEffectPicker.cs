@@ -5,7 +5,6 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class TileEffectPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.tileeffect";
-    internal override Vector3? Indent => new Vector3(330, 0, 0);
     internal static List<TileData.EffectType> excludedTileEffects = new()
     {
         TileData.EffectType.Swamped,

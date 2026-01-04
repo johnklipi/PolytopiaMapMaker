@@ -5,7 +5,6 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class ImprovementPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.improvement";
-    internal override Vector3? Indent => new Vector3(440, 0, 0);
     internal static List<ImprovementData.Type> allowedImprovements = new()
     {
         ImprovementData.Type.None,

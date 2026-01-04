@@ -5,7 +5,6 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class TerrainPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.terrain";
-    internal override Vector3? Indent => new Vector3(110, 0, 0);
     internal static List<Polytopia.Data.TerrainData.Type> excludedTerrains = new()
     {
         Polytopia.Data.TerrainData.Type.Wetland,

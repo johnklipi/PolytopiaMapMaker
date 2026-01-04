@@ -5,7 +5,6 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
-    internal override Vector3? Indent => new Vector3(0, -110, 0);
     private Dictionary<string, Sprite> cachedMaps = new();
 
     internal override Sprite GetIcon()

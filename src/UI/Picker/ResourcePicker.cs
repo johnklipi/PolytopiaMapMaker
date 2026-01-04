@@ -5,7 +5,6 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class ResourcePicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.resource";
-    internal override Vector3? Indent => new Vector3(220, 0, 0);
     internal static List<ResourceData.Type> excludedResources = new()
     {
         ResourceData.Type.Whale,
