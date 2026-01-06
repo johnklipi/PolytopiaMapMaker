@@ -5,6 +5,7 @@ using PolytopiaBackendBase.Common;
 namespace PolytopiaMapManager.UI.Picker;
 internal class BiomePicker : PickerBase
 {
+    private const int POLYMOD_AUTOIDX = 1000;
     internal SkinType chosenSkinType = SkinType.Default;
     internal override string HeaderKey => "mapmaker.choose.climate";
     internal static List<TribeType> excludedTribes = new()
@@ -49,7 +50,7 @@ internal class BiomePicker : PickerBase
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
     {
-        base.CreateChoiceButton(selectViewmodePopup, "none",
+        CreateChoiceButton(selectViewmodePopup, "none",
                 (int)TribeType.None, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(16777215), 1f), SetHeadIcon);
 
         void OnClick(int id)
@@ -73,7 +74,7 @@ internal class BiomePicker : PickerBase
                 }
                 chosenSkinType = SkinType.Default;
             }
-            this.Update(gameState.GameLogicData);
+            Update(gameState.GameLogicData);
             Editor.resourcePicker.Update(gameState.GameLogicData);
             Editor.terrainPicker.Update(gameState.GameLogicData);
             Editor.tileEffectPicker.Update(gameState.GameLogicData);
@@ -110,21 +111,21 @@ internal class BiomePicker : PickerBase
         foreach (TribeData tribeData in tribes)
         {
             TribeType tribeType = tribeData.type;
-            if(excludedTribes.Contains(tribeType))
+            if(excludedTribes.Contains(tribeType) || (int)tribeType >= POLYMOD_AUTOIDX)
                 continue;
 
             string tribeName = Localization.Get(tribeData.displayName);
 
-            base.CreateChoiceButton(selectViewmodePopup, tribeName,
+            CreateChoiceButton(selectViewmodePopup, tribeName,
                 (int)tribeType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, SkinType.Default)), 1f), SetHeadIcon);
 
             foreach (SkinType skinType in tribeData.skins)
             {
-                if(excludedSkins.Contains(skinType))
+                if(excludedSkins.Contains(skinType) || (int)skinType >= POLYMOD_AUTOIDX)
                     continue;
                 string skinHeader = string.Format(Localization.Get(SkinTypeExtensions.GetSkinNameKey(), new Il2CppSystem.Object[] { }), Localization.Get(skinType.GetLocalizationKey(), new Il2CppSystem.Object[] { }));
 
-                base.CreateChoiceButton(selectViewmodePopup, skinHeader,
+                CreateChoiceButton(selectViewmodePopup, skinHeader,
                     -(int)skinType, ref num, OnClick, ColorUtil.SetAlphaOnColor(ColorUtil.ColorFromInt(gameLogicData.GetTribeColor(tribeData.type, skinType)), 1f), SetHeadIcon);
             }
         }

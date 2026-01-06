@@ -46,16 +46,15 @@ public static class Brush
             return;
         }
 
-        if(!gameState.GameLogicData.TryGetData(resource, out ResourceData data) && Time.time >= nextAllowedTimeForPopup)
+        if(!gameState.GameLogicData.TryGetData(resource, out ResourceData data))
         {
-            NotificationManager.Notify(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { tileData.resource}));
-            nextAllowedTimeForPopup = Time.time + 1f;
+            ShowNotification(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { tileData.resource.type.ToString() }));
             return;
         }
 
-        if(!data.resourceTerrainRequirements.Contains(tileData.terrain) && Time.time >= nextAllowedTimeForPopup)
+        if(!data.resourceTerrainRequirements.Contains(tileData.terrain))
         {
-            NotificationManager.Notify(
+            ShowNotification(
                 Localization.Get(
                     "mapmaker.failed.creation",
                     new Il2CppSystem.Object[]
@@ -65,7 +64,6 @@ public static class Brush
                     }
                 )
             );
-            nextAllowedTimeForPopup = Time.time + 1f;
             return;
         }
 
@@ -90,9 +88,9 @@ public static class Brush
                 if(Editor.biomePicker.chosenSkinType == SkinType.Swamp)
                     tileData.AddEffect(TileData.EffectType.Swamped);
             }
-            else if(Time.time >= nextAllowedTimeForPopup)
+            else
             {
-                NotificationManager.Notify(
+                ShowNotification(
                     Localization.Get(
                         "mapmaker.failed.creation",
                         new Il2CppSystem.Object[]
@@ -102,7 +100,6 @@ public static class Brush
                         }
                     )
                 );
-                nextAllowedTimeForPopup = Time.time + 1f;
             }
         }
         else if(effectType == TileData.EffectType.Algae)
@@ -113,9 +110,9 @@ public static class Brush
                 if(Editor.biomePicker.chosenSkinType == SkinType.Cute)
                     tileData.AddEffect(TileData.EffectType.Foam);
             }
-            else if(Time.time >= nextAllowedTimeForPopup)
+            else
             {
-                NotificationManager.Notify(
+                ShowNotification(
                     Localization.Get(
                         "mapmaker.failed.creation",
                         new Il2CppSystem.Object[]
@@ -125,7 +122,6 @@ public static class Brush
                         }
                     )
                 );
-                nextAllowedTimeForPopup = Time.time + 1f;
             }
         }
     }
@@ -146,7 +142,31 @@ public static class Brush
         }
 
         if (!gameState.GameLogicData.TryGetData(improvement, out ImprovementData improvementData))
+        {
+            ShowNotification(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { tileData.improvement.type.ToString()}));
             return;
+        }
+
+        if (!gameState.TryGetPlayer(gameState.CurrentPlayer, out PlayerState playerState))
+        {
+            ShowNotification(Localization.Get("mapmaker.failed.retrieve", new Il2CppSystem.Object[] { gameState.CurrentPlayer.ToString()}));
+            return;
+        }
+
+        if(!gameState.GameLogicData.MeetsRequirement(tileData, improvementData, playerState, gameState))
+        {
+            ShowNotification(
+                Localization.Get(
+                    "mapmaker.failed.creation",
+                    new Il2CppSystem.Object[]
+                    {
+                        Localization.Get(improvementData.displayName, new Il2CppSystem.Object[] {} ),
+                        Localization.Get(tileData.terrain.GetDisplayName(), new Il2CppSystem.Object[] {} )
+                    }
+                )
+            );
+            return;
+        }
 
         ImprovementState improvementState = new ImprovementState
         {
@@ -169,5 +189,14 @@ public static class Brush
 
         tileData.climate = climate;
         tileData.Skin = skinType;
+    }
+
+    private static void ShowNotification(string message, string? title = null)
+    {
+        if(Time.time < nextAllowedTimeForPopup)
+            return;
+
+        NotificationManager.Notify(message, title);
+        nextAllowedTimeForPopup = Time.time + 1f;
     }
 }

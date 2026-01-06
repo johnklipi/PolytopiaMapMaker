@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Il2CppInterop.Runtime;
 using Polytopia.Data;
 using PolytopiaMapManager.Data;
 using PolytopiaMapManager.Popup;
@@ -19,6 +20,10 @@ public static class Editor
     internal static TerrainPicker terrainPicker = new();
     internal static TileEffectPicker tileEffectPicker = new();
     internal static ImprovementPicker improvementPicker = new();
+    internal static List<PickerBase> pickers = new();
+    internal static RectTransform? editorUi;
+    internal static RectTransform? horizontalLayout;
+    internal static RectTransform? verticalLayout;
     internal static SpriteAtlasManager spriteAtlasManager = GameManager.GetSpriteAtlasManager();
 
     [HarmonyPostfix]
@@ -35,53 +40,108 @@ public static class Editor
         __instance.Update();
     }
 
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
-    private static void HudScreen_OnMatchStart(HudScreen __instance)
+    internal static void CreateEditorUI(Transform hudScreen)
     {
-        if (!Main.isActive)
-            return;
+        GameObject editorGO = new GameObject(
+            "EditorUI",
+            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
+        );
 
-        UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
-        biomePicker.Create(referenceButton, __instance.transform);
-        mapPicker.Create(referenceButton, __instance.transform);
-        resourcePicker.Create(referenceButton, __instance.transform);
-        terrainPicker.Create(referenceButton, __instance.transform);
-        tileEffectPicker.Create(referenceButton, __instance.transform);
-        improvementPicker.Create(referenceButton, __instance.transform);
+        editorUi = editorGO.GetComponent<RectTransform>();
+        editorGO.transform.SetParent(hudScreen, false);
 
-        GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
-        biomePicker.Update(gameLogicData);
-        mapPicker.Update(gameLogicData);
-        resourcePicker.Update(gameLogicData);
-        terrainPicker.Update(gameLogicData);
-        tileEffectPicker.Update(gameLogicData);
-        improvementPicker.Update(gameLogicData);
+        editorUi.anchorMin = new Vector2(0f, 0.95f);
+        editorUi.anchorMax = new Vector2(0f, 0.95f);
+        editorUi.pivot     = new Vector2(0f, 0.95f);
+        editorUi.anchoredPosition = new Vector2(20f, 0f);
+        editorUi.sizeDelta = Vector2.zero;
 
-        UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(__instance.replayInterface.viewmodeSelectButton, __instance.transform);
+        GameObject horizontalLayoutGO = new GameObject(
+            "HorizontalLayout",
+            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
+        );
+        horizontalLayoutGO.transform.SetParent(editorUi, false);
+        horizontalLayout = horizontalLayoutGO.GetComponent<RectTransform>();
+
+        horizontalLayout.anchorMin = new Vector2(0f, 1f);
+        horizontalLayout.anchorMax = new Vector2(0f, 1f);
+        horizontalLayout.pivot     = new Vector2(0f, 1f);
+        horizontalLayout.anchoredPosition = Vector2.zero;
+        horizontalLayout.sizeDelta = Vector2.zero;
+
+        GameObject verticalLayouttGO = new GameObject(
+            "VerticalLayout",
+            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
+        );
+        verticalLayouttGO.transform.SetParent(editorUi, false);
+        verticalLayout = verticalLayouttGO.GetComponent<RectTransform>();
+
+        verticalLayout.anchorMin = new Vector2(0f, 1f);
+        verticalLayout.anchorMax = new Vector2(0f, 1f);
+        verticalLayout.pivot     = new Vector2(0f, 1f);
+        verticalLayout.anchoredPosition = Vector2.zero;
+        verticalLayout.sizeDelta = Vector2.zero;
+    }
+
+    internal static HorizontalLayoutGroup EnsureHorizontalLayout(
+        RectTransform parent,
+        float spacing = 20f)
+    {
+        HorizontalLayoutGroup layout =
+            parent.GetComponent<HorizontalLayoutGroup>();
+
+        if (layout == null)
+        {
+            layout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
+        }
+
+        layout.spacing = spacing;
+        layout.childAlignment = TextAnchor.MiddleLeft;
+
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+
+        return layout;
+    }
+
+    internal static VerticalLayoutGroup EnsureVerticalLayout(
+        RectTransform parent,
+        float spacing = 20f)
+    {
+        VerticalLayoutGroup layout =
+            parent.GetComponent<VerticalLayoutGroup>();
+
+        if (layout == null)
+        {
+            layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
+        }
+
+        layout.spacing = spacing;
+        layout.childAlignment = TextAnchor.UpperLeft;
+
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+        layout.padding.top = 75;
+        return layout;
+    }
+
+    private static void CreateMapResizeButton(UIRoundButton referenceButton)
+    {
+        UIRoundButton mapSizeButton = GameObject.Instantiate<UIRoundButton>(referenceButton, verticalLayout);
         mapSizeButton.transform.position = mapSizeButton.transform.position - new Vector3(0, 220, 0);
         mapSizeButton.gameObject.SetActive(true);
+
         mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
-        mapSizeButton.text = string.Empty;
-
-        mapSizeButton.rectTransform.sizeDelta = new Vector2(75f, 75f);
-        mapSizeButton.Outline.gameObject.SetActive(false);
-        mapSizeButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
-
-        mapSizeButton.faceIconSizeMultiplier = 0.6f;
-        mapSizeButton.icon.sprite = PolyMod.Registry.GetSprite("resize_icon");
-        mapSizeButton.icon.useSpriteMesh = true;
-        mapSizeButton.icon.SetNativeSize();
-        Vector2 sizeDelta = mapSizeButton.icon.rectTransform.sizeDelta;
-        mapSizeButton.icon.rectTransform.sizeDelta = sizeDelta * mapSizeButton.faceIconSizeMultiplier;
-        mapSizeButton.icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        mapSizeButton.icon.gameObject.SetActive(true);
-        mapSizeButton.text = Localization.Get("mapmaker.resize");
-
         void ShowMapPopup(int id, BaseEventData eventData)
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = Localization.Get("mapmaker.resize");
+            popup.Header = Localization.Get("mapmaker.map.resize");
             popup.Description = string.Empty;
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
@@ -109,6 +169,61 @@ public static class Editor
             }
             CustomInput.AddInputToPopup(popup, GameManager.GameState.Map.Width.ToString(), onValueChanged: new Action<string>(value => MapResizeValueChanged(value, popup)));
         }
+
+        mapSizeButton.text = string.Empty;
+
+        mapSizeButton.rectTransform.sizeDelta = new Vector2(75f, 75f);
+        mapSizeButton.Outline.gameObject.SetActive(false);
+        mapSizeButton.BG.color = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
+
+        mapSizeButton.faceIconSizeMultiplier = 0.6f;
+        mapSizeButton.icon.sprite = PolyMod.Registry.GetSprite("resize_icon");
+        mapSizeButton.icon.useSpriteMesh = true;
+        mapSizeButton.icon.SetNativeSize();
+        Vector2 sizeDelta = mapSizeButton.icon.rectTransform.sizeDelta;
+        mapSizeButton.icon.rectTransform.sizeDelta = sizeDelta * mapSizeButton.faceIconSizeMultiplier;
+        mapSizeButton.icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        mapSizeButton.icon.gameObject.SetActive(true);
+        mapSizeButton.text = Localization.Get("mapmaker.map.resize");
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(HudScreen), nameof(HudScreen.OnMatchStart))]
+    private static void HudScreen_OnMatchStart(HudScreen __instance)
+    {
+        if (!Main.isActive)
+            return;
+
+        CreateEditorUI(__instance.transform);
+        if(editorUi == null || horizontalLayout == null || verticalLayout == null)
+            return;
+        EnsureHorizontalLayout(horizontalLayout);
+        EnsureVerticalLayout(verticalLayout);
+        pickers.Add(biomePicker);
+        pickers.Add(mapPicker);
+        pickers.Add(resourcePicker);
+        pickers.Add(terrainPicker);
+        pickers.Add(tileEffectPicker);
+        pickers.Add(improvementPicker);
+
+        UIRoundButton referenceButton = __instance.replayInterface.viewmodeSelectButton;
+        GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
+        foreach (var picker in pickers)
+        {
+            if(picker.UseVerticalLayout)
+            {
+                picker.Create(referenceButton, verticalLayout);
+            }
+            else
+            {
+                picker.Create(referenceButton, horizontalLayout);
+            }
+            picker.Update(gameLogicData);
+        }
+
+        CreateMapResizeButton(referenceButton);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(horizontalLayout);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(verticalLayout);
     }
 
     [HarmonyPostfix]
@@ -122,11 +237,11 @@ public static class Editor
         {
             if (Input.GetKeyDown(KeyCode.S))
             {
-                if(!Main.MapSaved && Main.MapName == "Untitled Map")
+                if(!Main.MapSaved && Main.MapName == Localization.Get("mapmaker.map.untitled"))
                 {
                     BasicPopup popup = PopupManager.GetBasicPopup();
-                    popup.Header = "Rename Your Map!";
-                    popup.Description = "Before saving, please name your map!";
+                    popup.Header = Localization.Get("mapmaker.map.rename");
+                    popup.Description = Localization.Get("mapmaker.map.rename.onsave");
                     popup.buttonData = new PopupBase.PopupButtonData[]
                     {
                         new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
@@ -158,8 +273,9 @@ public static class Editor
             if(Input.GetKeyDown(KeyCode.W))
             {
                 BasicPopup popup = PopupManager.GetBasicPopup();
-                popup.Header = "Rename Map";
-                popup.Description = "Naming your map is an exciting step! Click SET if done, don't forget to save!";
+                popup.Header = Localization.Get("mapmaker.map.rename");
+                popup.Description = Localization.Get("mapmaker.map.rename.onclick");
+
                 popup.buttonData = new PopupBase.PopupButtonData[]
                 {
                     new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
@@ -175,7 +291,10 @@ public static class Editor
                     if(input != null)
                     {
                         Main.MapName = input.text;
-                        NotificationManager.Notify($"New name is {Main.MapName}", "Map name set!");
+                        NotificationManager.Notify(
+                            Localization.Get("mapmaker.map.newname", new Il2CppSystem.Object[] { Main.MapName }),
+                            Localization.Get("mapmaker.map.nameset")
+                        );
                         CustomInput.RemoveInputFromPopup(popup);
                     }
                 }
@@ -255,14 +374,14 @@ public static class Editor
         TileData tile1 = GameManager.GameState.Map.GetTile(tile.Coordinates);
         if (tile1 == null || tile1.improvement == null || tile1.improvement.type != Polytopia.Data.ImprovementData.Type.City) return;
 
-        UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("mapmaker.capitals.set"), false);
+        UIRoundButton uiroundButton = __instance.CreateRoundBottomBarButton(Localization.Get("mapmaker.capital.set"), false);
         uiroundButton.sprite = PolyMod.Registry.GetSprite("capital_icon");
         uiroundButton.OnClicked += (UIButtonBase.ButtonAction)setcapitalmethod;
         void setcapitalmethod(int id, BaseEventData baseEventData)
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = Localization.Get("mapmaker.capitals.header");
-            popup.Description = Localization.Get("mapmaker.capitals.desc", new Il2CppSystem.Object[]{1, 254, 0});
+            popup.Header = Localization.Get("mapmaker.capital.header");
+            popup.Description = Localization.Get("mapmaker.capital.desc", new Il2CppSystem.Object[]{1, 254, 0});
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
                 new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
@@ -297,15 +416,24 @@ public static class Editor
             if (capitalByCoords != null)
             {
                 Main.currCapitals.Remove(capitalByCoords);
-                NotificationManager.Notify("City is no longer a capital!");
+                NotificationManager.Notify(Localization.Get("mapmaker.capital.removed"));
             }
         }
-        else if (capitalById != null) NotificationManager.Notify("Player already has their capital set!");
+        else if (capitalById != null) NotificationManager.Notify(Localization.Get("mapmaker.capital.already"));
         else
         {
             if(capitalByCoords != null)
             {
-                NotificationManager.Notify("From " + capitalByCoords.player + " to " + ID, "Overwritten capital location!");
+                NotificationManager.Notify(
+                    Localization.Get(
+                        "mapmaker.capital.override.desc",
+                        new Il2CppSystem.Object[] {
+                            capitalByCoords.player,
+                            ID
+                        }
+                    ), 
+                    Localization.Get("mapmaker.capital.override")
+                );
                 Main.currCapitals.Remove(capitalByCoords);
             }
             Capital newCapital = new();
@@ -325,7 +453,12 @@ public static class Editor
         Capital? capital = Loader.GetCapital(tile.coordinates, Main.currCapitals);
         if(capital != null)
         {
-            __instance.description.text = "Capital City of Player "+ capital.player;
+            __instance.description.text = Localization.Get(
+                "mapmaker.capital",
+                new Il2CppSystem.Object[] {
+                    capital.player
+                }
+            );
         }
     }
 

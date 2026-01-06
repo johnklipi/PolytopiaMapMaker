@@ -13,14 +13,14 @@ internal class PickerBase
     internal Vector2 buttonSize = new Vector2(75f, 75f);
     internal Color baseColor = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
     internal float iconSize = 0.6f;
+    internal virtual bool UseVerticalLayout => false;
     internal virtual string HeaderKey => "";
-    internal virtual Vector3? Indent => null;
     internal virtual Vector2 ChoiceButtonSize => new Vector2(56f, 56f);
     internal int chosenValue = 0;
 
     internal virtual void Create(UIRoundButton referenceButton, Transform parent)
     {
-        button = CreatePicker(referenceButton, parent, CreatePopupButtons, Indent, HeaderKey);
+        button = CreatePicker(referenceButton, parent, CreatePopupButtons, HeaderKey);
     }
 
     internal virtual void Update(GameLogicData gameLogicData)
@@ -49,7 +49,7 @@ internal class PickerBase
     public Sprite GetSprite(int type, string spriteName, GameLogicData gameLogicData)
     {
         Sprite? sprite = null;
-        if(type >= PickerBase.DESTROY_OPTION_ID)
+        if(type >= DESTROY_OPTION_ID)
             return PolyMod.Registry.GetSprite("remove_icon")!;
 
         if(type != 0)
@@ -84,13 +84,9 @@ internal class PickerBase
     internal delegate void UtilshowAction(ref float num,
                                             SelectViewmodePopup selectViewmodePopup, GameState gameState);
 
-    internal UIRoundButton CreatePicker(UIRoundButton referenceButton, Transform parent, UtilshowAction showAction, Vector3? indent = null, string headerKey = "")
+    internal UIRoundButton CreatePicker(UIRoundButton referenceButton, Transform parent, UtilshowAction showAction, string headerKey = "")
     {
         UIRoundButton picker = GameObject.Instantiate<UIRoundButton>(referenceButton, parent);
-        if(indent != null)
-        {
-            picker.transform.position = picker.transform.position + (Vector3)indent;
-        }
         picker.gameObject.SetActive(true);
         picker.OnClicked = (UIButtonBase.ButtonAction)ShowPopup;
         picker.text = Localization.Get(headerKey, new Il2CppSystem.Object[] { });

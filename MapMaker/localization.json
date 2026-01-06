@@ -11,6 +11,10 @@
         "English": "Map Maker",
         "Russian": "Редактор Карт"
     },
+    "tribes_mapmaker":{
+        "English": "Map creator",
+        "Russian": "Создатель карты"
+    },
     "gamesettings_generationtype":
     {
         "English": "Generation Type"
@@ -50,10 +54,6 @@
     "building_names_none":{
         "English": "None"
     },
-    "tribes_mapmaker":{
-        "English": "Map creator",
-        "Russian": "Создатель карты"
-    },
     "mapmaker_choose_climate":
     {
         "English": "Choose tribe climate"
@@ -82,10 +82,6 @@
     {
         "English": "Choose map"
     },
-    "mapmaker_map_untitled":{
-        "English": "Untitled Map",
-        "Russian": "Безымянная Карта"
-    },
     "mapmaker_failed_creation":{
         "English": "{0} cannot be created on {1}."
     },
@@ -107,19 +103,53 @@
     "mapmaker_numbers_only":{
         "English": "Only numbers are allowed."
     },
-    "mapmaker_capitals_set":{
-        "English": "Set Capital"
-    },
-    "mapmaker_capitals_header":{
-        "English": "Whose capital should this be?"
-    },
-    "mapmaker_capitals_desc":{
-        "English": "Input a number from {0} to {1}! The associated player will spawn here. Type in {2} to mark this tile as an ordinary (noncapital) city!"
-    },
     "mapmaker_remove":{
         "English": "Remove"
     },
-    "mapmaker_resize":{
+    "mapmaker_map_untitled":{
+        "English": "Untitled Map",
+        "Russian": "Безымянная Карта"
+    },
+    "mapmaker_map_resize":{
         "English": "Resize Map"
+    },
+    "mapmaker_map_rename":{
+        "English": "Rename Your Map!"
+    },
+    "mapmaker_map_rename_onsave":{
+        "English": "Before saving, please name your map!"
+    },
+    "mapmaker_map_rename_onclick":{
+        "English": "Naming your map is an exciting step! Click SET if done, don't forget to save!"
+    },
+    "mapmaker_map_newname":{
+        "English": "New name is {0}"
+    },
+    "mapmaker_map_nameset":{
+        "English": "Map name set!"
+    },
+    "mapmaker_capital":{
+        "English": "Capital City of Player {0}"
+    },
+    "mapmaker_capital_set":{
+        "English": "Set Capital"
+    },
+    "mapmaker_capital_header":{
+        "English": "Whose capital should this be?"
+    },
+    "mapmaker_capital_desc":{
+        "English": "Input a number from {0} to {1}! The associated player will spawn here. Type in {2} to mark this tile as an ordinary (noncapital) city!"
+    },
+    "mapmaker_capital_override":{
+        "English": "Overwritten capital location!"
+    },
+    "mapmaker_capital_override_desc":{
+        "English": "From {0} to {1}"
+    },
+    "mapmaker_capital_already":{
+        "English": "Player already has their capital set!"
+    },
+    "mapmaker_capital_removed":{
+        "English": "City is no longer a capital!"
     }
 }

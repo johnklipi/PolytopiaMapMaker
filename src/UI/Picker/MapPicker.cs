@@ -5,7 +5,7 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
-    internal override Vector3? Indent => new Vector3(0, -110, 0);
+    internal override bool UseVerticalLayout => true;
     private Dictionary<string, Sprite> cachedMaps = new();
 
     internal override Sprite GetIcon()
@@ -35,7 +35,7 @@ internal class MapPicker : PickerBase
         for (int index = 0; index < cachedMaps.Count; index++)
         {
             string name = cachedMaps.Keys.ToArray()[index];
-            base.CreateChoiceButton(selectViewmodePopup, name,
+            CreateChoiceButton(selectViewmodePopup, name,
                     index, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.black, 0.6f), SetMapIcon);
 
             void OnClick(int id)
@@ -58,7 +58,7 @@ internal class MapPicker : PickerBase
             {
                 string name = cachedMaps.Keys.ToArray()[type];
 
-                base.SetIcon(button, cachedMaps[name]);
+                SetIcon(button, cachedMaps[name]);
             }
         }
     }

@@ -2,6 +2,9 @@
     "none__": {
         "pixelsPerUnit": 264
     },
+    "city__": {
+        "pixelsPerUnit": 264
+    },
     "remove_icon__": {
         "pixelsPerUnit": 1056
     },
