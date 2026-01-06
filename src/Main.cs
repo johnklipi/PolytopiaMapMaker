@@ -133,6 +133,8 @@ public static class Main
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
     private static void GameManager_ReturnToMenu()
     {
+        UI.Editor.pickers.Clear();
+
         if(!isActive)
             return;
 
@@ -153,7 +155,9 @@ public static class Main
     [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteAllSaveFilesOfType))]
 	private static bool LocalSaveFileUtils_DeleteAllSaveFilesOfType(GameType gameType, bool localOnly)
 	{
-		return GameManager.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+        if(GameManager.GameState != null && GameManager.GameState.Settings != null)
+		    return GameManager.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+        return true;
 	}
 
     [HarmonyPrefix]

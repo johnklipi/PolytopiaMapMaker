@@ -14,7 +14,7 @@ internal class TileEffectPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite(chosenValue, TileEffectToString(chosenValue), gameLogicData);
+       return GetSprite(chosenValue, TileEffectToString(chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -26,12 +26,12 @@ internal class TileEffectPicker : PickerBase
 
             string tileEffectName = Localization.Get($"tile.effect.{EnumCache<TileData.EffectType>.GetName(tileEffect)}");
 
-            base.CreateChoiceButton(selectViewmodePopup, tileEffectName,
+            CreateChoiceButton(selectViewmodePopup, tileEffectName,
                     (int)tileEffect, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
 
             if(tileEffect == TileData.EffectType.None)
-                base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
-                    PickerBase.DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
+                CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
+                    DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetTileEffectIcon);
 
             void OnClick(int id)
             {
@@ -41,7 +41,7 @@ internal class TileEffectPicker : PickerBase
 
             void SetTileEffectIcon(UIRoundButton button, int type)
             {
-                base.SetIcon(button, base.GetSprite(type, TileEffectToString(type), gameState.GameLogicData), 0.6f);
+                SetIcon(button, GetSprite(type, TileEffectToString(type), gameState.GameLogicData), 0.6f);
             }
         }
     }

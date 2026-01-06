@@ -2,7 +2,6 @@ using Polytopia.Data;
 using PolytopiaBackendBase.Common;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace PolytopiaMapManager.UI.Picker;
 internal class PickerBase
@@ -14,6 +13,7 @@ internal class PickerBase
     internal Vector2 buttonSize = new Vector2(75f, 75f);
     internal Color baseColor = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
     internal float iconSize = 0.6f;
+    internal virtual bool UseVerticalLayout => false;
     internal virtual string HeaderKey => "";
     internal virtual Vector2 ChoiceButtonSize => new Vector2(56f, 56f);
     internal int chosenValue = 0;
@@ -49,7 +49,7 @@ internal class PickerBase
     public Sprite GetSprite(int type, string spriteName, GameLogicData gameLogicData)
     {
         Sprite? sprite = null;
-        if(type >= PickerBase.DESTROY_OPTION_ID)
+        if(type >= DESTROY_OPTION_ID)
             return PolyMod.Registry.GetSprite("remove_icon")!;
 
         if(type != 0)

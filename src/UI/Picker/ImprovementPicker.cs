@@ -14,7 +14,11 @@ internal class ImprovementPicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite(chosenValue, SpriteData.ImprovementToString((ImprovementData.Type)chosenValue), gameLogicData);
+        if((ImprovementData.Type)chosenValue == ImprovementData.Type.City)
+        {
+            return PolyMod.Registry.GetSprite("city")!;
+        }
+        return GetSprite(chosenValue, SpriteData.ImprovementToString((ImprovementData.Type)chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -25,12 +29,12 @@ internal class ImprovementPicker : PickerBase
             if(!allowedImprovements.Contains(improvementType))
                 continue;
             string improvementName = Localization.Get(improvementData.displayName);
-            base.CreateChoiceButton(selectViewmodePopup, improvementName,
+            CreateChoiceButton(selectViewmodePopup, improvementName,
                     (int)improvementType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
 
             if(improvementType == ImprovementData.Type.None)
-                base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
-                    PickerBase.DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
+                CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
+                    DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetImprovementIcon);
 
             void OnClick(int id)
             {
@@ -40,7 +44,12 @@ internal class ImprovementPicker : PickerBase
 
             void SetImprovementIcon(UIRoundButton button, int type)
             {
-                base.SetIcon(button, base.GetSprite(type, SpriteData.ImprovementToString((ImprovementData.Type)type), gameState.GameLogicData), 0.6f);
+                Sprite icon = GetSprite(type, SpriteData.ImprovementToString((ImprovementData.Type)type), gameState.GameLogicData);
+                if((ImprovementData.Type)type == ImprovementData.Type.City)
+                {
+                    icon = PolyMod.Registry.GetSprite("city")!;
+                }
+                SetIcon(button, icon, 0.6f);
             }
         }
     }

@@ -12,7 +12,7 @@ internal class ResourcePicker : PickerBase
 
     internal override Sprite GetIcon(GameLogicData gameLogicData)
     {
-       return base.GetSprite(chosenValue, SpriteData.ResourceToString((ResourceData.Type)chosenValue), gameLogicData);
+       return GetSprite(chosenValue, SpriteData.ResourceToString((ResourceData.Type)chosenValue), gameLogicData);
     }
 
     internal override void CreatePopupButtons(ref float num, SelectViewmodePopup selectViewmodePopup, GameState gameState)
@@ -23,12 +23,12 @@ internal class ResourcePicker : PickerBase
             if(excludedResources.Contains(resourceType))
                 continue;
             string resourceName = Localization.Get(resourceData.displayName);
-            base.CreateChoiceButton(selectViewmodePopup, resourceName,
+            CreateChoiceButton(selectViewmodePopup, resourceName,
                     (int)resourceType, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
 
             if(resourceType == ResourceData.Type.None)
-                base.CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
-                    PickerBase.DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
+                CreateChoiceButton(selectViewmodePopup, Localization.Get("mapmaker.remove"),
+                    DESTROY_OPTION_ID, ref num, OnClick, ColorUtil.SetAlphaOnColor(Color.white, 0.6f), SetResourceIcon);
 
             void OnClick(int id)
             {
@@ -38,7 +38,7 @@ internal class ResourcePicker : PickerBase
 
             void SetResourceIcon(UIRoundButton button, int type)
             {
-                base.SetIcon(button, base.GetSprite(type, SpriteData.ResourceToString((ResourceData.Type)type), gameState.GameLogicData), 0.6f);
+                SetIcon(button, GetSprite(type, SpriteData.ResourceToString((ResourceData.Type)type), gameState.GameLogicData), 0.6f);
             }
         }
     }
