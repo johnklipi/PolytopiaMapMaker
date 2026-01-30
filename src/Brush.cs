@@ -20,11 +20,17 @@ public static class Brush
 
         GameState gameState = GameManager.GameState;
 
-        HandleTerrain(__instance.data, (Polytopia.Data.TerrainData.Type)Editor.terrainPicker.chosenValue);
-        HandleResource(gameState, __instance.data, (ResourceData.Type)Editor.resourcePicker.chosenValue);
-        HandleTileEffect(__instance.data, (TileData.EffectType)Editor.tileEffectPicker.chosenValue);
-        HandleImprovement(gameState, __instance.data, (ImprovementData.Type)Editor.improvementPicker.chosenValue);
-        HandleBiome(__instance.data, Editor.biomePicker.chosenValue, Editor.biomePicker.chosenSkinType);
+        ChangeTileCommand command = (ChangeTileCommand)Il2CppSystem.Activator.CreateInstance(Main.WrapType<ChangeTileCommand>());
+        command.PlayerId = gameState.CurrentPlayer;
+        command.Tribe = TribeType.Aquarion;
+        command.Skin = SkinType.Swamp;
+        command.Improvement = ImprovementData.Type.Ruin;
+        command.Resource = ResourceData.Type.Crop;
+        command.Terrain = Polytopia.Data.TerrainData.Type.Ocean;
+        command.TileEffect = TileData.EffectType.Flooded;
+        command.Coordinates = __instance.data.coordinates;
+        gameState.CommandStack.Add(command);
+        GameManager.Client.ActionManager.Update();
 
         __instance.Render();
     }

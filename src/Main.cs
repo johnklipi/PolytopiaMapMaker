@@ -7,6 +7,7 @@ using PolytopiaBackendBase.Common;
 using Il2CppInterop.Runtime;
 using DG.Tweening;
 using Polytopia.Data;
+using Il2CppInterop.Runtime.Injection;
 
 namespace PolytopiaMapManager;
 public static class Main
@@ -50,12 +51,88 @@ public static class Main
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
+        // PolyMod.Loader.AddPatchDataType("commandType", typeof(CommandType));
+        EnumCache<CommandType>.AddMapping("changetilecommand", (CommandType)PolyMod.Registry.autoidx);
+        EnumCache<CommandType>.AddMapping("changetilecommand", (CommandType)PolyMod.Registry.autoidx);
+        PolyMod.Registry.autoidx++;
         Directory.CreateDirectory(IO.MAPS_PATH);
 
         static void OnMapMaker(int id, BaseEventData eventData)
         {
             Init();
         }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CommandUtils), nameof(CommandUtils.GetUnitActions))]
+	public static void GetUnitActions(ref Il2CppSystem.Collections.Generic.List<CommandBase> __result,
+                GameState gameState, PlayerState player, TileData tile, bool includeUnavailable)
+    {
+        ChangeTileCommand command = (ChangeTileCommand)Il2CppSystem.Activator.CreateInstance(WrapType<ChangeTileCommand>());
+        command.PlayerId = player.Id;
+        command.Tribe = TribeType.Aquarion;
+        command.Skin = SkinType.Swamp;
+        command.Improvement = ImprovementData.Type.Ruin;
+        command.Resource = ResourceData.Type.Crop;
+        command.Terrain = TerrainData.Type.Ocean;
+        command.TileEffect = TileData.EffectType.Flooded;
+        command.Coordinates = tile.coordinates;
+        CommandUtils.AddCommand(gameState, __result, command, includeUnavailable);
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GameState), nameof(GameState.GetCommand))]
+    public static bool GameState_GetCommand(ref CommandBase  __result, CommandType type) {
+        Console.Write("GameState_GetCommand");
+        Console.Write(type);
+        if (type == EnumCache<CommandType>.GetType("changetilecommand")) {
+            __result = (ChangeTileCommand)Il2CppSystem.Activator.CreateInstance(WrapType<ChangeTileCommand>());
+            return false;
+        }
+        return true;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CommandBase), nameof(CommandBase.Execute))]
+    public static void CommandBase_Execute(ref CommandBase  __instance, GameState state)
+    {
+        if(__instance.GetCommandType() == EnumCache<CommandType>.GetType("changetilecommand"))
+        {
+            Console.Write("ChangeTileCommand.Execute");
+            ChangeTileCommand changeTileCommand = __instance.Cast<ChangeTileCommand>();
+            changeTileCommand.ExecuteNew(state);
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CommandBase), nameof(CommandBase.Serialize))]
+    public static void CommandBase_Execute(ref CommandBase  __instance, Il2CppSystem.IO.BinaryWriter writer, int version)
+    {
+        if(__instance.GetCommandType() == EnumCache<CommandType>.GetType("changetilecommand"))
+        {
+            Console.Write("ChangeTileCommand.Serialize");
+            ChangeTileCommand changeTileCommand = __instance.Cast<ChangeTileCommand>();
+            changeTileCommand.SerializeNew(writer, version);
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CommandBase), nameof(CommandBase.Deserialize))]
+    public static void CommandBase_Deserialize(ref CommandBase  __instance, Il2CppSystem.IO.BinaryReader reader, int version)
+    {
+        if(__instance.GetCommandType() == EnumCache<CommandType>.GetType("changetilecommand"))
+        {
+            Console.Write("ChangeTileCommand.Deserialize");
+            ChangeTileCommand changeTileCommand = __instance.Cast<ChangeTileCommand>();
+            changeTileCommand.DeserializeNew(reader, version);
+        }
+    }
+
+    internal static Il2CppSystem.Type WrapType<T>() where T : class
+    {
+        if (!ClassInjector.IsTypeRegisteredInIl2Cpp<T>())
+            ClassInjector.RegisterTypeInIl2Cpp<T>();
+        return Il2CppType.From(typeof(T));
     }
 
     public static void Init()

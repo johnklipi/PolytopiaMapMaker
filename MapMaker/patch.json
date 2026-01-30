@@ -20,5 +20,10 @@
 		"custom": {
 			"idx": -1
 		}
+	},
+	"commandType": {
+		"changetilecommand": {
+			"idx": -1
+		}
 	}
 }
