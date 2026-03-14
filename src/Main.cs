@@ -7,7 +7,6 @@ using PolytopiaBackendBase.Common;
 using Il2CppInterop.Runtime;
 using DG.Tweening;
 using Polytopia.Data;
-using static ClientBase;
 
 namespace PolytopiaMapManager;
 public static class Main
@@ -141,7 +140,7 @@ public static class Main
         return CreateSessionResult.Success;
 	}
 
-	public static GameState CreateMapMakerGame(int gameVersion, GameSettings settings, PlayerState ownPlayerState, Il2CppSystem.Collections.Generic.IEnumerable<PlayerState> opponents = null)
+	public static GameState CreateMapMakerGame(int gameVersion, GameSettings settings, PlayerState ownPlayerState)
 	{
 		GameState gameState = new GameState
 		{
@@ -152,10 +151,6 @@ public static class Main
 		};
 
 		gameState.PlayerStates.Add(ownPlayerState);
-		if (opponents != null)
-		{
-			gameState.PlayerStates.AddRange(opponents);
-		}
 		GameStateUtils.SetPlayerColors(gameState);
 		GameStateUtils.AddNaturePlayer(gameState);
 		ushort mapWidth = (ushort)Math.Max(settings.MapSize, MapDataExtensions.GetMinimumMapSize(gameState.PlayerCount));
