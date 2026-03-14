@@ -7,6 +7,7 @@ using PolytopiaBackendBase.Common;
 using Il2CppInterop.Runtime;
 using DG.Tweening;
 using Polytopia.Data;
+using static ClientBase;
 
 namespace PolytopiaMapManager;
 public static class Main
@@ -80,12 +81,14 @@ public static class Main
         GameManager.PreliminaryGameSettings.Difficulty = BotDifficulty.Frozen;
         Il2CppSystem.Nullable<UnityEngine.Color> color = new(UnityEngine.Color.black);
 
-        UIBlackFader.FadeIn(0.5f, DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(StartGame), "gamesettings.creatingworld", null, color);
+        UIBlackFader.FadeIn(
+            0.5f, DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(StartGame),
+            "gamesettings.creatingworld", null, color
+        );
 
         void StartGame()
         {
             DOTween.KillAll(false);
-            GameManager.Instance.CreateSinglePlayerGame();
             if (!GameManager.Instance.isLoadingGame)
             {
                 GameManager.Instance.SetLoadingGame(isLoading: true);
@@ -95,7 +98,8 @@ public static class Main
                     MapPreset.Continents : GameManager.Instance.settings.mapPreset
                 );
                 if (
-                    GameManager.Instance.client.CreateSession(
+                    CreateMapMakerSession(
+                        GameManager.Instance.client,
                         GameManager.Instance.settings,
                         Il2CppSystem.Guid.NewGuid()
                     ) == CreateSessionResult.Success)
@@ -104,17 +108,69 @@ public static class Main
                     return;
                 }
             }
-            int num = 0;
-            for (int y = 0; y < (int)GameManager.GameState.Map.Height; y++)
-            {
-                for (int x = 0; x < (int)GameManager.GameState.Map.Width; x++)
-                {
-                    GameManager.GameState.Map.Tiles[num++] = Loader.GetBasicTile(x, y);
-                }
-            }
-            Loader.SetLighthouses(GameManager.GameState);
         }
     }
+
+    private static CreateSessionResult CreateMapMakerSession(ClientBase client, GameSettings settings, Il2CppSystem.Guid gameId)
+    {
+        client.Reset();
+        GameManager.Client.gameId = gameId;
+
+        modLogger!.LogInfo($"Creating map maker session with key: {gameId.ToString()}");
+        PlayerState ownPlayerState = new PlayerState
+        {
+            Id = 1,
+            AccountId = new(Il2CppSystem.Guid.Empty),
+            AutoPlay = false,
+            UserName = AccountManager.AliasInternal,
+            tribe = GameManager.StartingTribe,
+            tribeMix = GameManager.StartingTribeMix,
+            skinType = GameManager.StartingSkin,
+            hasChosenTribe = true
+        };
+        
+        GameState gameState = CreateMapMakerGame(VersionManager.GameVersion, settings, ownPlayerState);
+        SerializationHelpers.FromByteArray<GameState>(SerializationHelpers.ToByteArray(gameState, gameState.Version), out GameState initialGameState);
+        GameManager.Client.initialGameState = initialGameState;
+        modLogger!.LogInfo("Session with map maker created successfully");
+        gameState.CommandStack.Add(new StartMatchCommand(1));
+        GameManager.Client.hasInitializedSaveData = true;
+        GameManager.Client.UpdateGameStateImmediate(gameState, StateUpdateReason.GameCreated);
+        GameManager.Client.PrepareSession();
+
+        return CreateSessionResult.Success;
+	}
+
+	public static GameState CreateMapMakerGame(int gameVersion, GameSettings settings, PlayerState ownPlayerState, Il2CppSystem.Collections.Generic.IEnumerable<PlayerState> opponents = null)
+	{
+		GameState gameState = new GameState
+		{
+			Version = gameVersion,
+			Settings = settings,
+			PlayerStates = new Il2CppSystem.Collections.Generic.List<PlayerState>(),
+            Seed = 0
+		};
+
+		gameState.PlayerStates.Add(ownPlayerState);
+		if (opponents != null)
+		{
+			gameState.PlayerStates.AddRange(opponents);
+		}
+		GameStateUtils.SetPlayerColors(gameState);
+		GameStateUtils.AddNaturePlayer(gameState);
+		ushort mapWidth = (ushort)Math.Max(settings.MapSize, MapDataExtensions.GetMinimumMapSize(gameState.PlayerCount));
+		gameState.Map = new MapData(mapWidth, mapWidth);
+        int tileCount = 0;
+        for (int y = 0; y < (int)gameState.Map.Height; y++)
+        {
+            for (int x = 0; x < (int)gameState.Map.Width; x++)
+            {
+                gameState.Map.Tiles[tileCount++] = Loader.GetBasicTile(x, y);
+            }
+        }
+        Loader.SetLighthouses(gameState);
+		return gameState;
+	}
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
