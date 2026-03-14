@@ -50,6 +50,8 @@ public static class Main
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
+        PolyMod.Loader.AddPatchDataType("gameType", typeof(GameType));
+        PolyMod.Loader.AddPatchDataType("gameMode", typeof(GameMode));
         Directory.CreateDirectory(IO.MAPS_PATH);
 
         static void OnMapMaker(int id, BaseEventData eventData)
@@ -64,6 +66,8 @@ public static class Main
         MapName = Localization.Get(Loader.DEFAULT_MAP_NAME_KEY);
         MapSaved = false;
         GameSettings gameSettings = new GameSettings();
+        gameSettings.GameName = "Map Maker";
+        gameSettings.GameType = EnumCache<GameType>.GetType("mapmaker");
         gameSettings.BaseGameMode = EnumCache<GameMode>.GetType("mapmaker");
         gameSettings.SetUnlockedTribes(GameManager.GetPurchaseManager().GetUnlockedTribes(false));
         gameSettings.mapPreset = MapPreset.Dryland;
@@ -82,6 +86,24 @@ public static class Main
         {
             DOTween.KillAll(false);
             GameManager.Instance.CreateSinglePlayerGame();
+            if (!GameManager.Instance.isLoadingGame)
+            {
+                GameManager.Instance.SetLoadingGame(isLoading: true);
+                GameManager.Instance.client = new LocalClient();
+                GameManager.Instance.settings.mapPreset = (
+                    (GameManager.Instance.settings.mapPreset == MapPreset.None) ?
+                    MapPreset.Continents : GameManager.Instance.settings.mapPreset
+                );
+                if (
+                    GameManager.Instance.client.CreateSession(
+                        GameManager.Instance.settings,
+                        Il2CppSystem.Guid.NewGuid()
+                    ) == CreateSessionResult.Success)
+                {
+                    GameManager.Instance.LoadLevel();
+                    return;
+                }
+            }
             int num = 0;
             for (int y = 0; y < (int)GameManager.GameState.Map.Height; y++)
             {
@@ -155,16 +177,14 @@ public static class Main
     [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteAllSaveFilesOfType))]
 	private static bool LocalSaveFileUtils_DeleteAllSaveFilesOfType(GameType gameType, bool localOnly)
 	{
-        if(GameManager.GameState != null && GameManager.GameState.Settings != null)
-		    return GameManager.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
-        return true;
+		return gameType != EnumCache<GameType>.GetType("mapmaker");
 	}
 
     [HarmonyPrefix]
     [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteSaveFile))]
 	private static bool LocalSaveFileUtils_DeleteSaveFile(GameType gameType, string gameId, bool localOnly)
 	{
-		return GameManager.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+		return gameType != EnumCache<GameType>.GetType("mapmaker");
 	}
 
     [HarmonyPrefix]

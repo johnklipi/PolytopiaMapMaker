@@ -20,5 +20,15 @@
 		"custom": {
 			"idx": -1
 		}
+	},
+	"gameType": {
+		"mapmaker": {
+			"idx": -1
+		}
+	},
+	"gameMode": {
+		"mapmaker": {
+			"idx": -1
+		}
 	}
 }
