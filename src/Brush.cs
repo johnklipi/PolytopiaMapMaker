@@ -24,7 +24,7 @@ public static class Brush
         HandleResource(gameState, __instance.data, (ResourceData.Type)Editor.resourcePicker.chosenValue);
         HandleTileEffect(__instance.data, (TileData.EffectType)Editor.tileEffectPicker.chosenValue);
         HandleImprovement(gameState, __instance.data, (ImprovementData.Type)Editor.improvementPicker.chosenValue);
-        HandleBiome(__instance.data, Editor.biomePicker.chosenValue, Editor.biomePicker.chosenSkinType);
+        HandleBiome(__instance.data, (TribeType)Editor.biomePicker.chosenValue, Editor.biomePicker.chosenSkinType);
 
         __instance.Render();
     }
@@ -182,7 +182,7 @@ public static class Brush
         tileData.improvement = improvementState;
     }
 
-    internal static void HandleBiome(TileData tileData, int climate, SkinType skinType)
+    internal static void HandleBiome(TileData tileData, TribeType climate, SkinType skinType)
     {
         if(Editor.biomePicker.chosenValue == 0)
             return;

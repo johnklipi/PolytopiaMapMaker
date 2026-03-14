@@ -7,7 +7,10 @@ namespace PolytopiaMapManager.Data;
 public class MapTile
 {
     [JsonInclude]
-    public int climate = DEFAULT_CLIMATE;
+    public int climate = -1;
+    [JsonInclude]
+    [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<TribeType>))]
+    public TribeType tribeType = DEFAULT_TRIBE;
     [JsonInclude]
     [JsonConverter(typeof(PolyMod.Json.EnumCacheJson<SkinType>))]
     public SkinType skinType = DEFAULT_SKIN;
@@ -23,13 +26,14 @@ public class MapTile
     [JsonInclude]
     [JsonConverter(typeof(PolyMod.Json.EnumCacheListJson<TileData.EffectType>))]
     public List<TileData.EffectType> effects = new();
-    const int DEFAULT_CLIMATE = 2;
-    const SkinType DEFAULT_SKIN = SkinType.Default;
+    public const int DEFAULT_CLIMATE = 2;
+    public const TribeType DEFAULT_TRIBE = TribeType.Imperius;
+    public const SkinType DEFAULT_SKIN = SkinType.Default;
 
     internal TileData ToTileData()
     {
         TileData tile = new TileData();
-        tile.climate = IsClimateValid(climate) ? climate : DEFAULT_CLIMATE;
+        tile.climate = IsClimateValid(climate) ? Loader.GetTribeTypeFromOldClimate(climate) : tribeType;
         tile.Skin = IsSkinTypeValid(skinType) ? skinType : DEFAULT_SKIN;
         tile.terrain = terrain;
         tile.resource = resource == null ? null : new() { type = (Polytopia.Data.ResourceData.Type)resource };

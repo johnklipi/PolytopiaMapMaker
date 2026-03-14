@@ -31,23 +31,100 @@ public static class Loader
         };
     }
 
-    internal static int GetTribeClimateFromType(TribeType type, GameLogicData gameLogicData)
+    public static int GetOldClimateFromTribeType(TribeType tribeType)
     {
-        gameLogicData.TryGetData(type, out TribeData data);
-        return data.climate;
+        switch(tribeType)
+        {
+            case TribeType.Xinxi:
+                return 1;
+            case TribeType.Imperius:
+                return 2;
+            case TribeType.Bardur:
+            case TribeType.None:
+            case TribeType.Nature:
+                return 3;
+            case TribeType.Oumaji:
+                return 4;
+            case TribeType.Kickoo:
+                return 5;
+            case TribeType.Hoodrick:
+                return 6;
+            case TribeType.Luxidoor:
+                return 7;
+            case TribeType.Vengir:
+                return 8;
+            case TribeType.Zebasi:
+                return 9;
+            case TribeType.Aimo:
+                return 10;
+            case TribeType.Aquarion:
+                return 11;
+            case TribeType.Quetzali:
+                return 12;
+            case TribeType.Elyrion:
+                return 13;
+            case TribeType.Yadakk:
+                return 14;
+            case TribeType.Polaris:
+                return 15;
+            case TribeType.Cymanti:
+                return 16;
+            default:
+                return MapTile.DEFAULT_CLIMATE;
+        }
     }
 
-    internal static int GetTribeClimateFromSkin(SkinType skinType, GameLogicData gameLogicData)
+    public static TribeType GetTribeTypeFromOldClimate(int oldClimate)
     {
-        List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray().ToList().Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray().ToList()).ToList();
-        foreach (TribeData tribeData in tribes)
+        switch(oldClimate)
+        {
+            case 1:
+                return TribeType.Xinxi;
+            case 2:
+                return TribeType.Imperius;
+            case 3:
+                return TribeType.Bardur;
+            case 4:
+                return TribeType.Oumaji;
+            case 5:
+                return TribeType.Kickoo;
+            case 6:
+                return TribeType.Hoodrick;
+            case 7:
+                return TribeType.Luxidoor;
+            case 8:
+                return TribeType.Vengir;
+            case 9:
+                return TribeType.Zebasi;
+            case 10:
+                return TribeType.Aimo;
+            case 11:
+                return TribeType.Aquarion;
+            case 12:
+                return TribeType.Quetzali;
+            case 13:
+                return TribeType.Elyrion;
+            case 14:
+                return TribeType.Yadakk;
+            case 15:
+                return TribeType.Polaris;
+            case 16:
+                return TribeType.Cymanti;
+            default:
+                return MapTile.DEFAULT_TRIBE;
+        }
+    }
+
+    internal static TribeType GetTribeClimateFromSkin(SkinType skinType, GameLogicData gameLogicData)
+    {
+        foreach (TribeData tribeData in gameLogicData.GetAllTribes().ToArray())
         {
             if (tribeData.skins.Contains(skinType))
             {
-                return tribeData.climate;
+                return tribeData.type;
             }
         }
-        return 1;
+        return MapTile.DEFAULT_TRIBE;
     }
 
     [HarmonyPrefix]
@@ -149,7 +226,7 @@ public static class Loader
         TileData tile = gameState.Map.GetTile(coordinates);
         mapGenerator.SetTileAsCapital(gameState, playerState, tile);
         int idx = tile.coordinates.X + tile.coordinates.Y * gameState.Map.width;
-        tile.climate = chosenMap!.map[idx].climate;
+        tile.climate = chosenMap!.map[idx].tribeType;
     }
 
     [HarmonyPrefix]

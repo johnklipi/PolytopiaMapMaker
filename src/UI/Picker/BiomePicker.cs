@@ -28,7 +28,7 @@ internal class BiomePicker : PickerBase
 
         if(chosenValue != 0)
         {
-            TribeType tribeType = gameLogicData.GetTribeTypeFromStyle(chosenValue);
+            TribeType tribeType = (TribeType)chosenValue;
             string spriteName;
             if (chosenSkinType == SkinType.Default)
             {
@@ -59,14 +59,14 @@ internal class BiomePicker : PickerBase
             {
                 id *= -1;
                 SkinType skinType = (SkinType)id;
-                chosenValue = Loader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
+                chosenValue = (int)Loader.GetTribeClimateFromSkin(skinType, gameState.GameLogicData);
                 chosenSkinType = skinType;
             }
             else
             {
                 if((TribeType)id != TribeType.None)
                 {
-                    chosenValue = Loader.GetTribeClimateFromType((TribeType)id, gameState.GameLogicData);
+                    chosenValue = id;
                 }
                 else
                 {
@@ -105,11 +105,13 @@ internal class BiomePicker : PickerBase
         }
 
         GameLogicData gameLogicData = gameState.GameLogicData;
-        List<TribeData> tribes = gameLogicData.GetTribes(TribeData.CategoryEnum.Human).ToArray()
-            .Concat(gameLogicData.GetTribes(TribeData.CategoryEnum.Special).ToArray()).ToList();
+        List<TribeData> tribes = gameLogicData.GetAllTribes().ToArray().ToList();
 
         foreach (TribeData tribeData in tribes)
         {
+            if(tribeData.category == TribeData.CategoryEnum.Hidden)
+                continue;
+
             TribeType tribeType = tribeData.type;
             if(excludedTribes.Contains(tribeType) || (int)tribeType >= POLYMOD_AUTOIDX)
                 continue;

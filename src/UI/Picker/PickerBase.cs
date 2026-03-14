@@ -57,7 +57,7 @@ internal class PickerBase
             TribeType tribeType = TribeType.Xinxi;
             if(Editor.biomePicker.chosenValue != 0)
             {
-                tribeType = gameLogicData.GetTribeTypeFromStyle(Editor.biomePicker.chosenValue);
+                tribeType = (TribeType)Editor.biomePicker.chosenValue;
             }
             SpriteAtlasManager.SpriteLookupResult lookupResult = Editor.spriteAtlasManager.DoSpriteLookup(spriteName, tribeType, Editor.biomePicker.chosenSkinType, false);
             sprite = lookupResult.sprite;

@@ -14,7 +14,7 @@ public static class IO
         {
             Data.MapTile mapTile = new Data.MapTile
             {
-                climate = tileData.climate,
+                tribeType = tileData.climate,
                 skinType = tileData.Skin,
                 terrain = tileData.terrain,
             };
