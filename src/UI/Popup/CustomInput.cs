@@ -23,6 +23,8 @@ public static class CustomInput
         var input = GetInputFromPopup(popup);
         if (input == null) return;
         UnityEngine.Object.Destroy(input.gameObject);
+        UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = true;
+	    InputManager.EnableInput(InputManager.InputType.Camera | InputManager.InputType.Map | InputManager.InputType.Input);
     }
 
     public static TMP_InputField? GetInputFromPopup(PopupBase popup)
@@ -36,6 +38,8 @@ public static class CustomInput
 
     public static void AddInputToPopup(BasicPopup popup, string baseValue = "", Action<string>? onSubmit = null, Action<string>? onValueChanged = null)
     {
+        UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = false;
+	    InputManager.DisableInput(InputManager.InputType.Camera | InputManager.InputType.Map | InputManager.InputType.Input);
         Transform parent = popup.transform; //Popup is parent
 
         GameObject go = new GameObject("InputBox");
