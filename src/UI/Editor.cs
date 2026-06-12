@@ -145,14 +145,14 @@ public static class Editor
             popup.Description = string.Empty;
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
-                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
-                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Resize, -1, true, null)
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{CustomInput.RemoveInputFromPopup(popup);}, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (Action)delegate{Resize();}, -1, true, null)
             };
-            void Exit(int id, BaseEventData eventData)
-            {
-                CustomInput.RemoveInputFromPopup(popup);
-            }
-            void Resize(int id, BaseEventData eventData){
+            //void Exit(int id, BaseEventData eventData)
+            //{
+            //   CustomInput.RemoveInputFromPopup(popup);
+            //}
+            void Resize(){
                 var input = CustomInput.GetInputFromPopup(popup);
                 if(input != null && int.TryParse(input.text, out int size))
                 {
@@ -244,14 +244,14 @@ public static class Editor
                     popup.Description = Localization.Get("mapmaker.map.rename.onsave");
                     popup.buttonData = new PopupBase.PopupButtonData[]
                     {
-                        new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
-                        new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Save, -1, true, null)
+                        new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{CustomInput.RemoveInputFromPopup(popup);}, -1, true, null),
+                        new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (Action)delegate{Save();}, -1, true, null)
                     };
-                    void Exit(int id, BaseEventData eventData)
-                    {
-                        CustomInput.RemoveInputFromPopup(popup);
-                    }
-                    void Save(int id, BaseEventData eventData)
+                    //void Exit(int id, BaseEventData eventData)
+                    //{
+                    //    CustomInput.RemoveInputFromPopup(popup);
+                    //}
+                    void Save()
                     {
                         var input = CustomInput.GetInputFromPopup(popup);
                         if(input != null)
@@ -278,14 +278,14 @@ public static class Editor
 
                 popup.buttonData = new PopupBase.PopupButtonData[]
                 {
-                    new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
-                    new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)SaveName, -1, true, null)
+                    new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{CustomInput.RemoveInputFromPopup(popup);}, -1, true, null),
+                    new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (Action)delegate{SaveName();}, -1, true, null)
                 };
-                void Exit(int id, BaseEventData eventData)
-                {
-                    CustomInput.RemoveInputFromPopup(popup);
-                }
-                void SaveName(int id, BaseEventData eventData)
+                //void Exit(int id, BaseEventData eventData)
+                //{
+                //    CustomInput.RemoveInputFromPopup(popup);
+                //}
+                void SaveName()
                 {
                     var input = CustomInput.GetInputFromPopup(popup);
                     if(input != null)
@@ -384,14 +384,14 @@ public static class Editor
             popup.Description = Localization.Get("mapmaker.capital.desc", new Il2CppSystem.Object[]{1, 254, 0});
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
-                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null),
-                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Save, -1, true, null)
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{Popup.CustomInput.RemoveInputFromPopup(popup);}, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (Action)delegate{Save();}, -1, true, null)
             };
-            void Exit(int id, BaseEventData eventData)
-            {
-                Popup.CustomInput.RemoveInputFromPopup(popup);
-            }
-            void Save(int id, BaseEventData eventData)
+            //void Exit(int id, BaseEventData eventData)
+            //{
+            //    Popup.CustomInput.RemoveInputFromPopup(popup);
+            //}
+            void Save()
             {
                 var input = Popup.CustomInput.GetInputFromPopup(popup);
                 if (input != null)

@@ -240,12 +240,12 @@ public static class Loader
             popup.Description = "You must have at least as many cities on the map as players!";
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
-                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{GameManager.ReturnToMenu();}, -1, true, null)
             };
-            void Exit(int id, BaseEventData eventData)
-            {
-                GameManager.ReturnToMenu();
-            }
+            //void Exit(int id, BaseEventData eventData)
+            //{
+            //    GameManager.ReturnToMenu();
+            //}
             popup.Show();
             return false;
         }

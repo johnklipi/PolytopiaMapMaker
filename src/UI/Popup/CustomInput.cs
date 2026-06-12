@@ -7,8 +7,8 @@ namespace PolytopiaMapManager.Popup;
 public static class CustomInput
 {
 	[HarmonyPostfix]
-	[HarmonyPatch(typeof(BasicPopup), nameof(BasicPopup.Update))]
-	private static void BasicPopup_Update(BasicPopup __instance)
+	[HarmonyPatch(typeof(BasicPopup), nameof(BasicPopup.Show))]
+	private static void BasicPopup_Show(BasicPopup __instance)
 	{
         var input = GetInputFromPopup(__instance);
         if(input != null)

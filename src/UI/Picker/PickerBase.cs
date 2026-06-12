@@ -59,7 +59,7 @@ internal class PickerBase
             {
                 tribeType = (TribeType)Editor.biomePicker.chosenValue;
             }
-            SpriteAtlasManager.SpriteLookupResult lookupResult = Editor.spriteAtlasManager.DoSpriteLookup(spriteName, tribeType, Editor.biomePicker.chosenSkinType, false);
+            SpriteAtlasManager.SpriteLookupResult lookupResult = Editor.spriteAtlasManager.DoSpriteLookup(spriteName, tribeType, Editor.biomePicker.chosenSkinType);
             sprite = lookupResult.sprite;
         }
         if(sprite == null)
@@ -107,16 +107,15 @@ internal class PickerBase
             selectViewmodePopup.gridLayout.padding.bottom = Mathf.RoundToInt(num + gridSpacing);
             selectViewmodePopup.gridBottomSpacer.minHeight = num + gridSpacing;
 
-
             selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
             {
-                new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)Exit, -1, true, null)
+                new PopupBase.PopupButtonData("buttons.ok", PopupBase.PopupButtonData.States.None, (Action)delegate{ selectViewmodePopup.Hide(); }, -1, true, null)
             };
 
-            void Exit(int id, BaseEventData eventData)
-            {
-                selectViewmodePopup.Hide();
-            }
+            //void Exit(int id, BaseEventData eventData)
+            //{
+            //    selectViewmodePopup.Hide();
+            //}
             selectViewmodePopup.Show(picker!.rectTransform.position);
         }
         return picker;
