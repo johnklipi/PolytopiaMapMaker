@@ -46,6 +46,7 @@ public static class Main
         Harmony.CreateAndPatchAll(typeof(UI.Editor));
         Harmony.CreateAndPatchAll(typeof(UI.Menu.Start));
         Harmony.CreateAndPatchAll(typeof(UI.Menu.GameSetup));
+        Harmony.CreateAndPatchAll(typeof(UI.Menu.GameSetup_UI2));
         Harmony.CreateAndPatchAll(typeof(CustomInput));
         PolyMod.Loader.AddGameMode("mapmaker", (UIButtonBase.ButtonAction)OnMapMaker, false);
         PolyMod.Loader.AddPatchDataType("mapPreset", typeof(MapPreset));

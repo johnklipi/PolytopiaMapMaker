@@ -105,15 +105,17 @@ internal class BiomePicker : PickerBase
         }
 
         GameLogicData gameLogicData = gameState.GameLogicData;
-        List<TribeData> tribes = gameLogicData.GetAllTribes().ToArray().ToList();
+        List<TribeType> tribes = GameLogicData.legacyTribeTypesOrder.ToArray().ToList();
 
-        foreach (TribeData tribeData in tribes)
+        foreach (TribeType tribeType in tribes)
         {
-            if(tribeData.category == TribeData.CategoryEnum.Hidden)
+            if(excludedTribes.Contains(tribeType) || (int)tribeType >= POLYMOD_AUTOIDX)
                 continue;
 
-            TribeType tribeType = tribeData.type;
-            if(excludedTribes.Contains(tribeType) || (int)tribeType >= POLYMOD_AUTOIDX)
+            if(!gameLogicData.TryGetData(tribeType, out TribeData tribeData))
+                continue;
+
+            if(tribeData.category == TribeData.CategoryEnum.Hidden)
                 continue;
 
             string tribeName = Localization.Get(tribeData.displayName);
