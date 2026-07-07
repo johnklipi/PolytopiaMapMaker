@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Il2CppInterop.Runtime;
+using PolyMod.Managers;
 using UnityEngine;
 
 namespace PolytopiaMapManager.UI.Menu;
@@ -9,7 +10,10 @@ public static class GameSetup_UI2
     private static GameSetupScreen_UI2? gameSetupScreen_UI2 = null; // i dont like it // don't like what?
     private static UIHorizontalList_UI2? generationSelectorList = null;
     private static UIHorizontalListData? generationSelectorListData = null;
+    private static UIHorizontalList_UI2? mapSelectorList = null;
+    private static UIHorizontalListData? mapSelectorListData = null;
     private static MapGenerationType chosenMapGenType = MapGenerationType.Default;
+    private static List<string> visualMaps = new();
     public enum MapGenerationType
     {
         Default,
@@ -17,7 +21,7 @@ public static class GameSetup_UI2
     }
 
     // (Hopefully) generic method for inserting list after another
-    private static void InsertListAt(GameSetupScreenView view, UIHorizontalList_UI2 list, UIHorizontalList_UI2 insertAfter)
+    private static void InsertListAt(GameSetupScreenView view, UIHorizontalList_UI2 list, UIHorizontalList_UI2 insertAfter, bool shouldPush = true, float padding = 50f)
     {
         if (insertAfter == null || !insertAfter.ActiveSelf)
         {
@@ -27,21 +31,21 @@ public static class GameSetup_UI2
         }
         list.ActiveSelf = true;
 
-        float padding = 50f;
         float y = insertAfter.GetY() - list.GetHeight() - padding;
 
         //Push everything beneath lower
-        for (int i = 0; i < view.allComponents.Count; i++)
-        {
-            var iuilayoutable = view.allComponents[i];
-            if (iuilayoutable != null)
+        if (shouldPush)
+            for (int i = 0; i < view.allComponents.Count; i++)
             {
-                if (iuilayoutable.GetY() <= y && iuilayoutable.Pointer != list.Pointer && iuilayoutable.ActiveSelf)
+                var iuilayoutable = view.allComponents[i];
+                if (iuilayoutable != null)
                 {
-                    iuilayoutable.SetY(iuilayoutable.GetY() - list.GetHeight());
+                    if (iuilayoutable.GetY() <= y && iuilayoutable.Pointer != list.Pointer && iuilayoutable.ActiveSelf)
+                    {
+                        iuilayoutable.SetY(iuilayoutable.GetY() - list.GetHeight());
+                    }
                 }
             }
-        }
 
         list.SetPosition(insertAfter.GetX(), y);
         list.UpdateLayout();
@@ -56,34 +60,37 @@ public static class GameSetup_UI2
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(GameSetupScreen_UI2), nameof(GameSetupScreen_UI2.RunLayout))]
-    private static void GameSetupScreen_UI2_RunLayout(GameSetupScreen_UI2 __instance, ScreenBase_UI2.ScreenSize screenSize)
-    {
-        generationSelectorListData = new UIHorizontalListData(2, __instance.Loc("your.localization.key"));
-        generationSelectorListData.AddItem("ITEM1", 0);
-        generationSelectorListData.AddItem("ITEM2", 1);
-    }
-
-    [HarmonyPostfix]
     [HarmonyPatch(typeof(GameSetupScreenView), nameof(GameSetupScreenView.Init))]
     private static void GameSetupScreenView_Init(GameSetupScreenView __instance, UnityEngine.RectTransform holder)
     {
         generationSelectorList = UILibrary.NewHorizontalList(__instance.scroller.content);
         generationSelectorList.ActiveSelf = false;
-        generationSelectorList.gameObject.name = "test list";
-        generationSelectorList.OnItemSelected().Add(DelegateSupport.ConvertDelegate<Il2CppSystem.Action<int>>(OnTestListChanged));
+        generationSelectorList.gameObject.name = "generationSelectorList";
+        generationSelectorList.OnItemSelected().Add(DelegateSupport.ConvertDelegate<Il2CppSystem.Action<int>>(OnGenerationSelectorChanged));
+
+        mapSelectorList = UILibrary.NewHorizontalList(__instance.scroller.content);
+        mapSelectorList.ActiveSelf = false;
+        mapSelectorList.gameObject.name = "mapSelectorList";
+        mapSelectorList.OnItemSelected().Add(DelegateSupport.ConvertDelegate<Il2CppSystem.Action<int>>(OnMapSelectorChanged));
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameSetupScreenView), nameof(GameSetupScreenView.RunLayout))]
     private static void GameSetupScreenView_RunLayout(GameSetupScreenView __instance, ScreenBase_UI2.ScreenSize screenSize)
     {
+        visualMaps = IO.GetAllMaps();
         generationSelectorListData = new UIHorizontalListData(2, "Map Generation"); // Needs to be localized
         generationSelectorListData.AddItem("Default", 0);
         generationSelectorListData.AddItem("Custom", 1);
 
+        mapSelectorListData = new UIHorizontalListData(visualMaps.Count + 1, "Choose map!"); //idk the text, also localize it pls
+        for (int i = 0; i < visualMaps.Count; i++)
+        {
+            mapSelectorListData.AddItem(visualMaps[i], i);
+        }
+
         bool inCreativeMode = __instance.listGameMode != null && __instance.listGameMode.ActiveSelf; // Custom maps only in creative mode
-        if (!inCreativeMode)
+        if (!inCreativeMode || visualMaps.Count <= 0)
         {
             if (generationSelectorList != null)
             {
@@ -95,26 +102,34 @@ public static class GameSetup_UI2
             return;
         }
 
-        if (generationSelectorList != null && generationSelectorListData != null)
+        if (generationSelectorList != null && generationSelectorListData != null && mapSelectorList != null && mapSelectorListData != null)
         {
             generationSelectorList.SetData(generationSelectorListData.header, generationSelectorListData.GetLabels(), 0);
             generationSelectorList.SetWidth(screenSize.screenRect.Width);
             generationSelectorList.UpdateLayout();
-            InsertListAt(__instance, generationSelectorList, __instance.listDifficulty);
+
+            mapSelectorList.SetData(mapSelectorListData.header, mapSelectorListData.GetLabels(), 0);
+            mapSelectorList.SetWidth(screenSize.screenRect.Width);
+            mapSelectorList.UpdateLayout();
+
+            InsertListAt(__instance, generationSelectorList, __instance.listDifficulty, true);
+            InsertListAt(__instance, mapSelectorList, generationSelectorList, false, 25f);
         }
         if (chosenMapGenType == MapGenerationType.Custom)
         {
             __instance.listMapType.ActiveSelf = false;
             __instance.listMapSize.ActiveSelf = false;
+            if (mapSelectorList != null) mapSelectorList.ActiveSelf = true;
         }
         else
         {
             __instance.listMapType.ActiveSelf = true;
             __instance.listMapSize.ActiveSelf = true;
+            if (mapSelectorList != null) mapSelectorList.ActiveSelf = false;
         }
     }
 
-    private static void OnTestListChanged(int index)
+    private static void OnGenerationSelectorChanged(int index)
     {
         if (generationSelectorListData == null)
             return;
@@ -125,10 +140,25 @@ public static class GameSetup_UI2
         if (gameSetupScreen_UI2 != null)
         {
             gameSetupScreen_UI2.UpdateLayout();
+            //generationSelectorList!.UpdateHighlightedItem();
         }
         else
         {
             Console.Write("GAME SETUP SCREEN IS NULL");
+        }
+    }
+
+    private static void OnMapSelectorChanged(int index)
+    {
+        Main.modLogger!.LogInfo("OnCustomMapChanged: " + index);
+        Loader.chosenMap = IO.LoadMap(visualMaps[index]);
+
+        if (Loader.chosenMap != null)
+        {
+            GameManager.PreliminaryGameSettings.MapSize = Loader.chosenMap.size;
+            GameManager.PreliminaryGameSettings.mapPreset = EnumCache<PolytopiaBackendBase.Game.MapPreset>.GetType("custom");
+            GameSetupScreen_UI2 gameSetupScreenUI2 = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen_UI2>();
+            gameSetupScreenUI2.UpdateLayout();
         }
     }
 }
