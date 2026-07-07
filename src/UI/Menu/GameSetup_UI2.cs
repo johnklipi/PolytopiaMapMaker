@@ -1,7 +1,9 @@
 using HarmonyLib;
 using Il2CppInterop.Runtime;
 using PolyMod.Managers;
+using PolytopiaBackendBase.Game;
 using UnityEngine;
+using PolytopiaMapManager.Popup;
 
 namespace PolytopiaMapManager.UI.Menu;
 
@@ -59,6 +61,8 @@ public static class GameSetup_UI2
         gameSetupScreen_UI2 = __instance;
     }
 
+    #region New Lists
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameSetupScreenView), nameof(GameSetupScreenView.Init))]
     private static void GameSetupScreenView_Init(GameSetupScreenView __instance, UnityEngine.RectTransform holder)
@@ -83,6 +87,8 @@ public static class GameSetup_UI2
         generationSelectorListData.AddItem("Default", 0);
         generationSelectorListData.AddItem("Custom", 1);
 
+
+
         mapSelectorListData = new UIHorizontalListData(visualMaps.Count + 1, "Choose map!"); //idk the text, also localize it pls
         for (int i = 0; i < visualMaps.Count; i++)
         {
@@ -90,6 +96,8 @@ public static class GameSetup_UI2
         }
 
         bool inCreativeMode = __instance.listGameMode != null && __instance.listGameMode.ActiveSelf; // Custom maps only in creative mode
+
+
         if (!inCreativeMode || visualMaps.Count <= 0)
         {
             if (generationSelectorList != null)
@@ -140,7 +148,7 @@ public static class GameSetup_UI2
         if (gameSetupScreen_UI2 != null)
         {
             gameSetupScreen_UI2.UpdateLayout();
-            //generationSelectorList!.UpdateHighlightedItem();
+            generationSelectorList!.UpdateLayout();
         }
         else
         {
@@ -159,6 +167,72 @@ public static class GameSetup_UI2
             GameManager.PreliminaryGameSettings.mapPreset = EnumCache<PolytopiaBackendBase.Game.MapPreset>.GetType("custom");
             GameSetupScreen_UI2 gameSetupScreenUI2 = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen_UI2>();
             gameSetupScreenUI2.UpdateLayout();
+            mapSelectorList!.UpdateLayout();
         }
     }
+    #endregion
+
+    #region Custom Map Size
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(UIHorizontalListData), nameof(UIHorizontalListData.AddItem))]
+    private static void AddItem_Postfix(UIHorizontalListData __instance, string label, int id)
+    {
+        if(__instance == null) return;
+        if(label == null || __instance.labels == null || label != Localization.Get("gamesettings.size.massive")) return;
+        if(__instance.header != Localization.Get("gamesettings.size")) return;
+
+        for(int i=0;i<__instance.labels.Count; i++)
+        {
+            if(__instance.labels[i] == Localization.Get("gamesettings_size_custom")) return;
+        }
+        int Id = (int)EnumCache<MapSize>.GetType("custom");
+        __instance.AddItem(Localization.Get("gamesettings_size_custom"), Id);
+        
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameSetupScreen_UI2), nameof(GameSetupScreen_UI2.OnMapSizeChanged))]
+    private static void OnMapSizeChanged(int index)
+    {
+        if(index == (int)EnumCache<MapSize>.GetType("custom"))
+        {
+            BasicPopup popup = PopupManager.GetBasicPopup();
+            popup.Header = Localization.Get("gamesettings_mapwidth");
+            popup.Description = string.Empty;
+            popup.buttonData = new PopupBase.PopupButtonData[]
+            {
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{GameManager.PreliminaryGameSettings.MapSize = 16; CustomInput.RemoveInputFromPopup(popup);}, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (Action)delegate{Resize();}, -1, true, null)
+            };
+
+            void Resize()
+            {
+                var input = CustomInput.GetInputFromPopup(popup);
+                if(input != null && int.TryParse(input.text, out int width))
+                {
+                    if(width >= (int)Loader.MAX_MAP_SIZE)
+                    {
+                        width = (int)Loader.MAX_MAP_SIZE;
+                        NotificationManager.Notify(Localization.Get("mapmaker.text.long",
+                                            new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE }), Localization.Get("gamemode.mapmaker"));
+                    }
+                    if(width <= (int)Loader.MIN_MAP_SIZE)
+                    {
+                        NotificationManager.Notify("Too small map!"); //Add more sensible localization
+                        width = (int) Loader.MIN_MAP_SIZE;
+                    }
+                    GameManager.PreliminaryGameSettings.MapSize = width;
+                }
+                else
+                {
+                    NotificationManager.Notify("Only numbers are allowed", "Error");
+                    GameManager.PreliminaryGameSettings.MapSize = 16;
+                }
+                CustomInput.RemoveInputFromPopup(popup);
+            }
+        }
+    }
+
+    #endregion
 }
