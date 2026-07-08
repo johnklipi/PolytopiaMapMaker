@@ -31,15 +31,15 @@ public static class GameSetup_UI2
             Main.modLogger!.LogError("Could not find insertAfter for horizontal list");
             return;
         }
+
         list.ActiveSelf = true;
 
         float y = insertAfter.GetY() - list.GetHeight() - padding;
 
         //Push everything beneath lower
         if (shouldPush)
-            for (int i = 0; i < view.allComponents.Count; i++)
+            foreach (var iuilayoutable in view.allComponents)
             {
-                var iuilayoutable = view.allComponents[i];
                 if (iuilayoutable != null)
                 {
                     if (iuilayoutable.GetY() <= y && iuilayoutable.Pointer != list.Pointer && iuilayoutable.ActiveSelf)
@@ -51,7 +51,6 @@ public static class GameSetup_UI2
 
         list.SetPosition(insertAfter.GetX(), y);
         list.UpdateLayout();
-
     }
 
     [HarmonyPostfix]
@@ -148,7 +147,9 @@ public static class GameSetup_UI2
         if (gameSetupScreen_UI2 != null)
         {
             gameSetupScreen_UI2.UpdateLayout();
-            generationSelectorList!.UpdateLayout();
+            //generationSelectorList!.HighlightedIndex = id;
+            //generationSelectorList!.highlightedIndex = id;
+            //generationSelectorList!.UpdateLayout();
         }
         else
         {
@@ -184,10 +185,10 @@ public static class GameSetup_UI2
 
         for(int i=0;i<__instance.labels.Count; i++)
         {
-            if(__instance.labels[i] == Localization.Get("gamesettings_size_custom")) return;
+            if(__instance.labels[i] == Localization.Get("gamesettings.size.custom")) return;
         }
         int Id = (int)EnumCache<MapSize>.GetType("custom");
-        __instance.AddItem(Localization.Get("gamesettings_size_custom"), Id);
+        __instance.AddItem(Localization.Get("gamesettings.size.custom"), Id);
         
     }
 
@@ -195,14 +196,16 @@ public static class GameSetup_UI2
     [HarmonyPatch(typeof(GameSetupScreen_UI2), nameof(GameSetupScreen_UI2.OnMapSizeChanged))]
     private static void OnMapSizeChanged(int index)
     {
-        if(index == (int)EnumCache<MapSize>.GetType("custom"))
+        if(gameSetupScreen_UI2 == null) return; // we're cooked
+        
+        if(gameSetupScreen_UI2.mapSizeData.ids[index] == (int)EnumCache<MapSize>.GetType("custom"))
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = Localization.Get("gamesettings_mapwidth");
+            popup.Header = Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE });
             popup.Description = string.Empty;
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
-                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{GameManager.PreliminaryGameSettings.MapSize = 16; CustomInput.RemoveInputFromPopup(popup);}, -1, true, null),
+                new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{GameManager.PreliminaryGameSettings.MapSize = 16; CustomInput.RemoveInputFromPopup(popup); gameSetupScreen_UI2.UpdateLayout();}, -1, true, null),
                 new PopupBase.PopupButtonData("buttons.set", PopupBase.PopupButtonData.States.None, (Action)delegate{Resize();}, -1, true, null)
             };
 
@@ -211,13 +214,13 @@ public static class GameSetup_UI2
                 var input = CustomInput.GetInputFromPopup(popup);
                 if(input != null && int.TryParse(input.text, out int width))
                 {
-                    if(width >= (int)Loader.MAX_MAP_SIZE)
+                    if(width > (int)Loader.MAX_MAP_SIZE)
                     {
                         width = (int)Loader.MAX_MAP_SIZE;
                         NotificationManager.Notify(Localization.Get("mapmaker.text.long",
                                             new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE }), Localization.Get("gamemode.mapmaker"));
                     }
-                    if(width <= (int)Loader.MIN_MAP_SIZE)
+                    if(width < (int)Loader.MIN_MAP_SIZE)
                     {
                         NotificationManager.Notify("Too small map!"); //Add more sensible localization
                         width = (int) Loader.MIN_MAP_SIZE;
@@ -230,7 +233,13 @@ public static class GameSetup_UI2
                     GameManager.PreliminaryGameSettings.MapSize = 16;
                 }
                 CustomInput.RemoveInputFromPopup(popup);
+                gameSetupScreen_UI2!.UpdateLayout();
             }
+
+            CustomInput.AddInputToPopup(popup, "16");
+            popup.Show();
+
+            gameSetupScreen_UI2.UpdateLayout();
         }
     }
 
