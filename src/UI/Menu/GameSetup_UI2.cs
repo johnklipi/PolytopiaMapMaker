@@ -96,13 +96,16 @@ public static class GameSetup_UI2
 
         bool inCreativeMode = __instance.listGameMode != null && __instance.listGameMode.ActiveSelf; // Custom maps only in creative mode
 
-
+        if (inCreativeMode && visualMaps.Count <= 0)
+        {
+            if (generationSelectorList != null) generationSelectorList.ActiveSelf = false;
+            if (__instance.listMapType != null) __instance.listMapType.ActiveSelf = true;
+            if (__instance.listMapSize != null) __instance.listMapSize.ActiveSelf = true;
+            return;
+        }
         if (!inCreativeMode || visualMaps.Count <= 0)
         {
-            if (generationSelectorList != null)
-            {
-                generationSelectorList.ActiveSelf = false;
-            }
+            if (generationSelectorList != null) generationSelectorList.ActiveSelf = false;
             if (__instance.listMapType != null) __instance.listMapType.ActiveSelf = false;
             if (__instance.listMapSize != null) __instance.listMapSize.ActiveSelf = false;
 
@@ -247,7 +250,6 @@ public static class GameSetup_UI2
     [HarmonyPatch(typeof(UIHorizontalListData), nameof(UIHorizontalListData.IndexFromId))]
     private static void ByPassVerification(UIHorizontalListData __instance, ref int __result, int id)
     {
-        Console.Write(__instance.header + " " + gameSetupScreen_UI2!.mapSizeData.header);
         if(__instance.header == gameSetupScreen_UI2!.mapSizeData.header && __result == -1)
         {
             int i=0;
