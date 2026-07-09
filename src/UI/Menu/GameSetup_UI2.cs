@@ -117,10 +117,19 @@ public static class GameSetup_UI2
             generationSelectorList.SetData(generationSelectorListData.header, generationSelectorListData.GetLabels(), 0);
             generationSelectorList.SetWidth(screenSize.screenRect.Width);
             generationSelectorList.UpdateLayout();
+            generationSelectorList.SelectedIndex = chosenMapGenType == MapGenerationType.Default ? 0 : 1;
 
             mapSelectorList.SetData(mapSelectorListData.header, mapSelectorListData.GetLabels(), 0);
             mapSelectorList.SetWidth(screenSize.screenRect.Width);
             mapSelectorList.UpdateLayout();
+            // Umm nevermind, to my knowledge there isnt anything from mapData that can easily get the mapname string.
+            // Not the end of the world anyways
+            /*if(Loader.chosenMap != null)
+                for(int j=0; j<visualMaps.Count; j++)
+                {
+                    if(visualMaps[j] == Loader.chosenMap.)
+                        mapSelectorList.SelectedIndex = j;
+                }*/
 
             InsertListAt(__instance, generationSelectorList, __instance.listDifficulty, true);
             InsertListAt(__instance, mapSelectorList, generationSelectorList, false, 25f);
@@ -150,9 +159,6 @@ public static class GameSetup_UI2
         if (gameSetupScreen_UI2 != null)
         {
             gameSetupScreen_UI2.UpdateLayout();
-            //generationSelectorList!.HighlightedIndex = id;
-            //generationSelectorList!.highlightedIndex = id;
-            //generationSelectorList!.UpdateLayout();
         }
         else
         {
@@ -171,7 +177,7 @@ public static class GameSetup_UI2
             GameManager.PreliminaryGameSettings.mapPreset = EnumCache<PolytopiaBackendBase.Game.MapPreset>.GetType("custom");
             GameSetupScreen_UI2 gameSetupScreenUI2 = UIManager.Instance.GetScreen(UIConstants.Screens.GameSetup).Cast<GameSetupScreen_UI2>();
             gameSetupScreenUI2.UpdateLayout();
-            mapSelectorList!.UpdateLayout();
+            mapSelectorList!.SelectedIndex = index;
         }
     }
     #endregion
