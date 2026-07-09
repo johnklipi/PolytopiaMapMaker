@@ -243,5 +243,25 @@ public static class GameSetup_UI2
         }
     }
 
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(UIHorizontalListData), nameof(UIHorizontalListData.IndexFromId))]
+    private static void ByPassVerification(UIHorizontalListData __instance, ref int __result, int id)
+    {
+        Console.Write(__instance.header + " " + gameSetupScreen_UI2!.mapSizeData.header);
+        if(__instance.header == gameSetupScreen_UI2!.mapSizeData.header && __result == -1)
+        {
+            int i=0;
+            foreach(var label in __instance.labels)
+            {
+                if(label == Localization.Get("gamesettings.size.custom"))
+                {
+                    __result = i;
+                    return;
+                }
+                i++;
+            }
+        }
+    }
+
     #endregion
 }
