@@ -6,41 +6,55 @@ namespace PolytopiaMapManager.Popup;
 
 public static class CustomInput
 {
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(BasicPopup), nameof(BasicPopup.Show))]
-	private static void BasicPopup_Show(BasicPopup __instance)
-	{
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(BasicPopupLegacy), nameof(BasicPopupLegacy.Show))] //Doesnt even work anymore
+    private static void BasicPopup_Show(BasicPopupLegacy __instance)
+    {
         var input = GetInputFromPopup(__instance);
-        if(input != null)
+        if (input != null)
         {
             var inputHeight = input.m_RectTransform.GetHeight();
             __instance.rectTransform.SetHeight(__instance.content.GetHeight() + (inputHeight * 1.5f));
         }
-	}
+    }
 
-    public static void RemoveInputFromPopup(BasicPopup popup)
+    public static void RemoveInputFromPopup(BasicPopupLegacy popup)
     {
         var input = GetInputFromPopup(popup);
         if (input == null) return;
         UnityEngine.Object.Destroy(input.gameObject);
         UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = true;
-	    InputManager.EnableInput(InputManager.InputType.Camera | InputManager.InputType.Map | InputManager.InputType.Input);
+        InputManager.EnableInput(InputManager.InputType.Camera | InputManager.InputType.Map | InputManager.InputType.Input);
     }
 
     public static TMP_InputField? GetInputFromPopup(PopupBase popup)
     {
         Transform t = popup.transform.Find("InputBox");
+
+        if (t == null && popup is BasicPopupLegacy legacyPopup && legacyPopup.content != null)
+        {
+            t = legacyPopup.content.transform.Find("InputBox");
+        }
+
         if (t == null) return null;
 
         return t.GetComponent<TMPro.TMP_InputField>();
     }
 
+    /*public static TMP_InputField? GetInputFromPopup(PopupBase popup)
+    {
+        Transform t = popup.transform.Find("InputBox");
+        if (t == null) return null;
 
-    public static void AddInputToPopup(BasicPopup popup, string baseValue = "", Action<string>? onSubmit = null, Action<string>? onValueChanged = null)
+        return t.GetComponent<TMPro.TMP_InputField>();
+    }*/
+
+
+    public static void AddInputToPopup(BasicPopupLegacy popup, string baseValue = "", Action<string>? onSubmit = null, Action<string>? onValueChanged = null)
     {
         UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = false;
-	    InputManager.DisableInput(InputManager.InputType.Camera | InputManager.InputType.Map | InputManager.InputType.Input);
-        Transform parent = popup.transform; //Popup is parent
+        InputManager.DisableInput(InputManager.InputType.Camera | InputManager.InputType.Map | InputManager.InputType.Input);
+        Transform parent = popup.content != null ? popup.content.transform : popup.transform;
 
         GameObject go = new GameObject("InputBox");
         go.transform.SetParent(parent, false);
@@ -51,7 +65,11 @@ public static class CustomInput
         rt.sizeDelta = new Vector2(400, 50);
         rt.anchoredPosition = new Vector2(0, 0);
 
-
+        var layoutElement = go.AddComponent<UnityEngine.UI.LayoutElement>();
+        layoutElement.minWidth = 400;
+        layoutElement.minHeight = 50;
+        layoutElement.preferredWidth = 400;
+        layoutElement.preferredHeight = 50;
 
         // Background
         var bg = go.AddComponent<UnityEngine.UI.Image>();
@@ -109,17 +127,19 @@ public static class CustomInput
         input.interactable = true;
         input.text = baseValue;
         popup.IsUnskippable = true;
-        if(onSubmit != null)
+        if (onSubmit != null)
         {
             input.onSubmit.RemoveAllListeners();
             input.onSubmit.AddListener(onSubmit);
         }
-        if(onValueChanged != null)
+        if (onValueChanged != null)
         {
             input.onValueChanged.RemoveAllListeners();
             input.onValueChanged.AddListener(onValueChanged);
         }
+
         popup.Show();
+
         UINavigationManager.Select(input);
         popup.currentSelectable = input;
     }

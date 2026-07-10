@@ -188,29 +188,29 @@ public static class GameSetup_UI2
     [HarmonyPatch(typeof(UIHorizontalListData), nameof(UIHorizontalListData.AddItem))]
     private static void AddItem_Postfix(UIHorizontalListData __instance, string label, int id)
     {
-        if(__instance == null) return;
-        if(label == null || __instance.labels == null || label != Localization.Get("gamesettings.size.massive")) return;
-        if(__instance.header != Localization.Get("gamesettings.size")) return;
+        if (__instance == null) return;
+        if (label == null || __instance.labels == null || label != Localization.Get("gamesettings.size.massive")) return;
+        if (__instance.header != Localization.Get("gamesettings.size")) return;
 
-        for(int i=0;i<__instance.labels.Count; i++)
+        for (int i = 0; i < __instance.labels.Count; i++)
         {
-            if(__instance.labels[i] == Localization.Get("gamesettings.size.custom")) return;
+            if (__instance.labels[i] == Localization.Get("gamesettings.size.custom")) return;
         }
         int Id = (int)EnumCache<MapSize>.GetType("custom");
         __instance.AddItem(Localization.Get("gamesettings.size.custom"), Id);
-        
+
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameSetupScreen_UI2), nameof(GameSetupScreen_UI2.OnMapSizeChanged))]
     private static void OnMapSizeChanged(int index)
     {
-        if(gameSetupScreen_UI2 == null) return; // we're cooked
-        
-        if(gameSetupScreen_UI2.mapSizeData.ids[index] == (int)EnumCache<MapSize>.GetType("custom"))
+        if (gameSetupScreen_UI2 == null) return; // we're cooked
+
+        if (gameSetupScreen_UI2.mapSizeData.ids[index] == (int)EnumCache<MapSize>.GetType("custom"))
         {
-            BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE });
+            BasicPopupLegacy popup = GameSetup_UI2.GetBasicPopupLegacy();
+            popup.Header = Localization.Get("gamesettings.mapwidth", new Il2CppSystem.Object[] { Loader.MAX_MAP_SIZE });
             popup.Description = string.Empty;
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
@@ -221,18 +221,18 @@ public static class GameSetup_UI2
             void Resize()
             {
                 var input = CustomInput.GetInputFromPopup(popup);
-                if(input != null && int.TryParse(input.text, out int width))
+                if (input != null && int.TryParse(input.text, out int width))
                 {
-                    if(width > (int)Loader.MAX_MAP_SIZE)
+                    if (width > (int)Loader.MAX_MAP_SIZE)
                     {
                         width = (int)Loader.MAX_MAP_SIZE;
                         NotificationManager.Notify(Localization.Get("mapmaker.text.long",
-                                            new Il2CppSystem.Object[]{ Loader.MAX_MAP_SIZE }), Localization.Get("gamemode.mapmaker"));
+                                            new Il2CppSystem.Object[] { Loader.MAX_MAP_SIZE }), Localization.Get("gamemode.mapmaker"));
                     }
-                    if(width < (int)Loader.MIN_MAP_SIZE)
+                    if (width < (int)Loader.MIN_MAP_SIZE)
                     {
                         NotificationManager.Notify("Too small map!"); //Add more sensible localization
-                        width = (int) Loader.MIN_MAP_SIZE;
+                        width = (int)Loader.MIN_MAP_SIZE;
                     }
                     GameManager.PreliminaryGameSettings.MapSize = width;
                 }
@@ -256,12 +256,12 @@ public static class GameSetup_UI2
     [HarmonyPatch(typeof(UIHorizontalListData), nameof(UIHorizontalListData.IndexFromId))]
     private static void ByPassVerification(UIHorizontalListData __instance, ref int __result, int id)
     {
-        if(__instance.header == gameSetupScreen_UI2!.mapSizeData.header && __result == -1)
+        if (__instance.header == gameSetupScreen_UI2!.mapSizeData.header && __result == -1)
         {
-            int i=0;
-            foreach(var label in __instance.labels)
+            int i = 0;
+            foreach (var label in __instance.labels)
             {
-                if(label == Localization.Get("gamesettings.size.custom"))
+                if (label == Localization.Get("gamesettings.size.custom"))
                 {
                     __result = i;
                     return;
@@ -269,6 +269,23 @@ public static class GameSetup_UI2
                 i++;
             }
         }
+    }
+
+    #endregion
+
+    #region LegacyPopup
+    private const int BASIC_POPUP_LEGACY_ID = 29;
+    internal static BasicPopupLegacy GetBasicPopupLegacy()
+    {
+        BasicPopupLegacy original = PopupManager.instance.popupPrefabs[BASIC_POPUP_LEGACY_ID].Cast<BasicPopupLegacy>();
+        BasicPopupLegacy basicPopupLegacy = UnityEngine.Object.Instantiate(original, PopupManager.instance.transform);
+        basicPopupLegacy.buttonContainer = GameObject.Instantiate(whatsNewPopup.buttonContainer, basicPopupLegacy.transform);
+        basicPopupLegacy.popupId = "basicPopupLegacy";
+        basicPopupLegacy.popupManager = PopupManager.instance;
+        basicPopupLegacy.Init();
+        basicPopupLegacy.identifier = null;
+        basicPopupLegacy.rectTransform.SetAsLastSibling();
+        return basicPopupLegacy;
     }
 
     #endregion

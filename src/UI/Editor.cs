@@ -8,6 +8,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using PolytopiaMapManager.UI.Menu;
 
 namespace PolytopiaMapManager.UI;
 
@@ -140,7 +141,7 @@ public static class Editor
         mapSizeButton.OnClicked = (UIButtonBase.ButtonAction)ShowMapPopup;
         void ShowMapPopup(int id, BaseEventData eventData)
         {
-            BasicPopup popup = PopupManager.GetBasicPopup();
+            var popup = GameSetup_UI2.GetBasicPopupLegacy();
             popup.Header = Localization.Get("mapmaker.map.resize");
             popup.Description = string.Empty;
             popup.buttonData = new PopupBase.PopupButtonData[]
@@ -239,7 +240,7 @@ public static class Editor
             {
                 if(!Main.MapSaved && Main.MapName == Localization.Get("mapmaker.map.untitled"))
                 {
-                    BasicPopup popup = PopupManager.GetBasicPopup();
+                    BasicPopupLegacy popup = GameSetup_UI2.GetBasicPopupLegacy();
                     popup.Header = Localization.Get("mapmaker.map.rename");
                     popup.Description = Localization.Get("mapmaker.map.rename.onsave");
                     popup.buttonData = new PopupBase.PopupButtonData[]
@@ -272,7 +273,7 @@ public static class Editor
             }
             if(Input.GetKeyDown(KeyCode.W))
             {
-                BasicPopup popup = PopupManager.GetBasicPopup();
+                BasicPopupLegacy popup = GameSetup_UI2.GetBasicPopupLegacy();
                 popup.Header = Localization.Get("mapmaker.map.rename");
                 popup.Description = Localization.Get("mapmaker.map.rename.onclick");
 
@@ -332,7 +333,7 @@ public static class Editor
         mapNameContainer = text.transform;
     }
 
-    public static void MapResizeValueChanged(string value, BasicPopup popup)
+    public static void MapResizeValueChanged(string value, BasicPopupLegacy popup)
     {
         if(!string.IsNullOrEmpty(value) && value.Length > 0)
         {
@@ -379,7 +380,7 @@ public static class Editor
         uiroundButton.OnClicked += (UIButtonBase.ButtonAction)setcapitalmethod;
         void setcapitalmethod(int id, BaseEventData baseEventData)
         {
-            BasicPopup popup = PopupManager.GetBasicPopup();
+            BasicPopupLegacy popup = GameSetup_UI2.GetBasicPopupLegacy();
             popup.Header = Localization.Get("mapmaker.capital.header");
             popup.Description = Localization.Get("mapmaker.capital.desc", new Il2CppSystem.Object[]{1, 254, 0});
             popup.buttonData = new PopupBase.PopupButtonData[]
