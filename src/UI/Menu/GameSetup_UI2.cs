@@ -277,6 +277,7 @@ public static class GameSetup_UI2
     private const int BASIC_POPUP_LEGACY_ID = 29;
     internal static BasicPopupLegacy GetBasicPopupLegacy()
     {
+        WhatsNewPopup whatsNewPopup = PopupManager.GetWhatsNewPopup();
         BasicPopupLegacy original = PopupManager.instance.popupPrefabs[BASIC_POPUP_LEGACY_ID].Cast<BasicPopupLegacy>();
         BasicPopupLegacy basicPopupLegacy = UnityEngine.Object.Instantiate(original, PopupManager.instance.transform);
         basicPopupLegacy.buttonContainer = GameObject.Instantiate(whatsNewPopup.buttonContainer, basicPopupLegacy.transform);
