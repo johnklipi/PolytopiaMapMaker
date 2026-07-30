@@ -1,6 +1,6 @@
 {
 	"id": "mapmaker",
-	"version": "0.0.73",
+	"version": "0.0.87",
 	"authors": ["JohnKlipi, Fapingvin, Exploit, MRB, Bananique"],
 	"name": "Map Maker",
 	"description": "In-game Map Maker and Loader for The Battle of Polytopia."
