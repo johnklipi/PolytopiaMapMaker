@@ -69,16 +69,10 @@ internal class PickerBase
         return sprite;
     }
 
-    public void SetIcon(UIRoundButton button, Sprite? icon, float iconSizeMultiplier = 0.8f)
+    public static void SetIcon(UIRoundButton button, Sprite? icon, float iconSizeMultiplier = 0.7f)
     {
-        button.faceIconSizeMultiplier = iconSizeMultiplier;
-        button.icon.sprite = icon;
-        button.icon.useSpriteMesh = true;
-        button.icon.SetNativeSize();
-        Vector2 sizeDelta = button.icon.rectTransform.sizeDelta;
-        button.icon.rectTransform.sizeDelta = sizeDelta * button.faceIconSizeMultiplier;
-        button.icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        button.icon.gameObject.SetActive(true);
+        Vector2 size = button.rectTransform.sizeDelta;
+        IconFitter.Fit(button.icon, icon, Mathf.Min(size.x, size.y) * iconSizeMultiplier);
     }
 
     internal delegate void UtilshowAction(ref float num,

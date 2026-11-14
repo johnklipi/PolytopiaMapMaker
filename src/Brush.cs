@@ -10,23 +10,73 @@ namespace PolytopiaMapManager;
 public static class Brush
 {
     private static float nextAllowedTimeForPopup = 0f;
+    internal static bool PaintMode = false;
+
+    private static bool IsTouchPainting()
+    {
+        return Main.isActive && PaintMode && InputManager.GetTouchCount() == 1;
+    }
+
+    private static bool IsPainting()
+    {
+        return Input.GetKey(KeyCode.Mouse1) || (IsTouchPainting() && InputManager.HasActiveTouch());
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(Tile), nameof(Tile.OnHoverStart))]
     private static void Tile_OnHoverStart(Tile __instance)
     {
-        if(!Main.isActive || !Input.GetKey(KeyCode.Mouse1) || !GameManager.Instance.isLevelLoaded)
+        if(!Main.isActive || !GameManager.Instance.isLevelLoaded || !IsPainting())
             return;
 
         GameState gameState = GameManager.GameState;
+        TileData tileData = __instance.data;
+        string before = GetTileSignature(tileData);
 
-        HandleTerrain(__instance.data, (Polytopia.Data.TerrainData.Type)Editor.terrainPicker.chosenValue);
-        HandleResource(gameState, __instance.data, (ResourceData.Type)Editor.resourcePicker.chosenValue);
-        HandleTileEffect(__instance.data, (TileData.EffectType)Editor.tileEffectPicker.chosenValue);
-        HandleImprovement(gameState, __instance.data, (ImprovementData.Type)Editor.improvementPicker.chosenValue);
-        HandleBiome(__instance.data, (TribeType)Editor.biomePicker.chosenValue, Editor.biomePicker.chosenSkinType);
+        HandleTerrain(tileData, (Polytopia.Data.TerrainData.Type)Editor.terrainPicker.chosenValue);
+        HandleResource(gameState, tileData, (ResourceData.Type)Editor.resourcePicker.chosenValue);
+        HandleTileEffect(tileData, (TileData.EffectType)Editor.tileEffectPicker.chosenValue);
+        HandleImprovement(gameState, tileData, (ImprovementData.Type)Editor.improvementPicker.chosenValue);
+        HandleBiome(tileData, (TribeType)Editor.biomePicker.chosenValue, Editor.biomePicker.chosenSkinType);
 
+        if(GetTileSignature(tileData) == before)
+            return;
+
+        Main.UnsavedChanges = true;
         __instance.Render();
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(CameraController), nameof(CameraController.UpdateInput))]
+    private static bool CameraController_UpdateInput(CameraController __instance)
+    {
+        if(!IsTouchPainting())
+            return true;
+
+        __instance.isDragging = false;
+        __instance.touchCount = 1;
+        __instance.NullVelocity();
+        return false;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(ClientInteraction), nameof(ClientInteraction.OnRelease))]
+    private static bool ClientInteraction_OnRelease()
+    {
+        return !(Main.isActive && PaintMode);
+    }
+
+    private static string GetTileSignature(TileData tileData)
+    {
+        System.Text.StringBuilder sb = new();
+        sb.Append((int)tileData.terrain).Append('|')
+            .Append(tileData.resource == null ? -1 : (int)tileData.resource.type).Append('|')
+            .Append(tileData.improvement == null ? -1 : (int)tileData.improvement.type).Append('|')
+            .Append((int)tileData.climate).Append('|')
+            .Append((int)tileData.Skin);
+        foreach (TileData.EffectType effect in tileData.effects)
+            sb.Append('|').Append((int)effect);
+        return sb.ToString();
     }
 
     internal static void HandleTerrain(TileData tileData, Polytopia.Data.TerrainData.Type terrain)

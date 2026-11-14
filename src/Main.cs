@@ -11,6 +11,7 @@ namespace PolytopiaMapManager;
 public static class Main
 {
     private static string mapName = "";
+    private static bool unsavedChanges = false;
     public static bool MapSaved = false;
     public static string MapName
     {
@@ -19,16 +20,34 @@ public static class Main
             if(!string.IsNullOrEmpty(value))
             {
                 mapName = value;
-                if(UI.Editor.mapNameContainer != null)
-                {
-                    UI.Editor.mapNameContainer.GetComponent<TMPLocalizer>().Text = value;
-                }
+                RefreshMapNameLabel();
             }
         }
         get
         {
             return mapName;
         }
+    }
+    public static bool UnsavedChanges
+    {
+        set
+        {
+            if(unsavedChanges == value)
+                return;
+            unsavedChanges = value;
+            RefreshMapNameLabel();
+        }
+        get
+        {
+            return unsavedChanges;
+        }
+    }
+    public static string DisplayMapName => unsavedChanges ? mapName + "*" : mapName;
+
+    internal static void RefreshMapNameLabel()
+    {
+        if(UI.Editor.mapNameContainer != null)
+            UI.Editor.mapNameContainer.GetComponent<TMPLocalizer>().Text = DisplayMapName;
     }
     internal static bool isActive = false;
     internal static ManualLogSource? modLogger;
@@ -60,6 +79,8 @@ public static class Main
         isActive = true;
         MapName = Localization.Get(Loader.DEFAULT_MAP_NAME_KEY);
         MapSaved = false;
+        UnsavedChanges = false;
+        Brush.PaintMode = false;
         GameSettings gameSettings = new GameSettings();
         gameSettings.GameName = "Map Maker";
         gameSettings.GameType = EnumCache<GameType>.GetType("mapmaker");
