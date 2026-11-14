@@ -23,6 +23,26 @@
     {
         "English": "Available Maps"
     },
+    "gamesettings_generationtype_default":
+    {
+        "English": "Default",
+        "Russian": "Обычная"
+    },
+    "gamesettings_generationtype_custom":
+    {
+        "English": "Custom",
+        "Russian": "Своя карта"
+    },
+    "gamesettings_mapwidth_range":
+    {
+        "English": "Map Width ({0}-{1})",
+        "Russian": "Ширина карты ({0}-{1})"
+    },
+    "gamesettings_custommap_info":
+    {
+        "English": "{0}x{0} map, {1} tiles, up to {2} players.",
+        "Russian": "Карта {0}x{0}, {1} клеток, до {2} игроков."
+    },
     "gamesettings_nomaps":
     {
         "English": "No maps has been found!"

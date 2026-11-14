@@ -134,6 +134,12 @@ public static class Loader
         if(chosenMap == null)
             return true;
 
+        if(!UI.Menu.GameSetup_UI2.CustomMapsSupported(state.Settings))
+        {
+            chosenMap = null;
+            return true;
+        }
+
         state.Seed = CreateSeed(chosenMap);
 
         LoadMapInState(ref state, chosenMap);

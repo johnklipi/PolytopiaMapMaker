@@ -31,6 +31,7 @@ public static class Start
         mapMakerButton.bg.color = Color.white;
         mapMakerButton.Text = Localization.Get("gamemode.mapmaker");
 		float num = 50f;
-		mapMakerButton.SetPosition(screenSize.safeRect.Left + (num * 2.5f), screenSize.safeRect.Top - num);
+		float labelOffset = (mapMakerButton.rectTransform.rect.height - mapMakerButton.bg.rectTransform.rect.height) / 2f;
+		mapMakerButton.SetPosition(screenSize.safeRect.Left + (num * 2.5f), screenSize.safeRect.Top - num - labelOffset);
     }
 }

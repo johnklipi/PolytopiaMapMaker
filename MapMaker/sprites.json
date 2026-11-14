@@ -1,14 +1,14 @@
 {
-    "none__": {
+    "none": {
         "pixelsPerUnit": 264
     },
-    "city__": {
+    "city": {
         "pixelsPerUnit": 1056
     },
-    "remove_icon__": {
+    "remove_icon": {
         "pixelsPerUnit": 1056
     },
-    "map_icon__": {
+    "map_icon": {
         "pixelsPerUnit": 4224
     }
 }

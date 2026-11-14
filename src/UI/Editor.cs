@@ -411,7 +411,7 @@ public static class Editor
     public static void ChangeCapitalForTile(byte ID, WorldCoordinates coords)
     {
         Capital? capitalByCoords = Loader.GetCapital(coords, Main.currCapitals);
-        Capital? capitalById = Loader.GetCapital(coords, Main.currCapitals);
+        Capital? capitalById = Loader.GetCapital(ID, Main.currCapitals);
         if (ID == 0)
         { 
             if (capitalByCoords != null)
