@@ -185,6 +185,14 @@
         "English": "Nothing to revert.",
         "Russian": "Нечего отменять."
     },
+    "mapmaker_unsaved":{
+        "English": "Unsaved changes",
+        "Russian": "Несохранённые изменения"
+    },
+    "mapmaker_unsaved_desc":{
+        "English": "Your map has unsaved changes. If you leave now, they will be lost.",
+        "Russian": "На карте есть несохранённые изменения. Если выйти сейчас, они будут потеряны."
+    },
     "mapmaker_map_rename_onsave":{
         "English": "Before saving, please name your map!"
     },

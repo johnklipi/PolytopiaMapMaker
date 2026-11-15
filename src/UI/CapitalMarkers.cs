@@ -32,8 +32,11 @@ public static class CapitalMarkers
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
-    private static void GameManager_ReturnToMenu()
+    private static void GameManager_ReturnToMenu(bool __runOriginal)
     {
+        if(!__runOriginal)
+            return;
+
         Clear();
     }
 

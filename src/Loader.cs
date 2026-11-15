@@ -208,6 +208,8 @@ public static class Loader
             inCustomGen = false;
             return;
         }
+        List<WorldCoordinates> placed = new List<WorldCoordinates>();
+        List<PlayerState> randomPlayers = new List<PlayerState>();
         foreach (PlayerState playerState in gameState.PlayerStates)
         {
             if (playerState == null || playerState.Id == 0 || playerState.Id == 255) continue;
@@ -215,16 +217,54 @@ public static class Loader
             if (capital != null)
             {
                 SetTileAsCapital(mapGenerator, playerState, gameState, capital.coordinates);
+                placed.Add(capital.coordinates);
             }
             else
             {
-                System.Random rng = new System.Random(gameState.Seed);
-                int num = rng.Next(0, validTiles.Count);
-                SetTileAsCapital(mapGenerator, playerState, gameState, validTiles[num].coordinates);
-                validTiles.Remove(validTiles[num]);
+                randomPlayers.Add(playerState);
             }
         }
+        System.Random rng = new System.Random(gameState.Seed);
+        foreach (PlayerState playerState in randomPlayers)
+        {
+            int num = PickSpreadTile(validTiles, placed, rng);
+            WorldCoordinates coordinates = validTiles[num].coordinates;
+            SetTileAsCapital(mapGenerator, playerState, gameState, coordinates);
+            placed.Add(coordinates);
+            validTiles.RemoveAt(num);
+        }
         inCustomGen = false;
+    }
+
+    private const float CAPITAL_SPREAD_TOLERANCE = 0.8f;
+
+    private static int PickSpreadTile(List<TileData> tiles, List<WorldCoordinates> placed, System.Random rng)
+    {
+        if (placed.Count == 0)
+            return rng.Next(0, tiles.Count);
+
+        int[] distances = new int[tiles.Count];
+        int best = 0;
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            int nearest = int.MaxValue;
+            foreach (WorldCoordinates other in placed)
+            {
+                WorldCoordinates coords = tiles[i].coordinates;
+                nearest = Math.Min(nearest, Math.Max(Math.Abs(coords.x - other.x), Math.Abs(coords.y - other.y)));
+            }
+            distances[i] = nearest;
+            best = Math.Max(best, nearest);
+        }
+
+        int threshold = (int)Math.Ceiling(best * CAPITAL_SPREAD_TOLERANCE);
+        List<int> candidates = new List<int>();
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            if (distances[i] >= threshold)
+                candidates.Add(i);
+        }
+        return candidates[rng.Next(0, candidates.Count)];
     }
 
     public static void SetTileAsCapital(MapGenerator mapGenerator, PlayerState playerState, GameState gameState, WorldCoordinates coordinates)

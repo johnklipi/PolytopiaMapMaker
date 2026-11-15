@@ -21,8 +21,12 @@ public static class GameSetup_UI2
     private static PolytopiaInputTextField_UI2? customWidthInput = null;
     private const int DEFAULT_CUSTOM_WIDTH = 40;
     private static int lastCustomWidth = DEFAULT_CUSTOM_WIDTH;
+    private const int MAX_OPPONENTS = 99;
+    private static int desiredOpponentCount = -1;
 
     private static int CustomSizeId => (int)EnumCache<MapSize>.GetType("custom");
+    private static MapPreset CustomPreset => EnumCache<MapPreset>.GetType("custom");
+    private static MapPreset lastPreset = MapPreset.Continents;
 
     private static bool IsCustomWidth(int width)
     {
@@ -56,6 +60,17 @@ public static class GameSetup_UI2
     }
 
     internal static int GetMaxPlayers(Data.MapInfo map)
+    {
+        return Math.Min(GetCityCount(map), MAX_OPPONENTS - GetMissingTribeCount() + 1);
+    }
+
+    private static int GetMissingTribeCount()
+    {
+        int unlocked = GameManager.GetPurchaseManager().GetUnlockedTribeCount();
+        return Math.Max(GameManager.GetMaxOpponents() + 1 - unlocked, 0);
+    }
+
+    private static int GetCityCount(Data.MapInfo map)
     {
         HashSet<(int, int)> cityTiles = new();
         for (int i = 0; i < map.map.Count; i++)
@@ -122,12 +137,18 @@ public static class GameSetup_UI2
     private static void GameSetupScreen_UI2_RunLayout_Prefix()
     {
         visualMaps = IO.GetAllMaps();
+        desiredOpponentCount = -1;
         if (chosenMapIndex >= visualMaps.Count)
             chosenMapIndex = 0;
 
         GameSettings settings = GameManager.PreliminaryGameSettings;
         if (settings.MapSize > Loader.MAX_MAP_SIZE)
             settings.MapSize = lastCustomWidth;
+
+        if (settings.mapPreset == CustomPreset)
+            settings.mapPreset = lastPreset;
+        else
+            lastPreset = settings.mapPreset;
 
         if (!UsingCustomMap(settings))
         {
@@ -152,23 +173,70 @@ public static class GameSetup_UI2
             int maxOpponents = Math.Max(GetMaxPlayers(Loader.chosenMap) - 1, 0);
             if (settings.OpponentCount > maxOpponents)
                 settings.OpponentCount = maxOpponents;
+            desiredOpponentCount = settings.OpponentCount;
         }
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(GameSetupScreenView), nameof(GameSetupScreenView.SetShowOpponents))]
-    private static void GameSetupScreenView_SetShowOpponents(GameSetupScreenView __instance, Il2CppSystem.Collections.Generic.List<string> labels)
+    [HarmonyPatch(typeof(GameSetupScreen_UI2), nameof(GameSetupScreen_UI2.RunLayout))]
+    private static void GameSetupScreen_UI2_RunLayout_Postfix()
     {
         GameSettings settings = GameManager.PreliminaryGameSettings;
-        if (Loader.chosenMap == null || !UsingCustomMap(settings) || settings.GameType != GameType.SinglePlayer)
+        if (Loader.chosenMap != null && UsingCustomMap(settings))
+            settings.mapPreset = CustomPreset;
+    }
+
+    private static bool ExtendsOpponentList(GameSettings settings)
+    {
+        return Loader.chosenMap != null && gameSetupScreen_UI2 != null && UsingCustomMap(settings) && settings.GameType == GameType.SinglePlayer;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GameSetupScreenView), nameof(GameSetupScreenView.SetShowOpponents))]
+    private static void GameSetupScreenView_SetShowOpponents_Prefix(Il2CppSystem.Collections.Generic.List<string> labels, Il2CppSystem.Collections.Generic.List<bool> enabled)
+    {
+        GameSettings settings = GameManager.PreliminaryGameSettings;
+        if (!ExtendsOpponentList(settings) || enabled == null)
             return;
 
-        int maxOpponents = GetMaxPlayers(Loader.chosenMap) - 1;
-        for (int i = 0; i < labels.Count; i++)
-        {
-            if (int.TryParse(labels[i], out int count) && count > maxOpponents)
-                __instance.listOpponentCount.SetItemEnabled(i, false);
-        }
+        int maxOpponents = Math.Max(GetMaxPlayers(Loader.chosenMap!) - 1, 0);
+        UIHorizontalListData data = gameSetupScreen_UI2!.opponentsData;
+        Il2CppSystem.Collections.Generic.List<int> ids = data.GetIds();
+        int last = ids.Count > 0 ? ids[ids.Count - 1] : 0;
+        for (int count = last + 1; count <= maxOpponents; count++)
+            data.AddItem(count.ToString(), count, true);
+
+        Il2CppSystem.Collections.Generic.List<string> allLabels = data.GetLabels();
+        for (int i = labels.Count; i < allLabels.Count; i++)
+            labels.Add(allLabels[i]);
+        while (enabled.Count < ids.Count)
+            enabled.Add(true);
+        for (int i = 0; i < ids.Count; i++)
+            enabled[i] = ids[i] <= maxOpponents;
+
+        if (desiredOpponentCount >= 0 && data.IndexFromId(desiredOpponentCount) >= 0)
+            settings.OpponentCount = desiredOpponentCount;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(PlayerPickerScreen), "MaxPlayers", MethodType.Getter)]
+    private static void PlayerPickerScreen_MaxPlayers(ref int __result)
+    {
+        if (Loader.chosenMap != null && UsingCustomMap(GameManager.PreliminaryGameSettings))
+            __result = GetMaxPlayers(Loader.chosenMap);
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameSetupScreenView), nameof(GameSetupScreenView.SetShowOpponents))]
+    private static void GameSetupScreenView_SetShowOpponents_Postfix(GameSetupScreenView __instance)
+    {
+        GameSettings settings = GameManager.PreliminaryGameSettings;
+        if (!ExtendsOpponentList(settings))
+            return;
+
+        int index = gameSetupScreen_UI2!.opponentsData.IndexFromId(settings.OpponentCount);
+        if (index >= 0)
+            __instance.listOpponentCount.SelectedIndex = index;
     }
 
     [HarmonyPrefix]

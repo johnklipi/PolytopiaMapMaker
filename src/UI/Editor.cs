@@ -26,6 +26,44 @@ public static class Editor
     internal static RectTransform? leftRow;
     internal static RectTransform? rightRow;
     internal static SpriteAtlasManager spriteAtlasManager = GameManager.GetSpriteAtlasManager();
+    private static bool leaveConfirmed = false;
+
+    internal static void ConfirmDiscard(Action proceed)
+    {
+        if(!Main.HasUnsavedEdits)
+        {
+            proceed();
+            return;
+        }
+
+        BasicPopup popup = PopupManager.GetBasicPopup();
+        popup.Header = Localization.Get("mapmaker.unsaved");
+        popup.Description = Localization.Get("mapmaker.unsaved.desc");
+        popup.buttonData = new PopupBase.PopupButtonData[]
+        {
+            new PopupBase.PopupButtonData("buttons.stay", PopupBase.PopupButtonData.States.None, (Action)delegate{}, -1, true, null),
+            new PopupBase.PopupButtonData("buttons.leave", PopupBase.PopupButtonData.States.None, proceed, -1, true, null)
+        };
+        popup.Show();
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
+    private static bool GameManager_ReturnToMenu_Prefix()
+    {
+        if(leaveConfirmed || !Main.HasUnsavedEdits)
+        {
+            leaveConfirmed = false;
+            return true;
+        }
+
+        ConfirmDiscard(() =>
+        {
+            leaveConfirmed = true;
+            GameManager.ReturnToMenu();
+        });
+        return false;
+    }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.Init))]

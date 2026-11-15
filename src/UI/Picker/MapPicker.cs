@@ -26,7 +26,7 @@ internal class MapPicker : PickerBase
         {
             Sprite icon = MapIconCache.Get(maps[index]) ?? GetIcon();
             CreateChoiceButton(selectViewmodePopup, maps[index], index, ref num,
-                id => LoadMap(maps[id], gameState),
+                id => Editor.ConfirmDiscard(() => LoadMap(maps[id], gameState)),
                 ColorUtil.SetAlphaOnColor(Color.black, 0.6f),
                 (button, id) => SetIcon(button, icon, PREVIEW_ICON_SIZE));
         }

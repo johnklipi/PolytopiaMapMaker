@@ -28,10 +28,13 @@ public static class Main
             return mapName;
         }
     }
+    private static bool edited = false;
+    internal static bool HasUnsavedEdits => isActive && unsavedChanges && edited;
     public static bool UnsavedChanges
     {
         set
         {
+            edited = value;
             if(unsavedChanges == value)
                 return;
             unsavedChanges = value;
@@ -84,6 +87,7 @@ public static class Main
         MapName = Localization.Get(Loader.DEFAULT_MAP_NAME_KEY);
         MapSaved = false;
         UnsavedChanges = true;
+        edited = false;
         Brush.PaintMode = false;
         GameSettings gameSettings = new GameSettings();
         gameSettings.GameName = "Map Maker";
@@ -238,8 +242,11 @@ public static class Main
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
-    private static void GameManager_ReturnToMenu()
+    private static void GameManager_ReturnToMenu(bool __runOriginal)
     {
+        if(!__runOriginal)
+            return;
+
         UI.Editor.pickers.Clear();
 
         if(!isActive)
