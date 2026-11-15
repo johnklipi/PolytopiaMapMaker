@@ -171,9 +171,13 @@ public static class Editor
                 if(input != null && int.TryParse(input.text, out int size))
                 {
                     GameState gameState = GameManager.GameState;
-                    if(size != gameState.Map.Width)
-                        Main.UnsavedChanges = true;
+                    bool changed = size != gameState.Map.Width;
                     Main.ResizeMap(ref gameState, size);
+                    if(changed)
+                    {
+                        Main.UnsavedChanges = true;
+                        History.Record(new ResizeCommand(size));
+                    }
                     GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                     NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");
                 }
@@ -210,15 +214,45 @@ public static class Editor
         void Generate(bool replaceExisting)
         {
             GameState gameState = GameManager.GameState;
+            TileData[] tiles = gameState.Map.Tiles;
+            int[] before = tiles.Select(GetResourceId).ToArray();
             int placed = ResourceGenerator.Generate(gameState, replaceExisting);
-            if(placed > 0 || replaceExisting)
+            List<WorldCoordinates> changed = new();
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                if(GetResourceId(tiles[i]) != before[i])
+                    changed.Add(tiles[i].coordinates);
+            }
+            if(changed.Count > 0)
+            {
                 Main.UnsavedChanges = true;
+                History.RecordTiles(gameState, changed);
+            }
             GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
             NotificationManager.Notify(
                 Localization.Get("mapmaker.resourcegen.done", new Il2CppSystem.Object[] { placed }),
                 Localization.Get("mapmaker.resourcegen")
             );
         }
+
+        static int GetResourceId(TileData tile)
+        {
+            return tile.resource == null ? -1 : (int)tile.resource.type;
+        }
+    }
+
+    private static void CreateRevertButton(UIRoundButton referenceButton)
+    {
+        CreateToolButton(referenceButton, leftRow!, PolyMod.Registry.GetSprite("revert_icon"), Localization.Get("mapmaker.revert"), Revert);
+    }
+
+    private static void Revert()
+    {
+        Brush.CommitStroke();
+        if(History.RewindOne())
+            Main.UnsavedChanges = true;
+        else
+            NotificationManager.Notify(Localization.Get("mapmaker.revert.empty"), Localization.Get("mapmaker.revert"));
     }
 
     [HarmonyPostfix]
@@ -251,9 +285,11 @@ public static class Editor
         CreateMapResizeButton(referenceButton);
         CreateGenerateResourcesButton(referenceButton);
         // CreatePaintButton(referenceButton);
+        CreateRevertButton(referenceButton);
         LayoutRebuilder.ForceRebuildLayoutImmediate(leftRow);
         LayoutRebuilder.ForceRebuildLayoutImmediate(rightRow);
         PlaceMapName();
+        History.Reset(GameManager.GameState);
     }
 
     [HarmonyPostfix]
@@ -269,6 +305,8 @@ public static class Editor
                 SaveMap();
             if(Input.GetKeyDown(KeyCode.W))
                 ShowRenamePopup();
+            if(Input.GetKeyDown(KeyCode.Z))
+                Revert();
         }
     }
 
@@ -459,6 +497,7 @@ public static class Editor
             {
                 Main.currCapitals.Remove(capitalByCoords);
                 Main.UnsavedChanges = true;
+                History.RecordTiles(GameManager.GameState, new List<WorldCoordinates>());
                 NotificationManager.Notify(Localization.Get("mapmaker.capital.removed"));
             }
         }
@@ -484,6 +523,7 @@ public static class Editor
             newCapital.coordinates = coords;
             Main.currCapitals.Add(newCapital);
             Main.UnsavedChanges = true;
+            History.RecordTiles(GameManager.GameState, new List<WorldCoordinates>());
         }
     }
 

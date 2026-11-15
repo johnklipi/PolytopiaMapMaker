@@ -177,6 +177,14 @@
         "English": "Paint: On",
         "Russian": "Кисть: вкл"
     },
+    "mapmaker_revert":{
+        "English": "Revert",
+        "Russian": "Отменить"
+    },
+    "mapmaker_revert_empty":{
+        "English": "Nothing to revert.",
+        "Russian": "Нечего отменять."
+    },
     "mapmaker_map_rename_onsave":{
         "English": "Before saving, please name your map!"
     },

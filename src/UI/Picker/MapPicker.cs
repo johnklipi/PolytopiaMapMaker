@@ -45,6 +45,7 @@ internal class MapPicker : PickerBase
         Loader.LoadMapInState(ref gameState, Loader.chosenMap);
         Main.currCapitals = Loader.chosenMap.capitals;
         GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
+        History.Reset(gameState);
         base.Update(gameState.GameLogicData);
     }
 }

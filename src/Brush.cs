@@ -42,8 +42,29 @@ public static class Brush
         if(GetTileSignature(tileData) == before)
             return;
 
+        strokeTiles.Add((tileData.coordinates.x, tileData.coordinates.y));
         Main.UnsavedChanges = true;
         __instance.Render();
+    }
+
+    private static readonly HashSet<(int x, int y)> strokeTiles = new();
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+    private static void GameManager_Update()
+    {
+        if(strokeTiles.Count > 0 && !IsPainting())
+            CommitStroke();
+    }
+
+    internal static void CommitStroke()
+    {
+        if(strokeTiles.Count == 0)
+            return;
+
+        if(Main.isActive && GameManager.GameState != null)
+            History.RecordTiles(GameManager.GameState, strokeTiles.Select(tile => new WorldCoordinates(tile.x, tile.y)).ToList());
+        strokeTiles.Clear();
     }
 
     [HarmonyPrefix]

@@ -246,6 +246,7 @@ public static class Main
         isActive = false;
         Loader.chosenMap = null;
         currCapitals.Clear();
+        History.Clear();
         UIManager.Instance.UnblockHints();
     }
 
