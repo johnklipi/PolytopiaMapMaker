@@ -176,7 +176,7 @@ public static class Editor
                     if(changed)
                     {
                         Main.UnsavedChanges = true;
-                        History.Record(new ResizeCommand(size));
+                        History.RecordResize(gameState, size);
                     }
                     GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
                     NotificationManager.Notify($"New size is {size}x{size}", "Map size set!");

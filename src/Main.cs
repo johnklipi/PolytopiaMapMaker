@@ -73,6 +73,8 @@ public static class Main
         PolyMod.Loader.AddPatchDataType("gameType", typeof(GameType));
         PolyMod.Loader.AddPatchDataType("gameMode", typeof(GameMode));
         Harmony.CreateAndPatchAll(typeof(UI.MapIconCache));
+        Commands.Register();
+        Harmony.CreateAndPatchAll(typeof(Commands));
         UI.MapIconCache.StartPreload();
     }
 
