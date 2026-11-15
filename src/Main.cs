@@ -58,6 +58,7 @@ public static class Main
     public static void Load(ManualLogSource logger)
     {
         modLogger = logger;
+        Directory.CreateDirectory(IO.MAPS_PATH);
         Harmony.CreateAndPatchAll(typeof(Main));
         Harmony.CreateAndPatchAll(typeof(Loader));
         Harmony.CreateAndPatchAll(typeof(Brush));
@@ -71,7 +72,8 @@ public static class Main
         PolyMod.Loader.AddPatchDataType("mapSize", typeof(MapSize));
         PolyMod.Loader.AddPatchDataType("gameType", typeof(GameType));
         PolyMod.Loader.AddPatchDataType("gameMode", typeof(GameMode));
-        Directory.CreateDirectory(IO.MAPS_PATH);
+        Harmony.CreateAndPatchAll(typeof(UI.MapIconCache));
+        UI.MapIconCache.StartPreload();
     }
 
     public static void Init()

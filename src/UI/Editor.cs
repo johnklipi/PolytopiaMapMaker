@@ -99,6 +99,8 @@ public static class Editor
 
     private static readonly Vector2 TOOL_BUTTON_SIZE = new Vector2(75f, 75f);
     private const float TOOL_ICON_SIZE = 0.6f;
+    private const float RESOURCE_POPUP_WIDTH_SHARE = 0.6f;
+    private const float RESOURCE_POPUP_MAX_WIDTH = 1000f;
     private static UIRoundButton? paintButton;
 
     private static UIRoundButton CreateToolButton(UIRoundButton referenceButton, Transform parent, Sprite? icon, string label, Action onClick)
@@ -189,20 +191,20 @@ public static class Editor
     {
         string spriteName = SpriteData.ResourceToString(Polytopia.Data.ResourceData.Type.Fruit);
         Sprite icon = spriteAtlasManager.DoSpriteLookup(spriteName, PolytopiaBackendBase.Common.TribeType.Xinxi, PolytopiaBackendBase.Common.SkinType.Default).sprite;
-        CreateToolButton(referenceButton, rightRow!, icon, Localization.Get("mapmaker.resources"), ShowPopup);
+        CreateToolButton(referenceButton, rightRow!, icon, Localization.Get("mapmaker.resourcegen"), ShowPopup);
 
         void ShowPopup()
         {
-            BasicPopup popup = PopupManager.GetBasicPopup();
-            popup.Header = Localization.Get("mapmaker.resources");
-            popup.Description = Localization.Get("mapmaker.resources.desc");
+            BasicPopupLegacy popup = GameSetup_UI2.GetBasicPopupLegacy();
+            popup.Header = Localization.Get("mapmaker.resourcegen");
+            popup.Description = Localization.Get("mapmaker.resourcegen.desc");
             popup.buttonData = new PopupBase.PopupButtonData[]
             {
                 new PopupBase.PopupButtonData("buttons.exit", PopupBase.PopupButtonData.States.None, (Action)delegate{}, -1, true, null),
-                new PopupBase.PopupButtonData("mapmaker.resources.replace", PopupBase.PopupButtonData.States.None, (Action)delegate{ Generate(true); }, -1, true, null),
-                new PopupBase.PopupButtonData("mapmaker.resources.fill", PopupBase.PopupButtonData.States.None, (Action)delegate{ Generate(false); }, -1, true, null)
+                new PopupBase.PopupButtonData("mapmaker.resourcegen.replace", PopupBase.PopupButtonData.States.None, (Action)delegate{ Generate(true); }, -1, true, null),
+                new PopupBase.PopupButtonData("mapmaker.resourcegen.fill", PopupBase.PopupButtonData.States.None, (Action)delegate{ Generate(false); }, -1, true, null)
             };
-            popup.Show();
+            PolyMod.Managers.Visual.ShowSetWidth(popup, RESOURCE_POPUP_WIDTH_SHARE, RESOURCE_POPUP_MAX_WIDTH);
         }
 
         void Generate(bool replaceExisting)
@@ -213,8 +215,8 @@ public static class Editor
                 Main.UnsavedChanges = true;
             GameManager.Client.UpdateGameState(gameState, PolytopiaBackendBase.Game.StateUpdateReason.Unknown);
             NotificationManager.Notify(
-                Localization.Get("mapmaker.resources.done", new Il2CppSystem.Object[] { placed }),
-                Localization.Get("mapmaker.resources")
+                Localization.Get("mapmaker.resourcegen.done", new Il2CppSystem.Object[] { placed }),
+                Localization.Get("mapmaker.resourcegen")
             );
         }
     }
@@ -248,7 +250,7 @@ public static class Editor
         CreateRenameButton(referenceButton);
         CreateMapResizeButton(referenceButton);
         CreateGenerateResourcesButton(referenceButton);
-        CreatePaintButton(referenceButton);
+        // CreatePaintButton(referenceButton);
         LayoutRebuilder.ForceRebuildLayoutImmediate(leftRow);
         LayoutRebuilder.ForceRebuildLayoutImmediate(rightRow);
         PlaceMapName();

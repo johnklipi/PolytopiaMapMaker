@@ -16,7 +16,9 @@ internal class PickerBase
     internal virtual bool UseRightRow => false;
     internal virtual string HeaderKey => "";
     internal virtual Vector2 ChoiceButtonSize => new Vector2(56f, 56f);
+    internal virtual Vector2? ChoiceCellSize => null;
     internal int chosenValue = 0;
+    private static Vector2? defaultCellSize;
 
     internal virtual void Create(UIRoundButton referenceButton, Transform parent)
     {
@@ -90,6 +92,8 @@ internal class PickerBase
             SelectViewmodePopup selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
             selectViewmodePopup.Header = Localization.Get(headerKey, new Il2CppSystem.Object[] { });
             GameState gameState = GameManager.GameState;
+            defaultCellSize ??= selectViewmodePopup.gridLayout.cellSize;
+            selectViewmodePopup.gridLayout.cellSize = ChoiceCellSize ?? defaultCellSize.Value;
 
             selectViewmodePopup.ClearButtons();
             selectViewmodePopup.buttons = new Il2CppSystem.Collections.Generic.List<UIRoundButton>();

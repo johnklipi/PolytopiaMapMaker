@@ -11,5 +11,6 @@ public class MapInfo
     [JsonInclude]
     public List<Capital> capitals = new();
     [JsonInclude]
+    [JsonConverter(typeof(ByteListBase64Json))]
     public List<byte> icon = new();
 }

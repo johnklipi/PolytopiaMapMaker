@@ -33,27 +33,27 @@
         "English": "Custom",
         "Russian": "Своя карта"
     },
-    "mapmaker_resources":
+    "mapmaker_resourcegen":
     {
-        "English": "Resources",
-        "Russian": "Ресурсы"
+        "English": "Generate resources",
+        "Russian": "Сгенерировать ресурсы"
     },
-    "mapmaker_resources_desc":
+    "mapmaker_resourcegen_desc":
     {
         "English": "Randomly place resources that fit each tile's terrain and climate. Tiles next to cities get more.",
         "Russian": "Случайно расставить ресурсы с учётом местности и климата каждой клетки. Рядом с городами их больше."
     },
-    "mapmaker_resources_fill":
+    "mapmaker_resourcegen_fill":
     {
         "English": "FILL EMPTY",
         "Russian": "ЗАПОЛНИТЬ"
     },
-    "mapmaker_resources_replace":
+    "mapmaker_resourcegen_replace":
     {
         "English": "REPLACE ALL",
         "Russian": "ЗАМЕНИТЬ ВСЕ"
     },
-    "mapmaker_resources_done":
+    "mapmaker_resourcegen_done":
     {
         "English": "Placed {0} resources.",
         "Russian": "Размещено ресурсов: {0}."
