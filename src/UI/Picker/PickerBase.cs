@@ -13,7 +13,7 @@ internal class PickerBase
     internal Vector2 buttonSize = new Vector2(75f, 75f);
     internal Color baseColor = ColorUtil.SetAlphaOnColor(Color.white, 0.5f);
     internal float iconSize = 0.6f;
-    internal virtual bool UseVerticalLayout => false;
+    internal virtual bool UseRightRow => false;
     internal virtual string HeaderKey => "";
     internal virtual Vector2 ChoiceButtonSize => new Vector2(56f, 56f);
     internal int chosenValue = 0;

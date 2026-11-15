@@ -23,8 +23,8 @@ public static class Editor
     internal static ImprovementPicker improvementPicker = new();
     internal static List<PickerBase> pickers = new();
     internal static RectTransform? editorUi;
-    internal static RectTransform? horizontalLayout;
-    internal static RectTransform? verticalLayout;
+    internal static RectTransform? leftRow;
+    internal static RectTransform? rightRow;
     internal static SpriteAtlasManager spriteAtlasManager = GameManager.GetSpriteAtlasManager();
 
     [HarmonyPostfix]
@@ -41,95 +41,60 @@ public static class Editor
         __instance.Update();
     }
 
+    private const float ROW_ANCHOR_Y = 0.95f;
+    private const float ROW_MARGIN = 20f;
+    private const float ROW_SPACING = 20f;
+
     internal static void CreateEditorUI(Transform hudScreen)
     {
-        GameObject editorGO = new GameObject(
-            "EditorUI",
-            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
-        );
+        editorUi = CreateRect("EditorUI", hudScreen);
+        editorUi.anchorMin = Vector2.zero;
+        editorUi.anchorMax = Vector2.one;
+        editorUi.offsetMin = Vector2.zero;
+        editorUi.offsetMax = Vector2.zero;
 
-        editorUi = editorGO.GetComponent<RectTransform>();
-        editorGO.transform.SetParent(hudScreen, false);
-
-        editorUi.anchorMin = new Vector2(0f, 0.95f);
-        editorUi.anchorMax = new Vector2(0f, 0.95f);
-        editorUi.pivot     = new Vector2(0f, 0.95f);
-        editorUi.anchoredPosition = new Vector2(20f, 0f);
-        editorUi.sizeDelta = Vector2.zero;
-
-        GameObject horizontalLayoutGO = new GameObject(
-            "HorizontalLayout",
-            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
-        );
-        horizontalLayoutGO.transform.SetParent(editorUi, false);
-        horizontalLayout = horizontalLayoutGO.GetComponent<RectTransform>();
-
-        horizontalLayout.anchorMin = new Vector2(0f, 1f);
-        horizontalLayout.anchorMax = new Vector2(0f, 1f);
-        horizontalLayout.pivot     = new Vector2(0f, 1f);
-        horizontalLayout.anchoredPosition = Vector2.zero;
-        horizontalLayout.sizeDelta = Vector2.zero;
-
-        GameObject verticalLayouttGO = new GameObject(
-            "VerticalLayout",
-            new Il2CppSystem.Type[] {Il2CppType.Of<RectTransform>()}
-        );
-        verticalLayouttGO.transform.SetParent(editorUi, false);
-        verticalLayout = verticalLayouttGO.GetComponent<RectTransform>();
-
-        verticalLayout.anchorMin = new Vector2(0f, 1f);
-        verticalLayout.anchorMax = new Vector2(0f, 1f);
-        verticalLayout.pivot     = new Vector2(0f, 1f);
-        verticalLayout.anchoredPosition = Vector2.zero;
-        verticalLayout.sizeDelta = Vector2.zero;
+        leftRow = CreateRow("LeftRow", new Vector2(0f, ROW_ANCHOR_Y), TextAnchor.MiddleLeft, ROW_MARGIN);
+        rightRow = CreateRow("RightRow", new Vector2(1f, ROW_ANCHOR_Y), TextAnchor.MiddleRight, -ROW_MARGIN);
     }
 
-    internal static HorizontalLayoutGroup EnsureHorizontalLayout(
-        RectTransform parent,
-        float spacing = 20f)
+    private static RectTransform CreateRect(string name, Transform parent)
     {
-        HorizontalLayoutGroup layout =
-            parent.GetComponent<HorizontalLayoutGroup>();
-
-        if (layout == null)
-        {
-            layout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
-        }
-
-        layout.spacing = spacing;
-        layout.childAlignment = TextAnchor.MiddleLeft;
-
-        layout.childControlWidth = false;
-        layout.childControlHeight = false;
-
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = false;
-
-        return layout;
+        GameObject go = new GameObject(name, new Il2CppSystem.Type[] { Il2CppType.Of<RectTransform>() });
+        go.transform.SetParent(parent, false);
+        return go.GetComponent<RectTransform>();
     }
 
-    internal static VerticalLayoutGroup EnsureVerticalLayout(
-        RectTransform parent,
-        float spacing = 20f)
+    private static RectTransform CreateRow(string name, Vector2 anchor, TextAnchor alignment, float offsetX)
     {
-        VerticalLayoutGroup layout =
-            parent.GetComponent<VerticalLayoutGroup>();
+        RectTransform row = CreateRect(name, editorUi!);
+        row.anchorMin = anchor;
+        row.anchorMax = anchor;
+        row.pivot = anchor;
+        row.anchoredPosition = new Vector2(offsetX, 0f);
+        row.sizeDelta = Vector2.zero;
 
-        if (layout == null)
-        {
-            layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
-        }
-
-        layout.spacing = spacing;
-        layout.childAlignment = TextAnchor.UpperLeft;
-
+        HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = ROW_SPACING;
+        layout.childAlignment = alignment;
         layout.childControlWidth = false;
         layout.childControlHeight = false;
-
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
-        layout.padding.top = 75;
-        return layout;
+        row.gameObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        return row;
+    }
+
+    private static void PlaceMapName()
+    {
+        if(mapNameContainer == null || editorUi == null)
+            return;
+
+        RectTransform rect = mapNameContainer.GetComponent<RectTransform>();
+        rect.SetParent(editorUi, false);
+        rect.anchorMin = new Vector2(0.5f, ROW_ANCHOR_Y);
+        rect.anchorMax = new Vector2(0.5f, ROW_ANCHOR_Y);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
     }
 
     private static readonly Vector2 TOOL_BUTTON_SIZE = new Vector2(75f, 75f);
@@ -151,17 +116,17 @@ public static class Editor
 
     private static void CreateSaveButton(UIRoundButton referenceButton)
     {
-        CreateToolButton(referenceButton, verticalLayout!, PolyMod.Registry.GetSprite("save_icon"), Localization.Get("mapmaker.map.save"), SaveMap);
+        CreateToolButton(referenceButton, rightRow!, PolyMod.Registry.GetSprite("save_icon"), Localization.Get("mapmaker.map.save"), SaveMap);
     }
 
     private static void CreateRenameButton(UIRoundButton referenceButton)
     {
-        CreateToolButton(referenceButton, verticalLayout!, PolyMod.Registry.GetSprite("rename_icon"), Localization.Get("mapmaker.map.rename.button"), ShowRenamePopup);
+        CreateToolButton(referenceButton, rightRow!, PolyMod.Registry.GetSprite("rename_icon"), Localization.Get("mapmaker.map.rename.button"), ShowRenamePopup);
     }
 
     private static void CreatePaintButton(UIRoundButton referenceButton)
     {
-        paintButton = CreateToolButton(referenceButton, horizontalLayout!, PolyMod.Registry.GetSprite("paint_icon"), string.Empty, TogglePaintMode);
+        paintButton = CreateToolButton(referenceButton, leftRow!, PolyMod.Registry.GetSprite("paint_icon"), string.Empty, TogglePaintMode);
         UpdatePaintButton();
     }
 
@@ -183,7 +148,7 @@ public static class Editor
 
     private static void CreateMapResizeButton(UIRoundButton referenceButton)
     {
-        CreateToolButton(referenceButton, verticalLayout!, PolyMod.Registry.GetSprite("resize_icon"), Localization.Get("mapmaker.map.resize"), ShowMapPopup);
+        CreateToolButton(referenceButton, rightRow!, PolyMod.Registry.GetSprite("resize_icon"), Localization.Get("mapmaker.map.resize"), ShowMapPopup);
 
         void ShowMapPopup()
         {
@@ -224,7 +189,7 @@ public static class Editor
     {
         string spriteName = SpriteData.ResourceToString(Polytopia.Data.ResourceData.Type.Fruit);
         Sprite icon = spriteAtlasManager.DoSpriteLookup(spriteName, PolytopiaBackendBase.Common.TribeType.Xinxi, PolytopiaBackendBase.Common.SkinType.Default).sprite;
-        CreateToolButton(referenceButton, verticalLayout!, icon, Localization.Get("mapmaker.resources"), ShowPopup);
+        CreateToolButton(referenceButton, rightRow!, icon, Localization.Get("mapmaker.resources"), ShowPopup);
 
         void ShowPopup()
         {
@@ -262,10 +227,8 @@ public static class Editor
             return;
 
         CreateEditorUI(__instance.transform);
-        if(editorUi == null || horizontalLayout == null || verticalLayout == null)
+        if(editorUi == null || leftRow == null || rightRow == null)
             return;
-        EnsureHorizontalLayout(horizontalLayout);
-        EnsureVerticalLayout(verticalLayout);
         pickers.Add(biomePicker);
         pickers.Add(mapPicker);
         pickers.Add(resourcePicker);
@@ -277,14 +240,7 @@ public static class Editor
         GameLogicData gameLogicData = GameManager.GameState.GameLogicData;
         foreach (var picker in pickers)
         {
-            if(picker.UseVerticalLayout)
-            {
-                picker.Create(referenceButton, verticalLayout);
-            }
-            else
-            {
-                picker.Create(referenceButton, horizontalLayout);
-            }
+            picker.Create(referenceButton, picker.UseRightRow ? rightRow : leftRow);
             picker.Update(gameLogicData);
         }
 
@@ -293,8 +249,9 @@ public static class Editor
         CreateMapResizeButton(referenceButton);
         CreateGenerateResourcesButton(referenceButton);
         CreatePaintButton(referenceButton);
-        LayoutRebuilder.ForceRebuildLayoutImmediate(horizontalLayout);
-        LayoutRebuilder.ForceRebuildLayoutImmediate(verticalLayout);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(leftRow);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(rightRow);
+        PlaceMapName();
     }
 
     [HarmonyPostfix]
@@ -393,14 +350,17 @@ public static class Editor
         __instance.scoreContainer.gameObject.SetActive(false);
         __instance.turnsContainer.gameObject.SetActive(false);
 
+        if(mapNameContainer != null)
+        {
+            Main.RefreshMapNameLabel();
+            return;
+        }
+
         TextMeshProUGUI text = GameObject.Instantiate(__instance.currencyContainer.headerLabel, __instance.turnsContainer.transform.parent);
         text.name = "MapName";
 
         RectTransform rect = text.GetComponent<RectTransform>();
         rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
-        rect.anchoredPosition = new Vector2((Screen.width / 2) - (500 / 8), 40);
-        rect.anchorMax = Vector2.zero;
-        rect.anchorMin = Vector2.zero;
 
         text.fontSize = 35;
         text.alignment = TextAlignmentOptions.Center;
@@ -409,6 +369,7 @@ public static class Editor
         text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
         mapNameContainer = text.transform;
+        PlaceMapName();
     }
 
     public static void MapResizeValueChanged(string value, BasicPopupLegacy popup)

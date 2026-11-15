@@ -5,7 +5,7 @@ namespace PolytopiaMapManager.UI.Picker;
 internal class MapPicker : PickerBase
 {
     internal override string HeaderKey => "mapmaker.choose.map";
-    internal override bool UseVerticalLayout => true;
+    internal override bool UseRightRow => true;
     private Dictionary<string, Sprite> cachedMaps = new();
 
     internal override Sprite GetIcon()

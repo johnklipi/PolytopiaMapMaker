@@ -79,7 +79,7 @@ public static class Main
         isActive = true;
         MapName = Localization.Get(Loader.DEFAULT_MAP_NAME_KEY);
         MapSaved = false;
-        UnsavedChanges = false;
+        UnsavedChanges = true;
         Brush.PaintMode = false;
         GameSettings gameSettings = new GameSettings();
         gameSettings.GameName = "Map Maker";
