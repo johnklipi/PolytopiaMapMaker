@@ -138,6 +138,7 @@ public static class Main
     private static CreateSessionResult CreateMapMakerSession(ClientBase client, GameSettings settings, Il2CppSystem.Guid gameId)
     {
         client.Reset();
+        DeleteMapMakerSaves();
         GameManager.Client.gameId = gameId;
 
         modLogger!.LogInfo($"Creating map maker session with key: {gameId.ToString()}");
@@ -261,11 +262,58 @@ public static class Main
 
     [HarmonyPrefix]
     [HarmonyPatch(typeof(ClientBase), nameof(ClientBase.SaveSession))]
-    private static bool ClientBase_SaveSession(ClientBase __instance, string gameId, bool showSaveErrorPopup = false)
+    private static bool ClientBase_SaveSession(ClientBase __instance, string gameId, bool showSaveErrorPopup, bool shouldIgnoreValidation)
     {
-        if (__instance.GameState == null || __instance.GameState.Settings == null)
+        if (!IsMapMakerSession(__instance))
             return true;
-        return __instance.GameState.Settings.BaseGameMode != EnumCache<GameMode>.GetType("mapmaker");
+        if (!shouldIgnoreValidation && !__instance.PrepareAndValidateSaveState())
+            return false;
+
+        byte[] data = DiskSerializationHelpers.ToLZ4CompressedByteArray(__instance, __instance.GameState.Version);
+        if (!DiskSerializationHelpers.ToDisk(data, GetMapMakerSavePath(gameId), out Il2CppSystem.Exception exception))
+            modLogger!.LogWarning($"Failed to save map maker session: {exception?.Message}");
+        return false;
+    }
+
+    internal const string SAVE_DIRECTORY = "MapMaker";
+
+    private static string GetMapMakerSavePath(string gameId)
+    {
+        return Path.Combine(Paths.GetSaveDirectoryPath(SAVE_DIRECTORY), gameId + ".state");
+    }
+
+    private static void DeleteMapMakerSaves()
+    {
+        foreach (string file in Directory.GetFiles(Paths.GetSaveDirectoryPath(SAVE_DIRECTORY), "*.state"))
+        {
+            try
+            {
+                File.Delete(file);
+            }
+            catch (Exception exception)
+            {
+                modLogger!.LogWarning($"Failed to delete old map maker session {file}: {exception.Message}");
+            }
+        }
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(LocalSaveFileUtils), "GetSaveDirectoryPath")]
+    private static bool LocalSaveFileUtils_GetSaveDirectoryPath(ref string __result, GameType gameType)
+    {
+        if (gameType != EnumCache<GameType>.GetType("mapmaker"))
+            return true;
+        __result = Paths.GetSaveDirectoryPath(SAVE_DIRECTORY);
+        return false;
+    }
+
+    private static bool IsMapMakerSession(ClientBase client)
+    {
+        if (isActive && GameManager.Client != null && client.Pointer == GameManager.Client.Pointer)
+            return true;
+        GameSettings? settings = client.GameState?.Settings;
+        return settings != null
+            && (settings.BaseGameMode == EnumCache<GameMode>.GetType("mapmaker") || settings.GameType == EnumCache<GameType>.GetType("mapmaker"));
     }
 
     [HarmonyPrefix]
@@ -292,14 +340,14 @@ public static class Main
     [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteAllSaveFilesOfType))]
 	private static bool LocalSaveFileUtils_DeleteAllSaveFilesOfType(GameType gameType, bool localOnly)
 	{
-		return gameType != EnumCache<GameType>.GetType("mapmaker");
+		return !isActive && gameType != EnumCache<GameType>.GetType("mapmaker");
 	}
 
     [HarmonyPrefix]
     [HarmonyPatch(typeof(LocalSaveFileUtils), nameof(LocalSaveFileUtils.DeleteSaveFile))]
 	private static bool LocalSaveFileUtils_DeleteSaveFile(GameType gameType, string gameId, bool localOnly)
 	{
-		return gameType != EnumCache<GameType>.GetType("mapmaker");
+		return !isActive && gameType != EnumCache<GameType>.GetType("mapmaker");
 	}
 
     [HarmonyPrefix]
