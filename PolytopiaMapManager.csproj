@@ -13,6 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PolyMod" Version="2.0.0-pre" />
+    <PackageReference Include="PolyMod" Version="2.0.0-pre.1" />
   </ItemGroup>
 </Project>
