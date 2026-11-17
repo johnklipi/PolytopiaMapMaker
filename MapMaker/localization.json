@@ -40,8 +40,8 @@
     },
     "mapmaker_resourcegen_desc":
     {
-        "English": "Randomly place resources that fit each tile's terrain and climate. Tiles next to cities get more.",
-        "Russian": "Случайно расставить ресурсы с учётом местности и климата каждой клетки. Рядом с городами их больше."
+        "English": "Randomly place resources within reach of cities and villages, matching each tile's terrain and climate. Starfish are scattered across the water.",
+        "Russian": "Случайно расставить ресурсы в пределах досягаемости городов и деревень с учётом местности и климата клеток. Морские звёзды разбрасываются по воде."
     },
     "mapmaker_resourcegen_fill":
     {

@@ -79,9 +79,35 @@ public static class Editor
         __instance.Update();
     }
 
+    private const float INTERACTION_BAR_GAP = 50f;
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(HudButtonBar), nameof(HudButtonBar.UpdateRightAlignment))]
+    private static bool HudButtonBar_UpdateRightAlignment(HudButtonBar __instance)
+    {
+        if(!Main.isActive)
+            return true;
+
+        InteractionBar interactionBar = __instance.hudScreen.InteractionBar;
+        if(interactionBar.type != InteractionBar.Type.PcBar)
+        {
+            __instance.SetRightAlign(false);
+            return false;
+        }
+
+        float menuButtonWidth = __instance.menuButton.rectTransform.WorldRect().width;
+        float centeredMenuButtonStart = __instance.rectTransform.WorldRect().center.x - menuButtonWidth / 2f;
+        bool overlapsInteractionBar = interactionBar.rectTransform.WorldRect().xMax > centeredMenuButtonStart - INTERACTION_BAR_GAP;
+        __instance.SetRightAlign(overlapsInteractionBar);
+        return false;
+    }
+
     private const float ROW_ANCHOR_Y = 0.95f;
     private const float ROW_MARGIN = 20f;
     private const float ROW_SPACING = 20f;
+    private const float COMPACT_NAME_TO_ROW = 80f;
+    private const float COMPACT_ROW_STEP = 130f;
+    private static bool compactLayout = false;
 
     internal static void CreateEditorUI(Transform hudScreen)
     {
@@ -91,8 +117,9 @@ public static class Editor
         editorUi.offsetMin = Vector2.zero;
         editorUi.offsetMax = Vector2.zero;
 
-        leftRow = CreateRow("LeftRow", new Vector2(0f, ROW_ANCHOR_Y), TextAnchor.MiddleLeft, ROW_MARGIN);
-        rightRow = CreateRow("RightRow", new Vector2(1f, ROW_ANCHOR_Y), TextAnchor.MiddleRight, -ROW_MARGIN);
+        leftRow = CreateRow("LeftRow", TextAnchor.MiddleLeft);
+        rightRow = CreateRow("RightRow", TextAnchor.MiddleRight);
+        ApplyLayout(false);
     }
 
     private static RectTransform CreateRect(string name, Transform parent)
@@ -102,13 +129,9 @@ public static class Editor
         return go.GetComponent<RectTransform>();
     }
 
-    private static RectTransform CreateRow(string name, Vector2 anchor, TextAnchor alignment, float offsetX)
+    private static RectTransform CreateRow(string name, TextAnchor alignment)
     {
         RectTransform row = CreateRect(name, editorUi!);
-        row.anchorMin = anchor;
-        row.anchorMax = anchor;
-        row.pivot = anchor;
-        row.anchoredPosition = new Vector2(offsetX, 0f);
         row.sizeDelta = Vector2.zero;
 
         HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -127,12 +150,73 @@ public static class Editor
         if(mapNameContainer == null || editorUi == null)
             return;
 
-        RectTransform rect = mapNameContainer.GetComponent<RectTransform>();
-        rect.SetParent(editorUi, false);
-        rect.anchorMin = new Vector2(0.5f, ROW_ANCHOR_Y);
-        rect.anchorMax = new Vector2(0.5f, ROW_ANCHOR_Y);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = Vector2.zero;
+        mapNameContainer.SetParent(editorUi, false);
+        ApplyLayout(compactLayout);
+    }
+
+    private static void UpdateLayout()
+    {
+        if(editorUi == null || leftRow == null || rightRow == null || mapNameContainer == null)
+            return;
+
+        bool compact = !MapNameFitsBetweenRows();
+        if(compact != compactLayout)
+            ApplyLayout(compact);
+    }
+
+    private static bool MapNameFitsBetweenRows()
+    {
+        float screenWidth = editorUi!.rect.width;
+        float nameHalfWidth = GetMapNameWidth() / 2f;
+        float leftRowEnd = ROW_MARGIN + leftRow!.rect.width + ROW_SPACING;
+        float rightRowStart = screenWidth - ROW_MARGIN - rightRow!.rect.width - ROW_SPACING;
+        return screenWidth / 2f - nameHalfWidth >= leftRowEnd
+            && screenWidth / 2f + nameHalfWidth <= rightRowStart;
+    }
+
+    private static float GetMapNameWidth()
+    {
+        TextMeshProUGUI text = mapNameContainer!.GetComponent<TextMeshProUGUI>();
+        return Mathf.Min(text.preferredWidth, text.rectTransform.rect.width);
+    }
+
+    private static void ApplyLayout(bool compact)
+    {
+        compactLayout = compact;
+        if(compact)
+        {
+            PlaceAtTop(leftRow, 0f, new Vector2(ROW_MARGIN, -COMPACT_NAME_TO_ROW));
+            PlaceAtTop(rightRow, 0f, new Vector2(ROW_MARGIN, -COMPACT_NAME_TO_ROW - COMPACT_ROW_STEP));
+            PlaceMapNameAtTop(0f, new Vector2(ROW_MARGIN, 0f), TextAlignmentOptions.Left);
+        }
+        else
+        {
+            PlaceAtTop(leftRow, 0f, new Vector2(ROW_MARGIN, 0f));
+            PlaceAtTop(rightRow, 1f, new Vector2(-ROW_MARGIN, 0f));
+            PlaceMapNameAtTop(0.5f, Vector2.zero, TextAlignmentOptions.Center);
+        }
+    }
+
+    private static void PlaceMapNameAtTop(float anchorX, Vector2 position, TextAlignmentOptions alignment)
+    {
+        if(mapNameContainer == null)
+            return;
+
+        TextMeshProUGUI text = mapNameContainer.GetComponent<TextMeshProUGUI>();
+        text.alignment = alignment;
+        PlaceAtTop(text.rectTransform, anchorX, position);
+    }
+
+    private static void PlaceAtTop(RectTransform? rect, float anchorX, Vector2 position)
+    {
+        if(rect == null)
+            return;
+
+        Vector2 anchor = new Vector2(anchorX, ROW_ANCHOR_Y);
+        rect.anchorMin = anchor;
+        rect.anchorMax = anchor;
+        rect.pivot = new Vector2(anchorX, 0.5f);
+        rect.anchoredPosition = position;
     }
 
     private static readonly Vector2 TOOL_BUTTON_SIZE = new Vector2(75f, 75f);
@@ -334,8 +418,10 @@ public static class Editor
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
     private static void GameManager_Update()
     {
-         if(!Main.isActive)
-             return;
+        if(!Main.isActive)
+            return;
+
+        UpdateLayout();
 
         if(Input.GetKey(KeyCode.LeftControl))
         {
@@ -441,7 +527,6 @@ public static class Editor
         rect.sizeDelta = new Vector2(500, rect.sizeDelta.y);
 
         text.fontSize = 35;
-        text.alignment = TextAlignmentOptions.Center;
 
         text.GetComponent<TMPLocalizer>().Text = Main.DisplayMapName;
         text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
